@@ -2,6 +2,7 @@
   "name": "syspons/laravel-sheetable",
   "description": "Laravel Helper for spreadsheet im-/export",
   "license": "MIT",
+  "version": "0.1",
   "authors": [
       {
           "name": "Andreas Jabusch",
@@ -11,18 +12,18 @@
   "minimum-stability": "dev",
   "autoload" : {
       "psr-4" : {
-          "syspons\\Sheetable\\": "src"
+          "Syspons\\Sheetable\\": "src"
       }
   },
   "autoload-dev": {
       "psr-4": {
-          "syspons\\Sheetable\\Tests\\": "tests"
+          "Syspons\\Sheetable\\Tests\\": "tests"
       }
   },
   "extra" : {
       "laravel" : {
           "providers" : [
-              "syspons\\Sheetable\\SheetableServiceProvider"
+              "Syspons\\Sheetable\\SheetableServiceProvider"
           ]
       }
   },
@@ -31,6 +32,9 @@
     "phpunit/phpunit": "^9.5"
   },
   "require": {
-    "haydenpierce/class-finder": "dev-master"
+    "php": "^8.0",
+    "haydenpierce/class-finder": "dev-master",
+    "barryvdh/laravel-ide-helper": "2.8.2",
+    "maatwebsite/excel": "4.0.x-dev"
   }
 }

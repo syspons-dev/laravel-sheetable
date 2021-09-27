@@ -2,7 +2,7 @@
 
 namespace Syspons\Sheetable\Models\Contracts;
 
-interface SheetableInterface
+interface Sheetable
 {
     public static function rules(mixed $id): array;
 }

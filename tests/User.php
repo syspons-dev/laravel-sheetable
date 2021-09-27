@@ -6,9 +6,9 @@ namespace Syspons\Sheetable\Tests;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use JetBrains\PhpStorm\ArrayShape;
-use Syspons\Sheetable\Models\Contracts\SheetableInterface;
+use Syspons\Sheetable\Models\Contracts\Sheetable;
 
-class User extends Model implements SheetableInterface
+class User extends Model implements Sheetable
 {
     use HasFactory;
 

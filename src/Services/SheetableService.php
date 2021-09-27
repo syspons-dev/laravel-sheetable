@@ -6,7 +6,7 @@ use Exception;
 use HaydenPierce\ClassFinder\ClassFinder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Syspons\Sheetable\Models\Contracts\SheetableInterface;
+use Syspons\Sheetable\Models\Contracts\Sheetable;
 
 class SheetableService
 {
@@ -46,7 +46,7 @@ class SheetableService
         $namespaces = config('sheetable.namespace');
         foreach (is_array($namespaces) ? $namespaces : [$namespaces] as $namespace) {
             foreach (ClassFinder::getClassesInNamespace($namespace) as $class) {
-                if (in_array(SheetableInterface::class, class_implements($class), true)) {
+                if (in_array(Sheetable::class, class_implements($class), true)) {
                     array_push($sheetables, $class);
                 }
             }
@@ -57,7 +57,7 @@ class SheetableService
     /**
      * Get the target model.
      */
-    public function getModelClassFromRequest(): string|SheetableInterface|Model|null
+    public function getModelClassFromRequest(): string|Sheetable|Model|null
     {
         if (!request()->segments() || !$this->sheetables) {
             return null;

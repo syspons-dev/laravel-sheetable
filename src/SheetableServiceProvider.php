@@ -28,7 +28,7 @@ class SheetableServiceProvider extends ServiceProvider
 //        $this->app->singleton(ExceptionHandler::class, Handler::class);
 
         // add config
-        $this->mergeConfigFrom(__DIR__.'/../config/sheetable.php', 'sheetable');
+        $this->mergeConfigFrom(__DIR__.'/../config/config.php', 'sheetable');
     }
 
     /**
@@ -47,14 +47,14 @@ class SheetableServiceProvider extends ServiceProvider
                 $tableName = $sheetableClass::newModelInstance()->getTable();
 
                 Route::get(
-                    $tableName.'/export/',
+                    '/export/'.$tableName,
                     [SheetController::class, 'export']
-                )->name($tableName.'.export');
+                )->name('export.'.$tableName);
 
                 Route::post(
-                    $tableName.'/import/',
+                    '/import/'.$tableName,
                     [SheetController::class, 'import']
-                )->name($tableName.'.import');
+                )->name('import.'.$tableName);
             }
         });
     }

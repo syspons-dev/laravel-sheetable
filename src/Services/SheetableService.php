@@ -64,7 +64,7 @@ class SheetableService
         }
 
         $prefixLength = count(explode('/', config('sheetable.prefix')));
-        $model = Str::studly(Str::singular(request()->segment($prefixLength + 1)));
+        $model = Str::studly(Str::singular(request()->segment($prefixLength + 2)));
 
         $results = preg_grep('/.*'.$model.'$/', $this->sheetables);
 

@@ -27,7 +27,7 @@ class User extends Model implements Sheetable
      * @return array
      */
     #[ArrayShape(['firstname' => "string"])]
-    public static function rules(mixed $id): array {
+    public static function rules(): array {
         return [
             'firstname' => 'required',
         ];

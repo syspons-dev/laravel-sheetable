@@ -31,6 +31,9 @@ class SheetsExport implements FromCollection, WithHeadings
         return $this->models;
     }
 
+    /**
+     * column name listing for exported models.
+     */
     public function headings(): array
     {
         return Schema::getColumnListing($this->tableName);

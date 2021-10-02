@@ -1,7 +1,5 @@
 <?php
 
-/** @noinspection PhpPossiblePolymorphicInvocationInspection */
-
 namespace Syspons\Sheetable;
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -25,7 +23,7 @@ class SheetableServiceProvider extends ServiceProvider
         });
 
         // bind exception singleton
-//        $this->app->singleton(ExceptionHandler::class, Handler::class);
+        $this->app->singleton(ExceptionHandler::class, Handler::class);
 
         // add config
         $this->mergeConfigFrom(__DIR__.'/../config/config.php', 'sheetable');

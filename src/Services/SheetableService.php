@@ -62,13 +62,12 @@ class SheetableService
         if (!request()->segments() || !$this->sheetables) {
             return null;
         }
-
         $prefixLength = count(explode('/', config('sheetable.prefix')));
         $model = Str::studly(Str::singular(request()->segment($prefixLength + 2)));
 
         $results = preg_grep('/.*'.$model.'$/', $this->sheetables);
 
-        return $results && 1 === count($results) ? $results[0] : null;
+        return $results && 1 === count($results) ? reset($results) : null;
     }
 
     public function getExportExtension(): string

@@ -33,7 +33,7 @@ class SheetController
     public function export(): BinaryFileResponse
     {
         return Excel::download(
-            new SheetsExport($this->getAllModels(), $this->getTableName()),
+            new SheetsExport($this->getAllModels(), $this->getModel()),
             $this->getTableName().'.'.$this->sheetableService->getExportExtension()
         );
     }
@@ -46,7 +46,7 @@ class SheetController
         $import = new SheetsImport($this->getModel());
         $filePath = $request->file('file')->store(sys_get_temp_dir());
         Excel::import($import, $filePath);
-        return redirect('/')->with('success', 'Spreadsheet imported.');
+        return redirect('/api/' . $this->getTableName())->with('success', 'Spreadsheet imported.');
     }
 
     public function getModel(): Model|string

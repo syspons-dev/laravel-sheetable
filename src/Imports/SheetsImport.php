@@ -7,8 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithValidation;
+use Syspons\Sheetable\Models\Contracts\Sheetable;
 
-class SheetsImport implements ToCollection, WithHeadingRow
+class SheetsImport implements ToCollection, WithHeadingRow, WithValidation
 {
     private string|Model $modelClass;
 
@@ -46,5 +48,12 @@ class SheetsImport implements ToCollection, WithHeadingRow
         } else {
             $this->modelClass::insert($rowArr);
         }
+    }
+
+    public function rules(): array
+    {
+        /** @var Sheetable $sheetable */
+        $sheetable = $this->modelClass::newModelInstance();
+        $sheetable::rules();
     }
 }

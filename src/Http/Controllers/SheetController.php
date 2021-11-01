@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Syspons\Sheetable\Exports\SheetsExport;
 use Syspons\Sheetable\Imports\SheetsImport;
 use Syspons\Sheetable\Services\SheetableService;
+use Syspons\Sheetable\Services\SpreadsheetHelper;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -21,10 +22,12 @@ use Syspons\Sheetable\Services\SheetableService;
 class SheetController
 {
     private SheetableService $sheetableService;
+    private SpreadsheetHelper $spreadsheetHelper;
 
-    public function __construct(SheetableService $sheetableService)
+    public function __construct(SheetableService $sheetableService, SpreadsheetHelper $spreadsheetHelper)
     {
         $this->sheetableService = $sheetableService;
+        $this->spreadsheetHelper = $spreadsheetHelper;
     }
 
     /**
@@ -33,7 +36,7 @@ class SheetController
     public function export(): BinaryFileResponse
     {
         return Excel::download(
-            new SheetsExport($this->getAllModels(), $this->getModel()),
+            new SheetsExport($this->getAllModels(), $this->getModel(), $this->spreadsheetHelper),
             $this->getTableName().'.'.$this->sheetableService->getExportExtension()
         );
     }
@@ -43,7 +46,7 @@ class SheetController
      */
     public function import(Request $request): Redirector|Application|RedirectResponse
     {
-        $import = new SheetsImport($this->getModel());
+        $import = new SheetsImport($this->getModel(), $this->spreadsheetHelper);
         $filePath = $request->file('file')->store(sys_get_temp_dir());
         Excel::import($import, $filePath);
 

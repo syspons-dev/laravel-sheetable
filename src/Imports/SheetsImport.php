@@ -1,4 +1,6 @@
-<?php /** @noinspection PhpMultipleClassDeclarationsInspection */
+<?php
+
+/** @noinspection PhpMultipleClassDeclarationsInspection */
 
 namespace Syspons\Sheetable\Imports;
 
@@ -6,11 +8,15 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Events\BeforeSheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Syspons\Sheetable\Models\Contracts\Dropdownable;
 use Syspons\Sheetable\Models\Contracts\Sheetable;
 
-class SheetsImport implements ToCollection, WithHeadingRow, WithValidation
+class SheetsImport implements ToCollection, WithHeadingRow, WithValidation, WithEvents
 {
     private string|Model $modelClass;
 
@@ -35,6 +41,35 @@ class SheetsImport implements ToCollection, WithHeadingRow, WithValidation
         return Carbon::createFromFormat('Y-m-d\TH:i:s', substr($dateTime, 0, 19))->toDateTimeString();
     }
 
+    public function registerEvents(): array
+    {
+        return [
+            BeforeSheet::class => function (BeforeSheet $event) {
+                $sheet = $event->sheet;
+                $workSheet = $sheet->getDelegate();
+
+                /** @var Dropdownable $dropdownable */
+                $dropdownable = $this->modelClass::newModelInstance();
+                if (method_exists($this->modelClass, 'getDropdownFields')) {
+                    $this->handleDropdownFields($dropdownable, $workSheet);
+                }
+            },
+        ];
+    }
+
+    /**
+     * Handles validation/dropdown-fields getDropdownFields.
+     *
+     * @param Dropdownable $dropdownable dropdownable model
+     */
+    private function handleDropdownFields(Dropdownable $dropdownable, Worksheet $sheet)
+    {
+        $dropdownFields = $dropdownable::getDropdownFields();
+        foreach ($dropdownFields as $dropdownSettings) {
+//            TODO
+        }
+    }
+
     /**
      * updateOrCreate instance from given row array.
      *
@@ -54,6 +89,7 @@ class SheetsImport implements ToCollection, WithHeadingRow, WithValidation
     {
         /** @var Sheetable $sheetable */
         $sheetable = $this->modelClass::newModelInstance();
-        $sheetable::rules();
+
+        return $sheetable::rules(null);
     }
 }

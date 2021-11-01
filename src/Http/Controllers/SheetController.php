@@ -46,7 +46,8 @@ class SheetController
         $import = new SheetsImport($this->getModel());
         $filePath = $request->file('file')->store(sys_get_temp_dir());
         Excel::import($import, $filePath);
-        return redirect('/api/' . $this->getTableName())->with('success', 'Spreadsheet imported.');
+
+        return redirect('/api/'.$this->getTableName())->with('success', 'Spreadsheet imported.');
     }
 
     public function getModel(): Model|string

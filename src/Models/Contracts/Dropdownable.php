@@ -2,16 +2,12 @@
 
 namespace Syspons\Sheetable\Models\Contracts;
 
-use Syspons\Sheetable\Exports\DropdownSettings;
+use Syspons\Sheetable\Exports\DropdownConfig;
 
 interface Dropdownable
 {
-//    /**
-//     * e.g. [ 'country_id' => ['foreignModel' => 'Countrycode::class', 'foreignTitleColumn' => 'code'] ].
-//     */
-
     /**
-     * @return DropdownSettings[]
+     * @return DropdownConfig[]
      */
     public static function getDropdownFields(): array;
 }

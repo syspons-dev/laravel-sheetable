@@ -7,6 +7,7 @@ namespace Syspons\Sheetable\Imports;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -15,7 +16,6 @@ use Maatwebsite\Excel\Events\BeforeSheet;
 use Syspons\Sheetable\Models\Contracts\Dropdownable;
 use Syspons\Sheetable\Models\Contracts\Sheetable;
 use Syspons\Sheetable\Services\SpreadsheetHelper;
-use Illuminate\Support\Facades\DB;
 
 class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithEvents
 {
@@ -71,12 +71,9 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
         /** @var Model $model */
         $model = $this->modelClass::find($rowArr['id']);
         if ($model) {
-//            $model->update($rowArr);
-
             DB::table($model->getTable())
                 ->where('id', $rowArr['id'])
                 ->update($rowArr);
-
         } else {
             $this->modelClass::insert($rowArr);
         }

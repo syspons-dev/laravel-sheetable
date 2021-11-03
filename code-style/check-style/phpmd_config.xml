@@ -9,14 +9,17 @@
     <description>
         Syspons Ruleset
     </description>
+
     <rule ref="rulesets/cleancode.xml" >
         <!--    Static access causes unexchangeable dependencies to other classes and leads to hard to test code.-->
         <!--    Avoid using static access at all costs and instead inject dependencies through the constructor.-->
         <!--    ... but laravel loves them ...-->
         <exclude name="StaticAccess" />
+
         <!--    A boolean flag argument is a reliable indicator for a violation of the Single Responsibility Principle (SRP). -->
         <!--    You can fix this problem by extracting the logic in the boolean flag into its own class or method.-->
         <exclude name="BooleanArgumentFlag" />
+
     </rule>
     <rule ref="rulesets/codesize.xml" />
     <rule ref="rulesets/controversial.xml" />
@@ -24,10 +27,25 @@
     <rule ref="rulesets/unusedcode.xml" />
     <rule ref="rulesets/naming.xml">
         <exclude name="ShortVariable"/>
+        <exclude name="ShortMethodName"/>
     </rule>
-    <rule ref="rulesets/naming.xml/ShortVariable">
+
+    <rule ref="rulesets/naming.xml/ShortVariable"
+          message="Avoid variables with short names like {0}. Configured minimum length is {1}." >
+        <priority>3</priority>
         <properties>
+            <property name="minimum" description="...Minimum length for a variable, property or parameter name" value="3"/>
             <property name="exceptions" value="up,id,i,j" />
         </properties>
     </rule>
+
+    <rule ref="rulesets/naming.xml/ShortMethodName"
+          message="Avoid using short method names like {0}::{1}(). The configured minimum method name length is {2}." >
+        <priority>3</priority>
+        <properties>
+            <property name="minimum" description="...Minimum length for a variable, property or parameter name" value="3"/>
+            <property name="exceptions" value="up,id,i,j" />
+        </properties>
+    </rule>
+
 </ruleset>

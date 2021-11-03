@@ -211,9 +211,8 @@ class SpreadsheetHelper
 
     /**
      * @param Sheet|Worksheet $worksheet
-     * @param int $rowNr
-     * @param DropdownConfig $config Field-DropdownConfig
-     * @param string $validationFormula e.g. 'foo, bar' or 'metadata!B1:B3'
+     * @param DropdownConfig  $config            Field-DropdownConfig
+     * @param string          $validationFormula e.g. 'foo, bar' or 'metadata!B1:B3'
      *
      * @throws PhpSpreadsheetException
      * @throws Exception
@@ -224,7 +223,6 @@ class SpreadsheetHelper
         DropdownConfig $config,
         string $validationFormula
     ): void {
-
         $colCoord = $this->getColumnByHeading($worksheet, $config->getField());
         $cellCoord = $colCoord.$rowNr;
         $fkId = $worksheet->getCell($cellCoord)->getValue();

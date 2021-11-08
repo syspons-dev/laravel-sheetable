@@ -32,7 +32,7 @@
   },
   "require": {
     "php": "^8.0",
-    "haydenpierce/class-finder": "dev-master",
+    "haydenpierce/class-finder": "^0.4.3",
     "barryvdh/laravel-ide-helper": "2.8.2",
     "maatwebsite/excel": "4.0.x-dev"
   }

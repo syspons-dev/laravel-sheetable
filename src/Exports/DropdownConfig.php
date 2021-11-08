@@ -82,4 +82,11 @@ class DropdownConfig
     {
         return $this->fkIdCol;
     }
+
+    public function setFkIdCol(string $fkIdCol): self
+    {
+        $this->fkIdCol = $fkIdCol;
+
+        return $this;
+    }
 }

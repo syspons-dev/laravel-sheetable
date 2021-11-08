@@ -16,6 +16,7 @@ use Syspons\Sheetable\Models\Contracts\Dropdownable;
 class SpreadsheetHelper
 {
     private string $metaSheetName = 'metadata';
+    private int $extraDropdownFieldsCount = 100;
 
     /**
      * Adds validation/dropdown-fields for all recipes defined in getDropdownFields.
@@ -50,6 +51,8 @@ class SpreadsheetHelper
             $spreadsheet->addSheet($metaSheet, 1);
         }
 
+//        TODO sheet protection
+//        $metaSheet->getProtection()->setSheet(true);
         return $metaSheet;
     }
 
@@ -97,7 +100,8 @@ class SpreadsheetHelper
         $highestValRow = $metaDataSheet->getHighestDataRow($refValCol);
         $selectOptions = $this->getMetaSheetName().'!$'.$refValCol.'$2:$'.$refValCol.'$'.$highestValRow;
 
-        for ($i = 2; $i <= $highestRow; ++$i) {
+
+        for ($i = 2; $i <= $highestRow + $this->extraDropdownFieldsCount; ++$i) {
             $this->addForeignKeyDropdownField(
                 $sheet,
                 $i,
@@ -119,7 +123,7 @@ class SpreadsheetHelper
         $metaValueCol = $this->getNextCol($metaIdCol);
         $row = 1;
 
-        $descriptions = $config->getFkModel()::select(['id', $config->getFkTextCol()])->get();
+        $descriptions = $config->getFkModel()::select([$config->getFkIdCol(), $config->getFkTextCol()])->get();
         $foreignModelShort = $this->getModelShortname($config->getFkModel());
 
         // Set Headings
@@ -237,8 +241,11 @@ class SpreadsheetHelper
      *
      * @return string e.g. 'John'
      */
-    private function getDescValueForId(int $id, DropdownConfig $config): string
+    private function getDescValueForId(?int $id, DropdownConfig $config): ?string
     {
+        if (null == $id){
+            return $id;
+        }
         $currentModel = $config->getFkModel()::find($id);
 
         return $currentModel->toArray()[$config->getFkTextCol()];
@@ -337,7 +344,7 @@ class SpreadsheetHelper
      *
      * @throws Exception
      */
-    public function addDropdownField(Worksheet $worksheet, string $spreadSheetField, string $cellValue, string $validationFormula): void
+    public function addDropdownField(Worksheet $worksheet, string $spreadSheetField, ?string $cellValue, string $validationFormula): void
     {
         $worksheet->setCellValue($spreadSheetField, $cellValue);
 

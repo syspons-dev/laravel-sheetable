@@ -52,7 +52,7 @@ class SpreadsheetHelper
         }
 
 //        TODO sheet protection
-//        $metaSheet->getProtection()->setSheet(true);
+        $metaSheet->getProtection()->setSheet(true);
         return $metaSheet;
     }
 
@@ -99,7 +99,6 @@ class SpreadsheetHelper
 
         $highestValRow = $metaDataSheet->getHighestDataRow($refValCol);
         $selectOptions = $this->getMetaSheetName().'!$'.$refValCol.'$2:$'.$refValCol.'$'.$highestValRow;
-
 
         for ($i = 2; $i <= $highestRow + $this->extraDropdownFieldsCount; ++$i) {
             $this->addForeignKeyDropdownField(
@@ -243,7 +242,7 @@ class SpreadsheetHelper
      */
     private function getDescValueForId(?int $id, DropdownConfig $config): ?string
     {
-        if (null == $id){
+        if (null == $id) {
             return $id;
         }
         $currentModel = $config->getFkModel()::find($id);

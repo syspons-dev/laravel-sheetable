@@ -4,5 +4,5 @@ namespace Syspons\Sheetable\Models\Contracts;
 
 interface Sheetable
 {
-    public static function rules(mixed $id): array;
+    public static function importRules(): array;
 }

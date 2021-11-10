@@ -28,12 +28,21 @@ class SpreadsheetHelper
     public function exportDropdownFields(Dropdownable $dropdownable, Worksheet $worksheet)
     {
         $dropdownFields = $dropdownable::getDropdownFields();
-        foreach ($dropdownFields as $dropdownSettings) {
-            if ($dropdownSettings->isEmbedded()) {
-                $this->addForeignKeyDropdownColumnEmbedded($worksheet, $dropdownSettings);
+        foreach ($dropdownFields as $dropdownConfig) {
+            if ($dropdownConfig->isEmbedded()) {
+                $this->addForeignKeyDropdownColumnEmbedded($worksheet, $dropdownConfig);
+                continue;
+            } elseif ($dropdownConfig->getMappingTable()) {
+                $this->createRefColumnsForField($worksheet->getParent(), $dropdownConfig);
+                $this->addManyToManyColumns($worksheet, $dropdownConfig);
+                continue;
+            } elseif (0 < count($dropdownConfig->getFixedList())) {
+                $this->createRefColumnsForFixedField($worksheet->getParent(), $dropdownConfig);
+                $this->addFixedListDropdownColumn($worksheet, $dropdownConfig);
                 continue;
             }
-            $this->addForeignKeyDropdownColumn($worksheet, $dropdownSettings);
+            $this->createRefColumnsForField($worksheet->getParent(), $dropdownConfig);
+            $this->addForeignKeyDropdownColumn($worksheet, $dropdownConfig);
         }
     }
 
@@ -45,14 +54,12 @@ class SpreadsheetHelper
     public function getMetadataSheet(Spreadsheet $spreadsheet): Worksheet
     {
         $metaSheet = $spreadsheet->getSheetByName($this->metaSheetName);
-
         if (null === $metaSheet) {
             $metaSheet = new Worksheet($spreadsheet, $this->metaSheetName);
             $spreadsheet->addSheet($metaSheet, 1);
         }
-
-//        TODO sheet protection
         $metaSheet->getProtection()->setSheet(true);
+
         return $metaSheet;
     }
 
@@ -62,7 +69,6 @@ class SpreadsheetHelper
     public function getColumnByHeading(Sheet|Worksheet $sheet, string $heading): ?string
     {
         $row = $sheet->getRowIterator()->current();
-
         $cellIterator = $row->getCellIterator();
         $cellIterator->setIterateOnlyExistingCells(false);
 
@@ -76,7 +82,35 @@ class SpreadsheetHelper
     }
 
     /**
-     * adds / replaces the IDs of all fields - containing values - in a given column
+     * TODO add doc.
+     *
+     * @throws PhpSpreadsheetException
+     * @throws Exception
+     */
+    public function addFixedListDropdownColumn(Worksheet $worksheet, DropdownConfig $dropdownConfig): void
+    {
+        $column = $this->getColumnByHeading($worksheet, $dropdownConfig->getField());
+        $highestRow = $worksheet->getHighestDataRow($column);
+        $selectOptions = $this->getValueCoordinatesFromMetaColumn($worksheet, 'fixed.'.$dropdownConfig->getField());
+
+        for ($i = 2; $i <= $highestRow + $this->extraDropdownFieldsCount; ++$i) {
+            $coord = $column.$i;
+            $value = $worksheet->getCell($coord)->getValue();
+            $this->addDropdownField($worksheet, $coord, $value, $selectOptions);
+        }
+    }
+
+    private function getValueCoordinatesFromMetaColumn(Worksheet $sheet, string $metaColumnName)
+    {
+        $metaDataSheet = $this->getMetaDataSheet($sheet->getParent());
+        $refValCol = $this->getColumnByHeading($metaDataSheet, $metaColumnName);
+        $highestValRow = $metaDataSheet->getHighestDataRow($refValCol);
+
+        return $this->getMetaSheetName().'!$'.$refValCol.'$2:$'.$refValCol.'$'.$highestValRow;
+    }
+
+    /**
+     * Adds / replaces the IDs of all fields - containing values - in a given column
      * with the corresponding describing text field and adds a dropdown to all of these fields
      * containing the valid values, referencing a range in the metadata-sheet
      * Uses the DropdownConfig-Object to determine the Field and the recipes.
@@ -122,6 +156,7 @@ class SpreadsheetHelper
         $metaValueCol = $this->getNextCol($metaIdCol);
         $row = 1;
 
+        /** @var $descriptions array */
         $descriptions = $config->getFkModel()::select([$config->getFkIdCol(), $config->getFkTextCol()])->get();
         $foreignModelShort = $this->getModelShortname($config->getFkModel());
 
@@ -141,13 +176,33 @@ class SpreadsheetHelper
     }
 
     /**
+     * Creates reference (id + describing value) columns within metadata sheet.
+     *
+     * @throws PhpSpreadsheetException
+     */
+    public function createRefColumnsForFixedField(Spreadsheet $spreadsheet, DropdownConfig $config)
+    {
+        $metaDataSheet = $this->getMetaDataSheet($spreadsheet);
+        $metaFixedValCol = $this->getFirstEmptyColumnName($metaDataSheet);
+        $row = 1;
+
+        // Set Heading
+        $metaDataSheet->setCellValue($metaFixedValCol.$row, 'fixed.'.$config->getField());
+
+        foreach ($config->getFixedList() as $item) {
+            ++$row;
+            $metaDataSheet->setCellValue($metaFixedValCol.$row, $item);
+        }
+    }
+
+    /**
      * shortens qualified class name like 'App\Models\Dummy' to shortname like 'Dummy'.
      *
      * @param string $model e.g. App\Models\Dummy
      *
      * @return string e.g. Dummy
      */
-    private function getModelShortname(string $model): string
+    private function getModelShortname(?string $model): string
     {
         $path = explode('\\', $model);
 
@@ -183,6 +238,45 @@ class SpreadsheetHelper
         $colIndex = Coordinate::columnIndexFromString($colName);
 
         return Coordinate::stringFromColumnIndex($colIndex + 1);
+    }
+
+    /**
+     * Adds multiple columns for an n-to-m field - as many columns as relations exist or the defined min amount -
+     * and adds / replaces the IDs of all fields - containing values - in a given column
+     * with the corresponding describing text field and adds a dropdown to all of these fields
+     * containing the valid values, referencing a range in the metadata-sheet
+     * Uses the DropdownConfig-Object to determine the Field and the recipes.
+     *
+     * @throws PhpSpreadsheetException
+     * @throws Exception
+     */
+    public function addManyToManyColumns(Worksheet $sheet, DropdownConfig $dropdownConfig): void
+    {
+//        TODO
+//        $this->addForeignKeyDropdownColumn($sheet);
+
+//        $column = $this->getColumnByHeading($sheet, $dropdownConfig->getField());
+//        $highestRow = $sheet->getHighestDataRow($column);
+//        $metaDataSheet = $this->getMetaDataSheet($sheet->getParent());
+//
+//        $foreignModelShort = $this->getModelShortname($dropdownConfig->getFkModel());
+//
+//        $this->createRefColumnsForField($sheet->getParent(), $dropdownConfig);
+//        $refValCol = $this->getColumnByHeading($metaDataSheet,
+//            $foreignModelShort.'.'.$dropdownConfig->getFkTextCol()
+//        );
+//
+//        $highestValRow = $metaDataSheet->getHighestDataRow($refValCol);
+//        $selectOptions = $this->getMetaSheetName().'!$'.$refValCol.'$2:$'.$refValCol.'$'.$highestValRow;
+//
+//        for ($i = 2; $i <= $highestRow + $this->extraDropdownFieldsCount; ++$i) {
+//            $this->addForeignKeyDropdownField(
+//                $sheet,
+//                $i,
+//                $dropdownConfig,
+//                $selectOptions
+//            );
+//        }
     }
 
     /**
@@ -285,21 +379,25 @@ class SpreadsheetHelper
     /**
      * Replaces the descriptive text(dropdown) fields with the corresponding IDs.
      *
-     * @param DropdownConfig $dropdownSettings Field-DropdownConfig
+     * @param DropdownConfig $dropdownConfig Field-DropdownConfig
      *
      * @throws PhpSpreadsheetException
      */
-    public function resolveIdsForDropdownColumn(Worksheet $worksheet, DropdownConfig $dropdownSettings): void
+    public function resolveIdsForDropdownColumn(Worksheet $worksheet, DropdownConfig $dropdownConfig): void
     {
-        $column = $this->getColumnByHeading($worksheet, $dropdownSettings->getField());
+        if (0 < count($dropdownConfig->getFixedList())) {
+            return;
+        }
+
+        $column = $this->getColumnByHeading($worksheet, $dropdownConfig->getField());
         $highestRow = $worksheet->getHighestDataRow($column);
 
         $metaDataSheet = $this->getMetaDataSheet($worksheet->getParent());
-        $foreignModelShort = $this->getModelShortname($dropdownSettings->getFkModel());
+        $foreignModelShort = $this->getModelShortname($dropdownConfig->getFkModel());
 
         $refIdCol = $this->getColumnByHeading($metaDataSheet, $foreignModelShort.'.id');
         $refValCol = $this->getColumnByHeading($metaDataSheet,
-            $foreignModelShort.'.'.$dropdownSettings->getFkTextCol()
+            $foreignModelShort.'.'.$dropdownConfig->getFkTextCol()
         );
 
         $highestRefValRow = $metaDataSheet->getHighestDataRow($refValCol);
@@ -309,6 +407,11 @@ class SpreadsheetHelper
         for ($i = 2; $i <= $highestRow; ++$i) {
             $cell = $worksheet->getCell($column.$i);
             $rawValue = $cell->getValue();
+
+            if (!array_key_exists($rawValue, $arrValuesToRowNr)) {
+                // there is no value for this id in the metadata-sheet
+                continue;
+            }
             $rowNr = $arrValuesToRowNr[$rawValue];
 
             $resolvedId = $metaDataSheet->getCell($refIdCol.$rowNr)->getValue();
@@ -337,17 +440,17 @@ class SpreadsheetHelper
     }
 
     /**
-     * @param string $spreadSheetField  e.g. 'C2'
-     * @param string $cellValue         the describing value to be displayed, not the corresponding (db) id
-     * @param string $validationFormula e.g. '"Item 1, Item 2, Item 3"' or 'metadata!$C$2:$C$240'
+     * @param string      $worksheetField    e.g. 'C2'
+     * @param string|null $cellValue         the describing value to be displayed, not the corresponding (db) id
+     * @param string      $validationFormula e.g. '"Item 1, Item 2, Item 3"' or 'metadata!$C$2:$C$240'
      *
-     * @throws Exception
+     * @throws PhpSpreadsheetException
      */
-    public function addDropdownField(Worksheet $worksheet, string $spreadSheetField, ?string $cellValue, string $validationFormula): void
+    public function addDropdownField(Worksheet $worksheet, string $worksheetField, string|null $cellValue, string $validationFormula): void
     {
-        $worksheet->setCellValue($spreadSheetField, $cellValue);
+        $worksheet->setCellValue($worksheetField, $cellValue);
 
-        $objValidation = $worksheet->getCell($spreadSheetField)->getDataValidation();
+        $objValidation = $worksheet->getCell($worksheetField)->getDataValidation();
         $objValidation->setType(DataValidation::TYPE_LIST);
         $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
         $objValidation->setAllowBlank(false);

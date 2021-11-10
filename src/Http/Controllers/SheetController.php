@@ -5,6 +5,7 @@ namespace Syspons\Sheetable\Http\Controllers;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
@@ -48,6 +49,14 @@ class SheetController
     {
         $import = new SheetsImport($this->getModel(), $this->spreadsheetHelper);
         $filePath = $request->file('file')->store(sys_get_temp_dir());
+
+//        /** @var  PendingDispatch $pendingDispatch */
+//        try {
+//            $pendingDispatch = Excel::import($import, $filePath);
+//        } catch (\Exception $exception) {
+//            return $exception;
+//        }
+
         Excel::import($import, $filePath);
 
         return redirect(env('APP_URL').'/api/'.$this->getTableName())->with('success', 'Spreadsheet imported.');

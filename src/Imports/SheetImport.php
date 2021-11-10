@@ -84,6 +84,6 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
         /** @var Sheetable $sheetable */
         $sheetable = $this->modelClass::newModelInstance();
 
-        return $sheetable::importRules(null);
+        return $sheetable::importRules();
     }
 }

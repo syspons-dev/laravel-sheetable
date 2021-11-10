@@ -9,22 +9,40 @@ class DropdownConfig
     /** @var string name of the field in the main Table/sheet */
     private string $field;
 
-    /** @var string DB foreign Model name containing the reference foreign id and text columns */
-    private string $fkModel;
+    /** @var string|null DB foreign Model name containing the reference foreign id and text columns */
+    private ?string $fkModel = null;
 
-    /** @var string DB column name in the foreign reference Table, containing the descriptive text for this field */
-    private string $fkTextCol;
+    /** @var string|null DB column name in the foreign reference Table, containing the descriptive text for this field */
+    private ?string $fkTextCol = null;
 
-    /** @var string DB column name in the foreign reference Table, containing the fk id */
-    private string $fkIdCol = 'id';
+    /** @var string|null DB column name in the foreign reference Table, containing the fk id */
+    private ?string $fkIdCol = 'id';
 
     /** @var bool embedded dropdown values in formula field, do not add them to metadata sheet */
     private bool $embedded = false;
 
+    /********************************************************************************
+     * Many to many mapping table and field information ...
+     ********************************************************************************/
+
+    /** @var string|null ... */
+    private ?string $mappingTable = null;
+
+    /** @var string|null ... */
+    private ?string $mappingFieldIdCol = null;
+
+    /** @var string|null ... */
+    private ?string $mappingFkIdCol = null;
+
     /**
-     * @return Model|string DB foreign Model name containing the reference foreign id and text columns
+     * @var string[] fixed array of Dropdown options
      */
-    public function getFkModel(): Model|string
+    private array $fixedList = [];
+
+    /**
+     * @return Model|string|null DB foreign Model name containing the reference foreign id and text columns
+     */
+    public function getFkModel(): Model|string|null
     {
         return $this->fkModel;
     }
@@ -66,7 +84,7 @@ class DropdownConfig
         return $this;
     }
 
-    public function getField(): string
+    public function getField(): string|null
     {
         return $this->field;
     }
@@ -78,7 +96,7 @@ class DropdownConfig
         return $this;
     }
 
-    public function getFkIdCol(): string
+    public function getFkIdCol(): string|null
     {
         return $this->fkIdCol;
     }
@@ -86,6 +104,66 @@ class DropdownConfig
     public function setFkIdCol(string $fkIdCol): self
     {
         $this->fkIdCol = $fkIdCol;
+
+        return $this;
+    }
+
+    /********************************************************************************
+     *
+     * Many to many mapping table and field informations ...
+     *
+     ********************************************************************************/
+
+    public function getMappingTable(): string|null
+    {
+        return $this->mappingTable;
+    }
+
+    public function setMappingTable(string $mappingTable): self
+    {
+        $this->mappingTable = $mappingTable;
+
+        return $this;
+    }
+
+    public function getMappingFieldIdCol(): string|null
+    {
+        return $this->mappingFieldIdCol;
+    }
+
+    public function setMappingFieldIdCol(string $mappingFieldIdCol): self
+    {
+        $this->mappingFieldIdCol = $mappingFieldIdCol;
+
+        return $this;
+    }
+
+    public function getMappingFkIdCol(): string|null
+    {
+        return $this->mappingFkIdCol;
+    }
+
+    public function setMappingFkIdCol(string $mappingFkIdCol): self
+    {
+        $this->mappingFkIdCol = $mappingFkIdCol;
+
+        return $this;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getFixedList(): array
+    {
+        return $this->fixedList;
+    }
+
+    /**
+     * @param string[] $fixedList
+     */
+    public function setFixedList(array $fixedList): self
+    {
+        $this->fixedList = $fixedList;
 
         return $this;
     }

@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -17,7 +18,7 @@ use Syspons\Sheetable\Models\Contracts\Dropdownable;
 use Syspons\Sheetable\Models\Contracts\Sheetable;
 use Syspons\Sheetable\Services\SpreadsheetHelper;
 
-class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithEvents
+class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithEvents, SkipsEmptyRows
 {
     private string|Model $modelClass;
     private SpreadsheetHelper $helper;
@@ -32,17 +33,30 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
 
     public function collection(Collection $collection)
     {
+        // TODO AJ use a better way to identify datetime colmuns
         foreach ($collection as $row) {
             $rowArr = $row->toArray();
             $rowArr['created_at'] = $this->cleanDateTime($row['created_at']);
             $rowArr['updated_at'] = $this->cleanDateTime($row['updated_at']);
+            $rowArr['date_start'] = $this->cleanDateTime($row['date_start']);
+            $rowArr['date_end'] = $this->cleanDateTime($row['date_end']);
+
             $this->updateOrCreate($rowArr);
         }
     }
 
-    private function cleanDateTime(string $dateTime): string
+    private function cleanDateTime(?string $dateTime): string
     {
-        return Carbon::createFromFormat('Y-m-d\TH:i:s', substr($dateTime, 0, 19))->toDateTimeString();
+        if (null === $dateTime) {
+            return Carbon::now()->toDateTimeString();
+        }
+        $dateTimeString = substr($dateTime, 0, 19);
+
+        if (10 === strlen($dateTime)) {
+            return Carbon::createFromFormat('d.m.Y', substr($dateTime, 0, 19))->toDateTimeString();
+        }
+
+        return Carbon::createFromFormat('d.m.Y H:i:s', substr($dateTime, 0, 19))->toDateTimeString();
     }
 
     public function registerEvents(): array
@@ -68,11 +82,12 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
      */
     protected function updateOrCreate(array $rowArr)
     {
+        $keyName = app($this->modelClass)->getKeyName();
         /** @var Model $model */
-        $model = $this->modelClass::find($rowArr['id']);
+        $model = $this->modelClass::find($rowArr[$keyName]);
         if ($model) {
             DB::table($model->getTable())
-                ->where('id', $rowArr['id'])
+                ->where($keyName, $rowArr[$keyName])
                 ->update($rowArr);
         } else {
             $this->modelClass::insert($rowArr);

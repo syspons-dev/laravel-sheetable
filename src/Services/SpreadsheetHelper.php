@@ -152,26 +152,30 @@ class SpreadsheetHelper
     public function createRefColumnsForField(Spreadsheet $spreadsheet, DropdownConfig $config)
     {
         $metaDataSheet = $this->getMetaDataSheet($spreadsheet);
-        $metaIdCol = $this->getFirstEmptyColumnName($metaDataSheet);
-        $metaValueCol = $this->getNextCol($metaIdCol);
-        $row = 1;
-
-        /** @var $descriptions array */
-        $descriptions = $config->getFkModel()::select([$config->getFkIdCol(), $config->getFkTextCol()])->get();
         $foreignModelShort = $this->getModelShortname($config->getFkModel());
+        $foreignModelCol = $this->getColumnByHeading($metaDataSheet, $foreignModelShort.'.id');
 
-        // Set Headings
-        $metaDataSheet->setCellValue($metaIdCol.$row, $foreignModelShort.'.id');
-        $metaDataSheet->setCellValue($metaValueCol.$row,
-            $foreignModelShort.'.'.$config->getFkTextCol()
-        );
+        if (!$foreignModelCol) {
+            $metaIdCol = $this->getFirstEmptyColumnName($metaDataSheet);
+            $metaValueCol = $this->getNextCol($metaIdCol);
+            $row = 1;
 
-        foreach ($descriptions as $description) {
-            ++$row;
-            $id = $description->id;
-            $value = $description->toArray()[$config->getFkTextCol()];
-            $metaDataSheet->setCellValue($metaIdCol.$row, $id);
-            $metaDataSheet->setCellValue($metaValueCol.$row, $value);
+            /** @var $descriptions array */
+            $descriptions = $config->getFkModel()::select([$config->getFkIdCol(), $config->getFkTextCol()])->get();
+
+            // Set Headings
+            $metaDataSheet->setCellValue($metaIdCol.$row, $foreignModelShort.'.id');
+            $metaDataSheet->setCellValue($metaValueCol.$row,
+                $foreignModelShort.'.'.$config->getFkTextCol()
+            );
+
+            foreach ($descriptions as $description) {
+                ++$row;
+                $id = $description->getKey();
+                $value = $description->toArray()[$config->getFkTextCol()];
+                $metaDataSheet->setCellValue($metaIdCol.$row, $id);
+                $metaDataSheet->setCellValue($metaValueCol.$row, $value);
+            }
         }
     }
 
@@ -385,12 +389,18 @@ class SpreadsheetHelper
      */
     public function resolveIdsForDropdownColumn(Worksheet $worksheet, DropdownConfig $dropdownConfig): void
     {
+        $column = $this->getColumnByHeading($worksheet, $dropdownConfig->getField());
+        $highestDataRow = $worksheet->getHighestDataRow($column);
+        $highestRow = $worksheet->getHighestRow($column);
+
+        for ($i = 2; $i <= $highestRow; ++$i) {
+            // remove DataValidation from all fields
+            $worksheet->getCell($column.$i)->setDataValidation(null);
+        }
+
         if (0 < count($dropdownConfig->getFixedList())) {
             return;
         }
-
-        $column = $this->getColumnByHeading($worksheet, $dropdownConfig->getField());
-        $highestRow = $worksheet->getHighestDataRow($column);
 
         $metaDataSheet = $this->getMetaDataSheet($worksheet->getParent());
         $foreignModelShort = $this->getModelShortname($dropdownConfig->getFkModel());
@@ -404,7 +414,9 @@ class SpreadsheetHelper
 
         $arrValuesToRowNr = $this->getValuesIndexedArray($metaDataSheet, $refValCol, 2, $highestRefValRow);
 
-        for ($i = 2; $i <= $highestRow; ++$i) {
+        for ($i = 2; $i <= $highestDataRow; ++$i) {
+            // Remove validation from cells
+
             $cell = $worksheet->getCell($column.$i);
             $rawValue = $cell->getValue();
 

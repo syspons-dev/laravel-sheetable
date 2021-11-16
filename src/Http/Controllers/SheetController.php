@@ -2,13 +2,9 @@
 
 namespace Syspons\Sheetable\Http\Controllers;
 
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Bus\PendingDispatch;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Redirector;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\Exception;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -45,21 +41,16 @@ class SheetController
     /**
      * Import TABLENAME.xlsx via upload.
      */
-    public function import(Request $request): Redirector|Application|RedirectResponse
+    public function import(Request $request): array
     {
         $import = new SheetsImport($this->getModel(), $this->spreadsheetHelper);
         $filePath = $request->file('file')->store(sys_get_temp_dir());
 
-//        /** @var  PendingDispatch $pendingDispatch */
-//        try {
-//            $pendingDispatch = Excel::import($import, $filePath);
-//        } catch (\Exception $exception) {
-//            return $exception;
-//        }
-
         Excel::import($import, $filePath);
 
-        return redirect(env('APP_URL').'/api/'.$this->getTableName())->with('success', 'Spreadsheet imported.');
+        // return redirect(env('APP_URL').'/api/'.$this->getTableName())->with('success', 'Spreadsheet imported.');
+        // TODO return a JSON with more info or redirect to list of entities?
+        return ['message' => 'ok'];
     }
 
     public function getModel(): Model|string

@@ -2,13 +2,17 @@
 
 namespace Syspons\Sheetable\Services;
 
+use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Sheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Syspons\Sheetable\Exports\DropdownConfig;
 use Syspons\Sheetable\Models\Contracts\Dropdownable;
@@ -16,6 +20,7 @@ use Syspons\Sheetable\Models\Contracts\Dropdownable;
 class SpreadsheetHelper
 {
     private string $metaSheetName = 'metadata';
+    private string $codebookSheetName = 'codebook';
     private int $extraDropdownFieldsCount = 100;
 
     /**
@@ -46,12 +51,141 @@ class SpreadsheetHelper
         }
     }
 
+    public function writeCodeBook(Model $model, Worksheet $worksheet)
+    {
+        $codebookSheet = $this->getCodebookSheet($worksheet->getParent());
+
+        $lastColumn = $worksheet->getHighestColumn();
+        ++$lastColumn;
+        $columnCodebook = 'A';
+
+        $codebookSheet->setCellValue('A1', 'Feldname');
+        $codebookSheet->getCell('A1')->getStyle()->getFont()->setBold(true);
+
+        $codebookSheet->setCellValue('A2', 'Typ');
+        $codebookSheet->getCell('A2')->getStyle()->getFont()->setBold(true);
+
+        $codebookSheet->setCellValue('A3', 'Bespiel');
+        $codebookSheet->getCell('A3')->getStyle()->getFont()->setBold(true);
+
+        $codebookSheet->setCellValue('A4', 'Erklärung');
+        $codebookSheet->getCell('A4')->getStyle()->getFont()->setBold(true);
+
+        $codebookSheet->getRowDimension(4)->setRowHeight(80);
+
+        for ($column = 'A'; $column != $lastColumn; ++$column) {
+            // Skip first col
+            ++$columnCodebook;
+
+            $cellHeading = $worksheet->getCell($column.'1');
+            $cellVal = $worksheet->getCell($column.'2');
+            $codebookSheet->setCellValue($columnCodebook.'1', $cellHeading->getValue());
+            $codebookSheet->getCell($columnCodebook.'1')->getStyle()->getFont()->setBold(true);
+
+            $codebookSheet->setCellValue($columnCodebook.'2', 'string/int/date');
+
+            $example = $cellVal->getValue();
+            if (!$example) {
+                $example = 'My Example';
+            }
+
+            $codebookSheet->setCellValue($columnCodebook.'3', $example);
+            $codebookSheet->setCellValue($columnCodebook.'4',
+                'This the Description<br>'
+                .'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut'
+                .'labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores'
+            );
+            $codebookSheet->getCell($columnCodebook.'4')->getStyle()->getAlignment()->setWrapText(true);
+
+            $width = 30;
+            if ($width < strlen($cellHeading->getValue())) {
+                $width = strlen($cellHeading->getValue());
+            }
+            $codebookSheet->getColumnDimension($column)->setWidth($width, 'pt');
+        }
+    }
+
+    public function formatFields(Model $model, Worksheet $worksheet)
+    {
+        $this->formatAllCols($model, $worksheet);
+        $worksheet->getPageSetup()->setFitToWidth(1);
+
+        $FORMAT_DATE_DATETIME = 'dd.mm.yyyy';
+        $dateTimeCols = $this->getDateTimeCols($model);
+        $dateTimeColValues = $model::select($dateTimeCols)->get();
+        $rowNr = 1;
+
+        // set width for all date fields
+        foreach ($dateTimeCols as $dateTimeCol) {
+            $colCoord = $this->getColumnByHeading($worksheet, $dateTimeCol);
+            $worksheet->getColumnDimension($colCoord)->setWidth(14, 'pt');
+            $worksheet->getCell($colCoord.'1')->getStyle()->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        }
+
+        foreach ($dateTimeColValues as $dateTimeColValue) {
+            ++$rowNr;
+            foreach ($dateTimeCols as $dateTimeCol) {
+                $val = $dateTimeColValue[$dateTimeCol];
+                $colCoord = $this->getColumnByHeading($worksheet, $dateTimeCol);
+
+                $worksheet->getStyle($colCoord.$rowNr)->getNumberFormat()->setFormatCode($FORMAT_DATE_DATETIME);
+                $worksheet->setCellValue($colCoord.$rowNr, \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($val));
+            }
+        }
+    }
+
+    public function formatAllCols(Model $model, Worksheet $worksheet)
+    {
+//        $row = 1;
+        $lastColumn = $worksheet->getHighestColumn();
+        ++$lastColumn;
+        for ($column = 'A'; $column != $lastColumn; ++$column) {
+            $cell = $worksheet->getCell($column.'1');
+            $val = $cell->getValue();
+            $width = 10;
+            if (10 < strlen($val)) {
+                $width = strlen($val);
+            }
+            $worksheet->getColumnDimension($column)->setWidth($width, 'pt');
+        }
+    }
+
+    /**
+     * @param Worksheet $worksheet
+     */
+    private function getDateTimeCols(Model $model): array
+    {
+        $dateTimeCols = [];
+
+        $tableName = $model::newModelInstance()->getTable();
+        foreach (DB::getSchemaBuilder()->getColumnListing($tableName) as $colName) {
+            $type = DB::getSchemaBuilder()->getColumnType($tableName, $colName);
+            if ('datetime' === $type) {
+                $dateTimeCols[] = $colName;
+            }
+//            $this->log('tableName:', $tableName, '| key:', $colName, '| type:', $type);
+        }
+
+        return $dateTimeCols;
+    }
+
+    private function log(?string ...$logItems)
+    {
+        $line = Carbon::now()->toDateTimeString().': ';
+
+        foreach ($logItems as $logItem) {
+            $line .= $logItem.' ';
+        }
+        $line .= PHP_EOL;
+        file_put_contents('tmp.log', $line, FILE_APPEND);
+    }
+
     /**
      * get the Sheet containing meta data info like field validation references.
      *
      * @throws PhpSpreadsheetException
      */
-    public function getMetadataSheet(Spreadsheet $spreadsheet): Worksheet
+    private function getMetadataSheet(Spreadsheet $spreadsheet): Worksheet
     {
         $metaSheet = $spreadsheet->getSheetByName($this->metaSheetName);
         if (null === $metaSheet) {
@@ -64,9 +198,26 @@ class SpreadsheetHelper
     }
 
     /**
+     * get the Sheet containing meta data info like field validation references.
+     *
+     * @throws PhpSpreadsheetException
+     */
+    private function getCodebookSheet(Spreadsheet $spreadsheet): Worksheet
+    {
+        $metaSheet = $spreadsheet->getSheetByName($this->codebookSheetName);
+        if (null === $metaSheet) {
+            $metaSheet = new Worksheet($spreadsheet, $this->codebookSheetName);
+            $spreadsheet->addSheet($metaSheet, 1);
+        }
+        $metaSheet->getProtection()->setSheet(true);
+
+        return $metaSheet;
+    }
+
+    /**
      * returns column e.g. "B". or null.
      */
-    public function getColumnByHeading(Sheet|Worksheet $sheet, string $heading): ?string
+    private function getColumnByHeading(Sheet|Worksheet $sheet, string $heading): ?string
     {
         $row = $sheet->getRowIterator()->current();
         $cellIterator = $row->getCellIterator();
@@ -87,7 +238,7 @@ class SpreadsheetHelper
      * @throws PhpSpreadsheetException
      * @throws Exception
      */
-    public function addFixedListDropdownColumn(Worksheet $worksheet, DropdownConfig $dropdownConfig): void
+    private function addFixedListDropdownColumn(Worksheet $worksheet, DropdownConfig $dropdownConfig): void
     {
         $column = $this->getColumnByHeading($worksheet, $dropdownConfig->getField());
         $highestRow = $worksheet->getHighestDataRow($column);
@@ -118,7 +269,7 @@ class SpreadsheetHelper
      * @throws PhpSpreadsheetException
      * @throws Exception
      */
-    public function addForeignKeyDropdownColumn(Worksheet $sheet, DropdownConfig $dropdownConfig): void
+    private function addForeignKeyDropdownColumn(Worksheet $sheet, DropdownConfig $dropdownConfig): void
     {
         $column = $this->getColumnByHeading($sheet, $dropdownConfig->getField());
         $highestRow = $sheet->getHighestDataRow($column);
@@ -149,7 +300,7 @@ class SpreadsheetHelper
      *
      * @throws PhpSpreadsheetException
      */
-    public function createRefColumnsForField(Spreadsheet $spreadsheet, DropdownConfig $config)
+    private function createRefColumnsForField(Spreadsheet $spreadsheet, DropdownConfig $config)
     {
         $metaDataSheet = $this->getMetaDataSheet($spreadsheet);
         $foreignModelShort = $this->getModelShortname($config->getFkModel());
@@ -184,7 +335,7 @@ class SpreadsheetHelper
      *
      * @throws PhpSpreadsheetException
      */
-    public function createRefColumnsForFixedField(Spreadsheet $spreadsheet, DropdownConfig $config)
+    private function createRefColumnsForFixedField(Spreadsheet $spreadsheet, DropdownConfig $config)
     {
         $metaDataSheet = $this->getMetaDataSheet($spreadsheet);
         $metaFixedValCol = $this->getFirstEmptyColumnName($metaDataSheet);
@@ -220,7 +371,7 @@ class SpreadsheetHelper
      *
      * @throws PhpSpreadsheetException
      */
-    public function getFirstEmptyColumnName(Worksheet $worksheet): string
+    private function getFirstEmptyColumnName(Worksheet $worksheet): string
     {
         $highestCol = $worksheet->getHighestDataColumn();
         $highestColIndex = Coordinate::columnIndexFromString($highestCol);
@@ -254,7 +405,7 @@ class SpreadsheetHelper
      * @throws PhpSpreadsheetException
      * @throws Exception
      */
-    public function addManyToManyColumns(Worksheet $sheet, DropdownConfig $dropdownConfig): void
+    private function addManyToManyColumns(Worksheet $sheet, DropdownConfig $dropdownConfig): void
     {
 //        TODO
 //        $this->addForeignKeyDropdownColumn($sheet);
@@ -387,7 +538,7 @@ class SpreadsheetHelper
      *
      * @throws PhpSpreadsheetException
      */
-    public function resolveIdsForDropdownColumn(Worksheet $worksheet, DropdownConfig $dropdownConfig): void
+    private function resolveIdsForDropdownColumn(Worksheet $worksheet, DropdownConfig $dropdownConfig): void
     {
         $column = $this->getColumnByHeading($worksheet, $dropdownConfig->getField());
         $highestDataRow = $worksheet->getHighestDataRow($column);
@@ -440,7 +591,7 @@ class SpreadsheetHelper
      *
      * @throws PhpSpreadsheetException
      */
-    public function getValuesIndexedArray(Worksheet $worksheet, string $column, int $startRow, int $endRow): array
+    private function getValuesIndexedArray(Worksheet $worksheet, string $column, int $startRow, int $endRow): array
     {
         $arr = [];
         for ($i = $startRow; $i <= $endRow; ++$i) {
@@ -458,7 +609,7 @@ class SpreadsheetHelper
      *
      * @throws PhpSpreadsheetException
      */
-    public function addDropdownField(Worksheet $worksheet, string $worksheetField, string|null $cellValue, string $validationFormula): void
+    private function addDropdownField(Worksheet $worksheet, string $worksheetField, string|null $cellValue, string $validationFormula): void
     {
         $worksheet->setCellValue($worksheetField, $cellValue);
 
@@ -476,8 +627,24 @@ class SpreadsheetHelper
         $objValidation->setFormula1($validationFormula);
     }
 
-    public function getMetaSheetName(): string
+    private function getMetaSheetName(): string
     {
         return $this->metaSheetName;
+    }
+
+    public function cleanDateTime(?string $dateTime): string
+    {
+        if (null === $dateTime) {
+            return Carbon::now()->toDateTimeString();
+        }
+        $dateTime = substr($dateTime, 0, 19);
+
+        if (preg_match('/[0-9]{5}\.[0-9]{9}/', $dateTime)) {
+            return Carbon::createFromDate(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($dateTime));
+        } elseif (10 === strlen($dateTime)) {
+            return Carbon::createFromFormat('d.m.Y', substr($dateTime, 0, 19))->toDateTimeString();
+        }
+
+        return Carbon::createFromFormat('d.m.Y H:i:s', substr($dateTime, 0, 19))->toDateTimeString();
     }
 }

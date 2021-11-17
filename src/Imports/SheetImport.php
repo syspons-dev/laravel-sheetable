@@ -36,27 +36,12 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
         // TODO AJ use a better way to identify datetime colmuns
         foreach ($collection as $row) {
             $rowArr = $row->toArray();
-            $rowArr['created_at'] = $this->cleanDateTime($row['created_at']);
-            $rowArr['updated_at'] = $this->cleanDateTime($row['updated_at']);
-            $rowArr['date_start'] = $this->cleanDateTime($row['date_start']);
-            $rowArr['date_end'] = $this->cleanDateTime($row['date_end']);
+
+            $rowArr['date_start'] = $this->helper->cleanDateTime($row['date_start']);
+            $rowArr['date_end'] = $this->helper->cleanDateTime($row['date_end']);
 
             $this->updateOrCreate($rowArr);
         }
-    }
-
-    private function cleanDateTime(?string $dateTime): string
-    {
-        if (null === $dateTime) {
-            return Carbon::now()->toDateTimeString();
-        }
-        $dateTimeString = substr($dateTime, 0, 19);
-
-        if (10 === strlen($dateTime)) {
-            return Carbon::createFromFormat('d.m.Y', substr($dateTime, 0, 19))->toDateTimeString();
-        }
-
-        return Carbon::createFromFormat('d.m.Y H:i:s', substr($dateTime, 0, 19))->toDateTimeString();
     }
 
     public function registerEvents(): array
@@ -86,10 +71,14 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
         /** @var Model $model */
         $model = $this->modelClass::find($rowArr[$keyName]);
         if ($model) {
+            unset($rowArr['created_at']);
+            $rowArr['updated_at'] = Carbon::now()->toDateTimeString();
             DB::table($model->getTable())
                 ->where($keyName, $rowArr[$keyName])
                 ->update($rowArr);
         } else {
+            $rowArr['created_at'] = Carbon::now()->toDateTimeString();
+            $rowArr['updated_at'] = Carbon::now()->toDateTimeString();
             $this->modelClass::insert($rowArr);
         }
     }

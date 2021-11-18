@@ -25,6 +25,9 @@ class DropdownConfig
      * Many to many mapping table and field information ...
      ********************************************************************************/
 
+    /** @var string|null the n-m-fields should appear next/right of this field */
+    private ?string $mappingRightOfField = null;
+
     /** @var string|null ... */
     private ?string $mappingTable = null;
 
@@ -164,6 +167,18 @@ class DropdownConfig
     public function setFixedList(array $fixedList): self
     {
         $this->fixedList = $fixedList;
+
+        return $this;
+    }
+
+    public function getMappingRightOfField(): ?string
+    {
+        return $this->mappingRightOfField;
+    }
+
+    public function setMappingRightOfField(?string $mappingRightOfField): self
+    {
+        $this->mappingRightOfField = $mappingRightOfField;
 
         return $this;
     }

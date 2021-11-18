@@ -2,6 +2,7 @@
 
 namespace Syspons\Sheetable\Services;
 
+use App\Models\DfMission;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
@@ -39,7 +40,7 @@ class SpreadsheetHelper
                 continue;
             } elseif ($dropdownConfig->getMappingTable()) {
                 $this->createRefColumnsForField($worksheet->getParent(), $dropdownConfig);
-                $this->addManyToManyColumns($worksheet, $dropdownConfig);
+                $this->addManyToManyColumns($worksheet, $dropdownable, $dropdownConfig);
                 continue;
             } elseif (0 < count($dropdownConfig->getFixedList())) {
                 $this->createRefColumnsForFixedField($worksheet->getParent(), $dropdownConfig);
@@ -142,17 +143,14 @@ class SpreadsheetHelper
         for ($column = 'A'; $column != $lastColumn; ++$column) {
             $cell = $worksheet->getCell($column.'1');
             $val = $cell->getValue();
-            $width = 10;
-            if (10 < strlen($val)) {
+            $width = 16;
+            if (16 < strlen($val)) {
                 $width = strlen($val);
             }
             $worksheet->getColumnDimension($column)->setWidth($width, 'pt');
         }
     }
 
-    /**
-     * @param Worksheet $worksheet
-     */
     private function getDateTimeCols(Model $model): array
     {
         $dateTimeCols = [];
@@ -217,7 +215,7 @@ class SpreadsheetHelper
     /**
      * returns column e.g. "B". or null.
      */
-    private function getColumnByHeading(Sheet|Worksheet $sheet, string $heading): ?string
+    private function getColumnByHeading(Worksheet $sheet, string $heading): ?string
     {
         $row = $sheet->getRowIterator()->current();
         $cellIterator = $row->getCellIterator();
@@ -405,33 +403,59 @@ class SpreadsheetHelper
      * @throws PhpSpreadsheetException
      * @throws Exception
      */
-    private function addManyToManyColumns(Worksheet $sheet, DropdownConfig $dropdownConfig): void
+    private function addManyToManyColumns(Worksheet $worksheet, Model $model, DropdownConfig $config): void
     {
-//        TODO
-//        $this->addForeignKeyDropdownColumn($sheet);
+        $rightOfField = $config->getMappingRightOfField();
+        $colCoord = $this->getColumnByHeading($worksheet, $rightOfField);
+        $firstColCoord = $colCoord;
 
-//        $column = $this->getColumnByHeading($sheet, $dropdownConfig->getField());
-//        $highestRow = $sheet->getHighestDataRow($column);
-//        $metaDataSheet = $this->getMetaDataSheet($sheet->getParent());
-//
-//        $foreignModelShort = $this->getModelShortname($dropdownConfig->getFkModel());
-//
-//        $this->createRefColumnsForField($sheet->getParent(), $dropdownConfig);
-//        $refValCol = $this->getColumnByHeading($metaDataSheet,
-//            $foreignModelShort.'.'.$dropdownConfig->getFkTextCol()
-//        );
-//
-//        $highestValRow = $metaDataSheet->getHighestDataRow($refValCol);
-//        $selectOptions = $this->getMetaSheetName().'!$'.$refValCol.'$2:$'.$refValCol.'$'.$highestValRow;
-//
-//        for ($i = 2; $i <= $highestRow + $this->extraDropdownFieldsCount; ++$i) {
-//            $this->addForeignKeyDropdownField(
-//                $sheet,
-//                $i,
-//                $dropdownConfig,
-//                $selectOptions
-//            );
-//        }
+        $allModels = $model::all();
+        $maxColCount = 0;
+
+        // find out $maxColCount
+        foreach ($allModels as $model1) {
+            /** @var Model $fkModel */
+            $fkModel = $config->getFkModel();
+            $fkModelTable = $fkModel::newModelInstance()->getTable();
+            $listOfFkModels = $model1->$fkModelTable;
+
+            if ($listOfFkModels->count() > $maxColCount) {
+                $maxColCount = $listOfFkModels->count();
+            }
+        }
+
+        $additionalFieldName = $config->getField();
+
+        if (!$config->getField()) {
+            $additionalFieldName = strtolower($config->getFkModel());
+        }
+        $additionalFieldName .= '_additional_';
+
+        for ($i = 1; $i <= $maxColCount; ++$i) {
+            $worksheet->insertNewColumnBefore(++$colCoord, 1);
+            $worksheet->setCellValue($colCoord.'1', $additionalFieldName.$i);
+        }
+
+        $row = 1;
+        foreach ($allModels as $model1) {
+            $row++;
+
+            /** @var Model $fkModel */
+            $fkModel = $config->getFkModel();
+            $fkModelTable = $fkModel::newModelInstance()->getTable();
+
+            $listOfFkModels = $model1->$fkModelTable;
+
+            $maxColCount = 0;
+            /** @var Model $fkModel */
+            $colCoord = $firstColCoord;
+
+            foreach ($listOfFkModels as $fkModel) {
+                $textCol = $config->getFkTextCol();
+                $this->log($fkModel->getKey(), ' : ', $fkModel->$textCol);
+                $worksheet->setCellValue(++$colCoord.$row, $fkModel->$textCol);
+            }
+        }
     }
 
     /**

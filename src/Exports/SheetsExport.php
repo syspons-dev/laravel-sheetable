@@ -68,7 +68,6 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
 
                 $this->helper->writeCodeBook($dropdownable, $workSheet);
 
-
                 if (method_exists($this->model, 'getDropdownFields')) {
                     /* @var Dropdownable $dropdownable */
 

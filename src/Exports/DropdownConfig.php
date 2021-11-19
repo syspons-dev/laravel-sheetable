@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class DropdownConfig
 {
-    /** @var string name of the field in the main Table/sheet */
+    /**
+     * @var string name of the field in the main Table/sheet. Without _1,_2 suffix in case of n-m
+     *             e.g. 'sdg_main_id' or 'sdg_additional_id'
+     */
     private string $field;
 
     /** @var string|null DB foreign Model name containing the reference foreign id and text columns */
@@ -25,10 +28,12 @@ class DropdownConfig
      * Many to many mapping table and field information ...
      ********************************************************************************/
 
-    /** @var string|null the n-m-fields should appear next/right of this field */
+    /** @var string|null the n-m-fields should appear next/right of this field; e.g. 'sdg_main_id' */
     private ?string $mappingRightOfField = null;
 
-    /** @var string|null ... */
+    private ?int $mappingMinFields = 0;
+
+    /** @var string|null OPTIONAL, only needed if not a standard hasMany relation */
     private ?string $mappingTable = null;
 
     /** @var string|null ... */
@@ -179,6 +184,18 @@ class DropdownConfig
     public function setMappingRightOfField(?string $mappingRightOfField): self
     {
         $this->mappingRightOfField = $mappingRightOfField;
+
+        return $this;
+    }
+
+    public function getMappingMinFields(): ?int
+    {
+        return $this->mappingMinFields;
+    }
+
+    public function setMappingMinFields(?int $mappingMinFields): self
+    {
+        $this->mappingMinFields = $mappingMinFields;
 
         return $this;
     }

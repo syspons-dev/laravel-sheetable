@@ -6,7 +6,7 @@ namespace Syspons\Sheetable\Imports;
 
 use Illuminate\Database\Eloquent\Model;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
-use Syspons\Sheetable\Services\SpreadsheetHelper;
+use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 
 class SheetsImport implements WithMultipleSheets
 {

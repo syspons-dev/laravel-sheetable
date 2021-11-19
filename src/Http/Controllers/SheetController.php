@@ -9,9 +9,9 @@ use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\Exception;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Syspons\Sheetable\Exports\SheetsExport;
+use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 use Syspons\Sheetable\Imports\SheetsImport;
 use Syspons\Sheetable\Services\SheetableService;
-use Syspons\Sheetable\Services\SpreadsheetHelper;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)

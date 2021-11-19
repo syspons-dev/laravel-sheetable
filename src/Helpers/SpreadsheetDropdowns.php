@@ -201,6 +201,9 @@ class SpreadsheetDropdowns
     }
 
     /**
+     *
+     * TODO clean up / refactor
+     *
      * Adds multiple columns for an n-to-m field - as many columns as relations exist or the defined min amount -
      * and adds / replaces the IDs of all fields - containing values - in a given column
      * with the corresponding describing text field and adds a dropdown to all of these fields
@@ -219,11 +222,13 @@ class SpreadsheetDropdowns
         $allModels = $model::all();
         $additionalColCount = $config->getMappingMinFields();
 
+        $fkModelClass = $config->getFkModel();
+        $fkModelTable = $fkModelClass::newModelInstance()->getTable();
+
         // find out $maxColCount
         foreach ($allModels as $modelRow) {
             /** @var Model $fkModelClass */
-            $fkModelClass = $config->getFkModel();
-            $fkModelTable = $fkModelClass::newModelInstance()->getTable();
+
             $listOfFkModels = $modelRow->$fkModelTable;
 
             if ($listOfFkModels->count() > $additionalColCount) {
@@ -240,7 +245,6 @@ class SpreadsheetDropdowns
 
         for ($i = 1; $i <= $additionalColCount; ++$i) {
             $worksheet->insertNewColumnBefore(++$colCoord);
-
             // headings
             $worksheet->setCellValue($colCoord.'1', $additionalFieldName.$i);
         }
@@ -252,6 +256,7 @@ class SpreadsheetDropdowns
 
             $fkModelTable = $fkModelClass::newModelInstance()->getTable();
 
+            $listOfFkModels = null;
             if ($modelRow) {
                 $listOfFkModels = $modelRow->$fkModelTable;
             }

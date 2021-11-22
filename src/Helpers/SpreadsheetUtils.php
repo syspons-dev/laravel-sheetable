@@ -98,24 +98,24 @@ class SpreadsheetUtils
         $dateTimeColValues = $model::select($dateTimeCols)->get();
         $rowNr = 1;
 
-//        // set width for all date fields
-//        foreach ($dateTimeCols as $dateTimeCol) {
-//            $colCoord = $this->getColumnByHeading($worksheet, $dateTimeCol);
-//            $worksheet->getColumnDimension($colCoord)->setWidth(self::COL_DATE_WIDTH_IN_PT);
-//            $worksheet->getColumnDimension($colCoord)->setAutoSize(false);
-//            $worksheet->getCell($colCoord.'1')->getStyle()->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-//        }
-//
-//        foreach ($dateTimeColValues as $dateTimeColValue) {
-//            ++$rowNr;
-//            foreach ($dateTimeCols as $dateTimeCol) {
-//                $val = $dateTimeColValue[$dateTimeCol];
-//                $colCoord = $this->getColumnByHeading($worksheet, $dateTimeCol);
-//
-//                $worksheet->getStyle($colCoord.$rowNr)->getNumberFormat()->setFormatCode(self::FORMAT_DATE_DATETIME);
-//                $worksheet->setCellValue($colCoord.$rowNr, Date::PHPToExcel($val));
-//            }
-//        }
+        // set width for all date fields
+        foreach ($dateTimeCols as $dateTimeCol) {
+            $colCoord = $this->getColumnByHeading($worksheet, $dateTimeCol);
+            $worksheet->getColumnDimension($colCoord)->setWidth(self::COL_DATE_WIDTH_IN_PT);
+            $worksheet->getColumnDimension($colCoord)->setAutoSize(false);
+            $worksheet->getCell($colCoord.'1')->getStyle()->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        }
+
+        foreach ($dateTimeColValues as $dateTimeColValue) {
+            ++$rowNr;
+            foreach ($dateTimeCols as $dateTimeCol) {
+                $val = $dateTimeColValue[$dateTimeCol];
+                $colCoord = $this->getColumnByHeading($worksheet, $dateTimeCol);
+
+                $worksheet->getStyle($colCoord.$rowNr)->getNumberFormat()->setFormatCode(self::FORMAT_DATE_DATETIME);
+                $worksheet->setCellValue($colCoord.$rowNr, Date::PHPToExcel($val));
+            }
+        }
     }
 
     /**

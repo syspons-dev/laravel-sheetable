@@ -13,7 +13,6 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\BeforeSheet;
 use Syspons\Sheetable\Helpers\SpreadsheetHelper;
-use Syspons\Sheetable\Models\Contracts\Dropdownable;
 use Syspons\Sheetable\Models\Contracts\Sheetable;
 
 class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithEvents, SkipsEmptyRows
@@ -39,13 +38,7 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
         return [
             BeforeSheet::class => function (BeforeSheet $event) {
                 $sheet = $event->sheet;
-                $workSheet = $sheet->getDelegate();
-
-                /** @var Dropdownable $dropdownable */
-                $dropdownable = $this->modelClass::newModelInstance();
-                if (method_exists($this->modelClass, 'getDropdownFields')) {
-                    $this->helper->importDropdownFields($dropdownable, $workSheet);
-                }
+                $this->helper->beforeSheetImport($this->modelClass, $sheet->getDelegate());
             },
         ];
     }

@@ -111,10 +111,20 @@ class SpreadsheetHelper
         return $metaSheet;
     }
 
-    public function importCollection(Collection $collection, Model $model)
+    /**
+     * @throws PhpSpreadsheetException
+     */
+    public function beforeSheetImport(Model|string $modelClass, Worksheet $worksheet)
     {
-        // TODO AJ use a better way to identify datetime columns
+        /** @var Dropdownable $dropdownable */
+        $dropdownable = $modelClass::newModelInstance();
+        if (method_exists($modelClass, 'getDropdownFields')) {
+            $this->dropdowns->importDropdownFields($dropdownable, $worksheet);
+        }
+    }
 
+    public function importCollection(Collection $collection, Model|string $model)
+    {
         foreach ($collection as $row) {
             $rowArr = $row->toArray();
 
@@ -123,7 +133,17 @@ class SpreadsheetHelper
             foreach ($dateTimeCols as $dateTimeCol) {
                 $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($row[$dateTimeCol]);
             }
-            $this->updateOrCreate($rowArr, $model);
+
+            $arr = $this->dropdowns->importManyToManyFields($rowArr, $model);
+            if ($arr && array_key_exists('rowArr', $arr)) {
+                $rowArr = $arr['rowArr'];
+            }
+
+            $storedModel = $this->updateOrCreate($rowArr, $model);
+
+            if ($storedModel && $arr && array_key_exists('attachToFields', $arr)) {
+                $this->dropdowns->attachManyToManyValues($storedModel, $arr['attachToFields']);
+            }
         }
     }
 
@@ -132,7 +152,7 @@ class SpreadsheetHelper
      *
      * @SuppressWarnings(PHPMD.ElseExpression)
      */
-    protected function updateOrCreate(array $rowArr, Model $modelClass)
+    protected function updateOrCreate(array $rowArr, Model|string $modelClass)
     {
         $keyName = app($modelClass)->getKeyName();
         /** @var Model $model */
@@ -143,10 +163,14 @@ class SpreadsheetHelper
             DB::table($model->getTable())
                 ->where($keyName, $rowArr[$keyName])
                 ->update($rowArr);
+
+            return $model;
         } else {
             $rowArr['created_at'] = Carbon::now()->toDateTimeString();
             $rowArr['updated_at'] = Carbon::now()->toDateTimeString();
-            $modelClass::insert($rowArr);
+            $id = $modelClass::insertGetId($rowArr);
+
+            return $modelClass::find($id);
         }
     }
 }

@@ -3,7 +3,9 @@
 namespace Syspons\Sheetable\Helpers;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Sheet;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
@@ -27,6 +29,109 @@ class SpreadsheetDropdowns
     public function __construct(SpreadsheetUtils $utils)
     {
         $this->utils = $utils;
+    }
+
+//    /**
+//     * @param Dropdownable|Model $model
+//     * @return string[]
+//     */
+//    public function getManyToManyFields(Dropdownable|Model $model): array
+//    {
+//        $dropdownFields = $model::getDropdownFields();
+//
+//        $fields = [];
+//        foreach ($dropdownFields as $dropdownConfig) {
+//            if($dropdownConfig->getMappingRightOfField()){
+//                $fields[] = $dropdownConfig->getField();
+//            }
+//        }
+//        return $fields;
+//    }
+
+    /**
+     * @param Dropdownable|Model $model
+     *
+     * @return string[]
+     */
+    public function importManyToManyFields(array $rowArr, Model|string $model): array
+    {
+        if (method_exists($model, 'getDropdownFields')) {
+            $dropdownFields = $model::getDropdownFields();
+
+            $attachToFields = [];
+            foreach ($dropdownFields as $dropdownConfig) {
+                if ($dropdownConfig->getMappingRightOfField()) {
+                    $field = $dropdownConfig->getField();
+
+                    $table = $dropdownConfig->getFkModel()::newModelInstance()->getTable();
+
+                    $attach = [];
+
+                    for ($i = 1; $i < 100; ++$i) {
+                        $key = $field.'_'.$i;
+
+                        if (!array_key_exists($key, $rowArr)) {
+                            break;
+                        }
+                        $value = $rowArr[$key];
+                        unset($rowArr[$key]);
+
+                        $attach[] = $value;
+
+//                    $model->sdgs()->attach();
+                    }
+                    $attachToFields[$table] = $attach;
+                }
+            }
+
+            return ['attachToFields' => $attachToFields, 'rowArr' => $rowArr];
+        }
+
+        return [];
+    }
+
+    /**
+     * @param Model|string $model
+     *
+     * ['FIELD_NAME' => [1,2,3,5], 'FIELD_NAME2' => [2,3,4], ]
+     */
+    public function attachManyToManyValues(Model|string $model, array $attachToFields): void
+    {
+        foreach ($attachToFields as $field => $values) {
+            $this->attachManyToManyValuesForField($model, $field, $values);
+        }
+    }
+
+    public function attachManyToManyValuesForField(Model|string $model, $field, array $values): void
+    {
+        if (method_exists($model, $field)) {
+            foreach ($values as $value) {
+                    // TODO this should work automatically, but eloquent does not use the correct key
+                // $storedModel->$key()->attach($value);
+                // The following code is a workaround
+
+                /** @var BelongsToMany $belongsToMany */
+                $belongsToMany = $model->$field();
+
+                $thisKey = 'id';
+                $foreignPivotKeyName = $belongsToMany->getForeignPivotKeyName();
+
+                if (str_ends_with($foreignPivotKeyName, 'foreign')) {
+                    $thisKey = substr($foreignPivotKeyName, 0, strlen($foreignPivotKeyName) - 8);
+                }
+
+                $relation = DB::table($belongsToMany->getTable())
+                        ->where($belongsToMany->getForeignPivotKeyName(), $model[$thisKey])
+                        ->where($belongsToMany->getRelatedPivotKeyName(), $value)->first();
+
+                if (!$relation) {
+                    DB::table($belongsToMany->getTable())->insert([
+                            [$belongsToMany->getForeignPivotKeyName() => $model[$thisKey],
+                                $belongsToMany->getRelatedPivotKeyName() => $value, ],
+                        ]);
+                }
+            }
+        }
     }
 
     /**
@@ -88,7 +193,8 @@ class SpreadsheetDropdowns
 
             foreach ($descriptions as $description) {
                 ++$row;
-                $id = $description->getKey();
+//                $id = $description->getKey();
+                $id = $description[$config->getFkIdCol()];
                 $value = $description->toArray()[$config->getFkTextCol()];
                 $metaDataSheet->setCellValue($metaIdCol.$row, $id);
                 $metaDataSheet->setCellValue($metaValueCol.$row, $value);
@@ -240,7 +346,9 @@ class SpreadsheetDropdowns
 
             $fkModelTable = $fkModelClass::newModelInstance()->getTable();
 
-            $listOfFkModels = $modelRow?->$fkModelTable;
+            // TODO 2-key-problem
+//            $listOfFkModels = $modelRow?->$fkModelTable;
+            $listOfFkModels = $this->getFkModelsForField($modelRow, $fkModelTable);
 
             /** @var Model $fkModel */
             $colCoord = $firstColCoord;
@@ -261,11 +369,63 @@ class SpreadsheetDropdowns
                 $highestValRow = $metaDataSheet->getHighestDataRow($refValCol);
                 $validationFormula = $this->getMetaSheetName().'!$'.$refValCol.'$2:$'.$refValCol.'$'.$highestValRow;
 
-                $fkText = $fkModel ? $this->getDescValueForId($fkModel->getKey(), $config) : null;
+//                $fkText = $fkModel ? $this->getDescValueForId($fkModel->getKey(), $config) : null;
+                // TODO 2-key-problem
+                $fkText = $fkModel ? $this->getDescValueForId($this->getDomainKey($fkModel), $config) : null;
 
                 $this->addDropdownField($worksheet, ++$colCoord.$row, $fkText, $validationFormula);
             }
         }
+    }
+
+    private function getDomainKey(Model|array|\stdClass $model): string
+    {
+        $keyName = $this->getDomainKeyName($model);
+
+        return $model->$keyName;
+    }
+
+    private function getDomainKeyName(Model|array|\stdClass $model): string
+    {
+        foreach ($model as $key => $value) {
+            if (str_ends_with('_key', $key)) {
+                return $key;
+            }
+        }
+
+        return 'id';
+    }
+
+    private function getFkModelsForField(Model|null $modelRow, string $fkModelTable): Collection|null
+    {
+        if ($modelRow && method_exists($modelRow, $fkModelTable)) {
+            // TODO this should work automatically, but eloquent does not use the correct key
+            // return $modelRow?->$fkModelTable;
+
+            // The following code is a workaround
+
+            /** @var BelongsToMany $belongsToMany */
+            $belongsToMany = $modelRow->$fkModelTable();
+
+            $thisKey = 'id';
+            $foreignPivotKeyName = $belongsToMany->getForeignPivotKeyName();
+
+            if (str_ends_with($foreignPivotKeyName, 'foreign')) {
+                $thisKey = substr($foreignPivotKeyName, 0, strlen($foreignPivotKeyName) - 8);
+            }
+
+            $mappings = DB::table($belongsToMany->getTable())
+                ->where($belongsToMany->getForeignPivotKeyName(), $modelRow[$thisKey])
+                ->get($belongsToMany->getRelatedPivotKeyName());
+
+            $relations = DB::table($fkModelTable)
+                ->whereIn($belongsToMany->getRelatedKeyName(), $mappings->pluck('sdg_id')->toArray())
+                ->get();
+
+            return $relations;
+        }
+
+        return null;
     }
 
     /**
@@ -321,8 +481,21 @@ class SpreadsheetDropdowns
     public function importDropdownFields(Dropdownable $dropdownable, Worksheet $sheet)
     {
         $dropdownFields = $dropdownable::getDropdownFields();
-        foreach ($dropdownFields as $dropdownSettings) {
-            $this->resolveImportIdsForDropdownColumn($sheet, $dropdownSettings);
+        foreach ($dropdownFields as $dropdownConfig) {
+            if ($dropdownConfig->getMappingMinFields()) {
+                // TODO resolve real columns!
+                $manyToManyCols = [
+                    $this->utils->getColumnByHeading($sheet, $dropdownConfig->getField().'_1'),
+                    $this->utils->getColumnByHeading($sheet, $dropdownConfig->getField().'_2'),
+                ];
+
+                foreach ($manyToManyCols as $manyToManyCol) {
+                    $this->resolveImportIdsForDropdownColumn($sheet, $dropdownConfig, $manyToManyCol);
+                }
+                continue;
+            }
+            $colCoord = $this->utils->getColumnByHeading($sheet, $dropdownConfig->getField());
+            $this->resolveImportIdsForDropdownColumn($sheet, $dropdownConfig, $colCoord);
         }
     }
 
@@ -333,15 +506,16 @@ class SpreadsheetDropdowns
      *
      * @throws PhpSpreadsheetException
      */
-    private function resolveImportIdsForDropdownColumn(Worksheet $worksheet, DropdownConfig $dropdownConfig): void
+    private function resolveImportIdsForDropdownColumn(Worksheet $worksheet, DropdownConfig $dropdownConfig, $colCoord): void
     {
-        $column = $this->utils->getColumnByHeading($worksheet, $dropdownConfig->getField());
-        $highestDataRow = $worksheet->getHighestDataRow($column);
-        $highestRow = $worksheet->getHighestRow($column);
+//        $colCoord = $this->utils->getColumnByHeading($worksheet, $dropdownConfig->getField());
+        $highestDataRow = $worksheet->getHighestDataRow($colCoord);
+        $highestRow = $worksheet->getHighestRow($colCoord);
 
         for ($i = 2; $i <= $highestRow; ++$i) {
             // remove DataValidation from all fields
-            $worksheet->getCell($column.$i)->setDataValidation();
+
+            $worksheet->getCell($colCoord.$i)->setDataValidation();
         }
 
         if (0 < count($dropdownConfig->getFixedList())) {
@@ -363,7 +537,7 @@ class SpreadsheetDropdowns
         for ($i = 2; $i <= $highestDataRow; ++$i) {
             // Remove validation from cells
 
-            $cell = $worksheet->getCell($column.$i);
+            $cell = $worksheet->getCell($colCoord.$i);
             $rawValue = $cell->getValue();
 
             if (!array_key_exists($rawValue, $arrValuesToRowNr)) {
@@ -466,7 +640,7 @@ class SpreadsheetDropdowns
         if (null == $id) {
             return $id;
         }
-        $currentModel = $config->getFkModel()::find($id);
+        $currentModel = $config->getFkModel()::where($config->getFkIdCol(), '=', $id)->first();
 
         return $currentModel->toArray()[$config->getFkTextCol()];
     }

@@ -51,7 +51,7 @@ class SpreadsheetUtils
     /**
      * @return string[] names of all datetime columns in given model e.g. ['date_start', 'date_end']
      */
-    public function getDateTimeCols(Model $model): array
+    public function getDateTimeCols(Model|string $model): array
     {
         $dateTimeCols = [];
 

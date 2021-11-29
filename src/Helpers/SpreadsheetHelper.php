@@ -29,7 +29,7 @@ class SpreadsheetHelper
      */
     public function afterSheetExport(Dropdownable|Model $model, Worksheet $worksheet)
     {
-        $this->writeCodeBook($worksheet);
+        $this->writeCodeBook($model, $worksheet);
 
         if (method_exists($model, 'getDropdownFields')) {
             $this->dropdowns->exportDropdownFields($model, $worksheet);
@@ -40,13 +40,14 @@ class SpreadsheetHelper
     /**
      * @throws PhpSpreadsheetException
      */
-    public function writeCodeBook(Worksheet $worksheet)
+    public function writeCodeBook(Model $model,Worksheet $worksheet)
     {
         $codebookSheet = $this->getCodebookSheet($worksheet->getParent());
 
         $lastColumn = $worksheet->getHighestColumn();
         ++$lastColumn;
-        $columnCodebook = 'A';
+        $colCoord = 'A';
+        $colNum = -1;
 
         $codebookSheet->setCellValue('A1', 'Feldname');
         $codebookSheet->getCell('A1')->getStyle()->getFont()->setBold(true);
@@ -54,39 +55,41 @@ class SpreadsheetHelper
         $codebookSheet->setCellValue('A2', 'Typ');
         $codebookSheet->getCell('A2')->getStyle()->getFont()->setBold(true);
 
-        $codebookSheet->setCellValue('A3', 'Beispiel');
+        $codebookSheet->setCellValue('A3', 'Erklärung');
         $codebookSheet->getCell('A3')->getStyle()->getFont()->setBold(true);
+        $codebookSheet->getRowDimension(3)->setRowHeight(80);
 
-        $codebookSheet->setCellValue('A4', 'Erklärung');
+        $codebookSheet->setCellValue('A4', 'Beispiel');
         $codebookSheet->getCell('A4')->getStyle()->getFont()->setBold(true);
+        $codebookSheet->getRowDimension(4)->setRowHeight(40);
 
-        $codebookSheet->getRowDimension(4)->setRowHeight(80);
+        $codeBook = DB::table('code_book')
+            ->where('table_name', $model->getTable())->get();
 
         for ($column = 'A'; $column != $lastColumn; ++$column) {
             // Skip first col
-            ++$columnCodebook;
+            ++$colCoord;
+            ++$colNum;
 
             $cellHeading = $worksheet->getCell($column.'1');
             $cellVal = $worksheet->getCell($column.'2');
-            $codebookSheet->setCellValue($columnCodebook.'1', $cellHeading->getValue());
-            $codebookSheet->getCell($columnCodebook.'1')->getStyle()->getFont()->setBold(true);
+            $codebookSheet->setCellValue($colCoord.'1', $codeBook[$colNum]->field_name);
+            $codebookSheet->getCell($colCoord.'1')->getStyle()->getFont()->setBold(true);
 
-            $codebookSheet->setCellValue($columnCodebook.'2', 'string/int/date');
+            $codebookSheet->setCellValue($colCoord.'2', $codeBook[$colNum]->data_type);
 
             $example = $cellVal->getValue();
             if (!$example) {
                 $example = 'My Example';
             }
 
-            $codebookSheet->setCellValue($columnCodebook.'3', $example);
-            $codebookSheet->setCellValue($columnCodebook.'4',
-                'This the Description<br>'
-                .'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt '
-                .'labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores'
-            );
-            $codebookSheet->getCell($columnCodebook.'4')->getStyle()->getAlignment()->setWrapText(true);
+            $codebookSheet->setCellValue($colCoord.'3', $codeBook[$colNum]->description);
+            $codebookSheet->getCell($colCoord.'3')->getStyle()->getAlignment()->setWrapText(true);
 
-            $width = 30;
+            $codebookSheet->setCellValue($colCoord.'4',$codeBook[$colNum]->example);
+            $codebookSheet->getCell($colCoord.'4')->getStyle()->getAlignment()->setWrapText(true);
+
+            $width = 35;
             if ($width < strlen($cellHeading->getValue())) {
                 $width = strlen($cellHeading->getValue());
             }

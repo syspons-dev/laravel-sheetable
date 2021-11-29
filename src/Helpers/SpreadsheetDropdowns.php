@@ -105,31 +105,28 @@ class SpreadsheetDropdowns
     public function attachManyToManyValuesForField(Model|string $model, $field, array $values): void
     {
         if (method_exists($model, $field)) {
+
+            /** @var BelongsToMany $belongsToMany */
+            $belongsToMany = $model->$field();
+
+            $thisKey = 'id';
+            $foreignPivotKeyName = $belongsToMany->getForeignPivotKeyName();
+
+            if (str_ends_with($foreignPivotKeyName, 'foreign')) {
+                $thisKey = substr($foreignPivotKeyName, 0, strlen($foreignPivotKeyName) - 8);
+            }
+
+            // $storedModel->$key()->attach($value); // TODO should work automatically, but eloquent uses wrong key
+            // The following code is a workaround
+
+            DB::table($belongsToMany->getTable())
+                ->where($belongsToMany->getForeignPivotKeyName(), $model[$thisKey])->delete();
+
             foreach ($values as $value) {
-                    // TODO this should work automatically, but eloquent does not use the correct key
-                // $storedModel->$key()->attach($value);
-                // The following code is a workaround
-
-                /** @var BelongsToMany $belongsToMany */
-                $belongsToMany = $model->$field();
-
-                $thisKey = 'id';
-                $foreignPivotKeyName = $belongsToMany->getForeignPivotKeyName();
-
-                if (str_ends_with($foreignPivotKeyName, 'foreign')) {
-                    $thisKey = substr($foreignPivotKeyName, 0, strlen($foreignPivotKeyName) - 8);
-                }
-
-                $relation = DB::table($belongsToMany->getTable())
-                        ->where($belongsToMany->getForeignPivotKeyName(), $model[$thisKey])
-                        ->where($belongsToMany->getRelatedPivotKeyName(), $value)->first();
-
-                if (!$relation) {
-                    DB::table($belongsToMany->getTable())->insert([
-                            [$belongsToMany->getForeignPivotKeyName() => $model[$thisKey],
-                                $belongsToMany->getRelatedPivotKeyName() => $value, ],
-                        ]);
-                }
+                DB::table($belongsToMany->getTable())->insert([
+                    [$belongsToMany->getForeignPivotKeyName() => $model[$thisKey],
+                        $belongsToMany->getRelatedPivotKeyName() => $value,],
+                ]);
             }
         }
     }

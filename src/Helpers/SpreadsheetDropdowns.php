@@ -123,9 +123,12 @@ class SpreadsheetDropdowns
                 ->where($belongsToMany->getForeignPivotKeyName(), $model[$thisKey])->delete();
 
             foreach ($values as $value) {
+                if(null === $value) {
+                    continue; // this row has no value for additional n-to-m-col
+                }
                 DB::table($belongsToMany->getTable())->insert([
                     [$belongsToMany->getForeignPivotKeyName() => $model[$thisKey],
-                        $belongsToMany->getRelatedPivotKeyName() => $value,],
+                        $belongsToMany->getRelatedPivotKeyName() => $value],
                 ]);
             }
         }
@@ -480,11 +483,12 @@ class SpreadsheetDropdowns
         $dropdownFields = $dropdownable::getDropdownFields();
         foreach ($dropdownFields as $dropdownConfig) {
             if ($dropdownConfig->getMappingMinFields()) {
-                // TODO resolve real columns!
-                $manyToManyCols = [
-                    $this->utils->getColumnByHeading($sheet, $dropdownConfig->getField().'_1'),
-                    $this->utils->getColumnByHeading($sheet, $dropdownConfig->getField().'_2'),
-                ];
+
+                $manyToManyCols = [];
+                $i=1;
+                while($col = $this->utils->getColumnByHeading($sheet, $dropdownConfig->getField().'_'.$i++)){
+                    $manyToManyCols[] = $col;
+                }
 
                 foreach ($manyToManyCols as $manyToManyCol) {
                     $this->resolveImportIdsForDropdownColumn($sheet, $dropdownConfig, $manyToManyCol);

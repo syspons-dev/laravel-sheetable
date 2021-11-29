@@ -14,6 +14,7 @@ use Syspons\Sheetable\Models\Contracts\Dropdownable;
 class SpreadsheetHelper
 {
     private string $codebookSheetName = 'codebook';
+    private string $codebookSheetName2 = 'codebook2';
 
     private SpreadsheetUtils $utils;
     private SpreadsheetDropdowns $dropdowns;
@@ -29,8 +30,8 @@ class SpreadsheetHelper
      */
     public function afterSheetExport(Dropdownable|Model $model, Worksheet $worksheet)
     {
+        $this->writeCodeBook2($model, $worksheet);
         $this->writeCodeBook($model, $worksheet);
-
         if (method_exists($model, 'getDropdownFields')) {
             $this->dropdowns->exportDropdownFields($model, $worksheet);
         }
@@ -78,11 +79,6 @@ class SpreadsheetHelper
 
             $codebookSheet->setCellValue($colCoord.'2', $codeBook[$colNum]->data_type);
 
-            $example = $cellVal->getValue();
-            if (!$example) {
-                $example = 'My Example';
-            }
-
             $codebookSheet->setCellValue($colCoord.'3', $codeBook[$colNum]->description);
             $codebookSheet->getCell($colCoord.'3')->getStyle()->getAlignment()->setWrapText(true);
 
@@ -98,6 +94,55 @@ class SpreadsheetHelper
     }
 
     /**
+     * @throws PhpSpreadsheetException
+     */
+    public function writeCodeBook2(Model $model,Worksheet $worksheet)
+    {
+        $codebookSheet = $this->getCodebookSheet2($worksheet->getParent());
+
+        $lastColumn = $worksheet->getHighestColumn();
+        ++$lastColumn;
+        $rowNum = 1;
+
+
+        $codebookSheet->setCellValue('A1', 'Feldname');
+        $codebookSheet->getCell('A1')->getStyle()->getFont()->setBold(true);
+
+        $codebookSheet->setCellValue('B1', 'Typ');
+        $codebookSheet->getCell('B1')->getStyle()->getFont()->setBold(true);
+
+        $codebookSheet->setCellValue('C1', 'Erklärung');
+        $codebookSheet->getCell('C1')->getStyle()->getFont()->setBold(true);
+
+        $codebookSheet->setCellValue('D1', 'Beispiel');
+        $codebookSheet->getCell('D1')->getStyle()->getFont()->setBold(true);
+
+        $codeBook = DB::table('code_book')
+            ->where('table_name', $model->getTable())->get();
+
+        foreach ($codeBook as $row){
+            ++$rowNum;
+            $codebookSheet->getRowDimension($rowNum)->setRowHeight(40);
+
+            $codebookSheet->setCellValue('A'.$rowNum, $row->field_name);
+            $codebookSheet->getCell('A'.$rowNum)->getStyle()->getFont()->setBold(true);
+            $codebookSheet->getColumnDimension('A')->setWidth(40);
+
+            $codebookSheet->setCellValue('B'.$rowNum, $row->data_type);
+            $codebookSheet->getColumnDimension('B')->setWidth(30);
+
+            $codebookSheet->setCellValue('C'.$rowNum, $row->description);
+            $codebookSheet->getCell('C'.$rowNum)->getStyle()->getAlignment()->setWrapText(true);
+            $codebookSheet->getColumnDimension('C')->setWidth(50);
+
+            $codebookSheet->setCellValue('D'.$rowNum, $row->example);
+            $codebookSheet->getCell('D'.$rowNum)->getStyle()->getAlignment()->setWrapText(true);
+            $codebookSheet->getColumnDimension('D')->setWidth(30);
+
+        }
+    }
+
+    /**
      * get the Sheet containing meta data info like field validation references.
      *
      * @throws PhpSpreadsheetException
@@ -107,6 +152,23 @@ class SpreadsheetHelper
         $metaSheet = $spreadsheet->getSheetByName($this->codebookSheetName);
         if (null === $metaSheet) {
             $metaSheet = new Worksheet($spreadsheet, $this->codebookSheetName);
+            $spreadsheet->addSheet($metaSheet, 1);
+        }
+        $metaSheet->getProtection()->setSheet(true);
+
+        return $metaSheet;
+    }
+
+    /**
+     * get the Sheet containing meta data info like field validation references.
+     *
+     * @throws PhpSpreadsheetException
+     */
+    private function getCodebookSheet2(Spreadsheet $spreadsheet): Worksheet
+    {
+        $metaSheet = $spreadsheet->getSheetByName($this->codebookSheetName2);
+        if (null === $metaSheet) {
+            $metaSheet = new Worksheet($spreadsheet, $this->codebookSheetName2);
             $spreadsheet->addSheet($metaSheet, 1);
         }
         $metaSheet->getProtection()->setSheet(true);

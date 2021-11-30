@@ -41,7 +41,7 @@ class SpreadsheetHelper
     /**
      * @throws PhpSpreadsheetException
      */
-    public function writeCodeBook(Model $model,Worksheet $worksheet)
+    public function writeCodeBook(Model $model, Worksheet $worksheet)
     {
         $codebookSheet = $this->getCodebookSheet($worksheet->getParent());
 
@@ -82,7 +82,7 @@ class SpreadsheetHelper
             $codebookSheet->setCellValue($colCoord.'3', $codeBook[$colNum]->description);
             $codebookSheet->getCell($colCoord.'3')->getStyle()->getAlignment()->setWrapText(true);
 
-            $codebookSheet->setCellValue($colCoord.'4',$codeBook[$colNum]->example);
+            $codebookSheet->setCellValue($colCoord.'4', $codeBook[$colNum]->example);
             $codebookSheet->getCell($colCoord.'4')->getStyle()->getAlignment()->setWrapText(true);
 
             $width = 35;
@@ -96,14 +96,13 @@ class SpreadsheetHelper
     /**
      * @throws PhpSpreadsheetException
      */
-    public function writeCodeBook2(Model $model,Worksheet $worksheet)
+    public function writeCodeBook2(Model $model, Worksheet $worksheet)
     {
         $codebookSheet = $this->getCodebookSheet2($worksheet->getParent());
 
         $lastColumn = $worksheet->getHighestColumn();
         ++$lastColumn;
         $rowNum = 1;
-
 
         $codebookSheet->setCellValue('A1', 'Feldname');
         $codebookSheet->getCell('A1')->getStyle()->getFont()->setBold(true);
@@ -120,7 +119,7 @@ class SpreadsheetHelper
         $codeBook = DB::table('code_book')
             ->where('table_name', $model->getTable())->get();
 
-        foreach ($codeBook as $row){
+        foreach ($codeBook as $row) {
             ++$rowNum;
             $codebookSheet->getRowDimension($rowNum)->setRowHeight(40);
 
@@ -138,7 +137,6 @@ class SpreadsheetHelper
             $codebookSheet->setCellValue('D'.$rowNum, $row->example);
             $codebookSheet->getCell('D'.$rowNum)->getStyle()->getAlignment()->setWrapText(true);
             $codebookSheet->getColumnDimension('D')->setWidth(30);
-
         }
     }
 

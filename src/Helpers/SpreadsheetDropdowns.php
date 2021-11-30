@@ -105,7 +105,6 @@ class SpreadsheetDropdowns
     public function attachManyToManyValuesForField(Model|string $model, $field, array $values): void
     {
         if (method_exists($model, $field)) {
-
             /** @var BelongsToMany $belongsToMany */
             $belongsToMany = $model->$field();
 
@@ -123,12 +122,12 @@ class SpreadsheetDropdowns
                 ->where($belongsToMany->getForeignPivotKeyName(), $model[$thisKey])->delete();
 
             foreach ($values as $value) {
-                if(null === $value) {
+                if (null === $value) {
                     continue; // this row has no value for additional n-to-m-col
                 }
                 DB::table($belongsToMany->getTable())->insert([
                     [$belongsToMany->getForeignPivotKeyName() => $model[$thisKey],
-                        $belongsToMany->getRelatedPivotKeyName() => $value],
+                        $belongsToMany->getRelatedPivotKeyName() => $value, ],
                 ]);
             }
         }
@@ -483,10 +482,9 @@ class SpreadsheetDropdowns
         $dropdownFields = $dropdownable::getDropdownFields();
         foreach ($dropdownFields as $dropdownConfig) {
             if ($dropdownConfig->getMappingMinFields()) {
-
                 $manyToManyCols = [];
-                $i=1;
-                while($col = $this->utils->getColumnByHeading($sheet, $dropdownConfig->getField().'_'.$i++)){
+                $i = 1;
+                while ($col = $this->utils->getColumnByHeading($sheet, $dropdownConfig->getField().'_'.$i++)) {
                     $manyToManyCols[] = $col;
                 }
 

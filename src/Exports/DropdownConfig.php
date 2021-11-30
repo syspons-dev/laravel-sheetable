@@ -109,6 +109,11 @@ class DropdownConfig
         return $this->fkIdCol;
     }
 
+    /**
+     * defaults to 'id'
+     * @param string $fkIdCol
+     * @return $this
+     */
     public function setFkIdCol(string $fkIdCol): self
     {
         $this->fkIdCol = $fkIdCol;

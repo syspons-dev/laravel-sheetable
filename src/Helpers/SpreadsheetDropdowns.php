@@ -107,28 +107,14 @@ class SpreadsheetDropdowns
         if (method_exists($model, $field)) {
             /** @var BelongsToMany $belongsToMany */
             $belongsToMany = $model->$field();
-
-            $thisKey = 'id';
             $foreignPivotKeyName = $belongsToMany->getForeignPivotKeyName();
 
-            if (str_ends_with($foreignPivotKeyName, 'foreign')) {
-                $thisKey = substr($foreignPivotKeyName, 0, strlen($foreignPivotKeyName) - 8);
-            }
-
-            // $storedModel->$key()->attach($value); // TODO should work automatically, but eloquent uses wrong key
-            // The following code is a workaround
-
-            DB::table($belongsToMany->getTable())
-                ->where($belongsToMany->getForeignPivotKeyName(), $model[$thisKey])->delete();
+            DB::table($belongsToMany->getTable())->where($belongsToMany->getForeignPivotKeyName(), $model->getKey())->delete();
 
             foreach ($values as $value) {
-                if (null === $value) {
-                    continue; // this row has no value for additional n-to-m-col
+                if ($value){
+                    $model->$field()->attach($value);
                 }
-                DB::table($belongsToMany->getTable())->insert([
-                    [$belongsToMany->getForeignPivotKeyName() => $model[$thisKey],
-                        $belongsToMany->getRelatedPivotKeyName() => $value, ],
-                ]);
             }
         }
     }
@@ -345,9 +331,9 @@ class SpreadsheetDropdowns
 
             $fkModelTable = $fkModelClass::newModelInstance()->getTable();
 
-            // TODO 2-key-problem
-//            $listOfFkModels = $modelRow?->$fkModelTable;
-            $listOfFkModels = $this->getFkModelsForField($modelRow, $fkModelTable);
+            // 2-key-problem resolved
+            $listOfFkModels = $modelRow?->$fkModelTable;
+//            $listOfFkModels = $this->getFkModelsForField($modelRow, $fkModelTable);
 
             /** @var Model $fkModel */
             $colCoord = $firstColCoord;
@@ -395,37 +381,37 @@ class SpreadsheetDropdowns
         return 'id';
     }
 
-    private function getFkModelsForField(Model|null $modelRow, string $fkModelTable): Collection|null
-    {
-        if ($modelRow && method_exists($modelRow, $fkModelTable)) {
-            // TODO this should work automatically, but eloquent does not use the correct key
-            // return $modelRow?->$fkModelTable;
-
-            // The following code is a workaround
-
-            /** @var BelongsToMany $belongsToMany */
-            $belongsToMany = $modelRow->$fkModelTable();
-
-            $thisKey = 'id';
-            $foreignPivotKeyName = $belongsToMany->getForeignPivotKeyName();
-
-            if (str_ends_with($foreignPivotKeyName, 'foreign')) {
-                $thisKey = substr($foreignPivotKeyName, 0, strlen($foreignPivotKeyName) - 8);
-            }
-
-            $mappings = DB::table($belongsToMany->getTable())
-                ->where($belongsToMany->getForeignPivotKeyName(), $modelRow[$thisKey])
-                ->get($belongsToMany->getRelatedPivotKeyName());
-
-            $relations = DB::table($fkModelTable)
-                ->whereIn($belongsToMany->getRelatedKeyName(), $mappings->pluck('sdg_id')->toArray())
-                ->get();
-
-            return $relations;
-        }
-
-        return null;
-    }
+//    private function getFkModelsForField(Model|null $modelRow, string $fkModelTable): Collection|null
+//    {
+//        if ($modelRow && method_exists($modelRow, $fkModelTable)) {
+//            // TODO this should work automatically, but eloquent does not use the correct key
+//            // return $modelRow?->$fkModelTable;
+//
+//            // The following code is a workaround
+//
+//            /** @var BelongsToMany $belongsToMany */
+//            $belongsToMany = $modelRow->$fkModelTable();
+//
+//            $thisKey = 'id';
+//            $foreignPivotKeyName = $belongsToMany->getForeignPivotKeyName();
+//
+//            if (str_ends_with($foreignPivotKeyName, 'foreign')) {
+//                $thisKey = substr($foreignPivotKeyName, 0, strlen($foreignPivotKeyName) - 8);
+//            }
+//
+//            $mappings = DB::table($belongsToMany->getTable())
+//                ->where($belongsToMany->getForeignPivotKeyName(), $modelRow[$thisKey])
+//                ->get($belongsToMany->getRelatedPivotKeyName());
+//
+//            $relations = DB::table($fkModelTable)
+//                ->whereIn($belongsToMany->getRelatedKeyName(), $mappings->pluck('sdg_id')->toArray())
+//                ->get();
+//
+//            return $relations;
+//        }
+//
+//        return null;
+//    }
 
     /**
      * @param $allModels

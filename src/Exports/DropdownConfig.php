@@ -110,8 +110,8 @@ class DropdownConfig
     }
 
     /**
-     * defaults to 'id'
-     * @param string $fkIdCol
+     * defaults to 'id'.
+     *
      * @return $this
      */
     public function setFkIdCol(string $fkIdCol): self

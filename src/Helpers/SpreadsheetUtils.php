@@ -14,6 +14,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class SpreadsheetUtils
 {
     public const FORMAT_DATE_DATETIME = 'dd.mm.yyyy';
+    public const FORMAT_NUMBER_COMMA_SEPARATED_DE = '#,##0.00'; // ??
     public const COL_WIDTH_IN_PT = 16;
     public const COL_DATE_WIDTH_IN_PT = 16;
 
@@ -94,6 +95,8 @@ class SpreadsheetUtils
         $this->formatAllCols($worksheet);
         $worksheet->getPageSetup()->setFitToWidth(1);
 
+        $this->formatExportCols($model,$worksheet);
+
         $dateTimeCols = $this->getDateTimeCols($model);
         $dateTimeColValues = $model::select($dateTimeCols)->get();
         $rowNr = 1;
@@ -116,6 +119,37 @@ class SpreadsheetUtils
                 $worksheet->setCellValue($colCoord.$rowNr, Date::PHPToExcel($val));
             }
         }
+    }
+
+
+    /**
+     * @return string[] names of all datetime columns in given model e.g. ['date_start', 'date_end']
+     */
+    public function formatExportCols(Model|string $model, Worksheet $worksheet): array
+    {
+        $dateTimeCols = [];
+
+
+        $tableName = $model::newModelInstance()->getTable();
+        foreach (DB::getSchemaBuilder()->getColumnListing($tableName) as $colName) {
+            $colCoord = $this->getColumnByHeading($worksheet, $colName);
+            $type = DB::getSchemaBuilder()->getColumnType($tableName, $colName);
+            if ('datetime' === $type) {
+                $worksheet->getStyle($colCoord.':'.$colCoord)->getNumberFormat()
+                    ->setFormatCode(self::FORMAT_DATE_DATETIME);
+            } else if ('bigint' === $type) {
+                $worksheet->getStyle($colCoord.':'.$colCoord)->getNumberFormat()
+                    ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
+            } else if ('integer' === $type) {
+                $worksheet->getStyle($colCoord.':'.$colCoord)->getNumberFormat()
+                    ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
+            } else if ('float' === $type) {
+                $worksheet->getStyle($colCoord.':'.$colCoord)->getNumberFormat()
+                    ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+            }
+        }
+
+        return $dateTimeCols;
     }
 
     /**

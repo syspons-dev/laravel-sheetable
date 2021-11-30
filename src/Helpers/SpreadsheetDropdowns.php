@@ -112,7 +112,7 @@ class SpreadsheetDropdowns
             DB::table($belongsToMany->getTable())->where($belongsToMany->getForeignPivotKeyName(), $model->getKey())->delete();
 
             foreach ($values as $value) {
-                if ($value){
+                if ($value) {
                     $model->$field()->attach($value);
                 }
             }

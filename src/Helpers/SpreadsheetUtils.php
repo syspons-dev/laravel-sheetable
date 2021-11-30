@@ -95,7 +95,7 @@ class SpreadsheetUtils
         $this->formatAllCols($worksheet);
         $worksheet->getPageSetup()->setFitToWidth(1);
 
-        $this->formatExportCols($model,$worksheet);
+        $this->formatExportCols($model, $worksheet);
 
         $dateTimeCols = $this->getDateTimeCols($model);
         $dateTimeColValues = $model::select($dateTimeCols)->get();
@@ -121,14 +121,12 @@ class SpreadsheetUtils
         }
     }
 
-
     /**
      * @return string[] names of all datetime columns in given model e.g. ['date_start', 'date_end']
      */
     public function formatExportCols(Model|string $model, Worksheet $worksheet): array
     {
         $dateTimeCols = [];
-
 
         $tableName = $model::newModelInstance()->getTable();
         foreach (DB::getSchemaBuilder()->getColumnListing($tableName) as $colName) {
@@ -137,13 +135,13 @@ class SpreadsheetUtils
             if ('datetime' === $type) {
                 $worksheet->getStyle($colCoord.':'.$colCoord)->getNumberFormat()
                     ->setFormatCode(self::FORMAT_DATE_DATETIME);
-            } else if ('bigint' === $type) {
+            } elseif ('bigint' === $type) {
                 $worksheet->getStyle($colCoord.':'.$colCoord)->getNumberFormat()
                     ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
-            } else if ('integer' === $type) {
+            } elseif ('integer' === $type) {
                 $worksheet->getStyle($colCoord.':'.$colCoord)->getNumberFormat()
                     ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
-            } else if ('float' === $type) {
+            } elseif ('float' === $type) {
                 $worksheet->getStyle($colCoord.':'.$colCoord)->getNumberFormat()
                     ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
             }

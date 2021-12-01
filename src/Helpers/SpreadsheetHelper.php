@@ -216,8 +216,19 @@ class SpreadsheetHelper
 
             $dateTimeCols = $this->utils->getDateTimeCols($model);
 
+            foreach ($rowArr as $rowItem => $rowValue) {
+
+                if("" == $rowItem || null === $rowItem){
+                    unset($rowArr[$rowItem]);
+
+                }
+            }
             foreach ($dateTimeCols as $dateTimeCol) {
-                $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($row[$dateTimeCol]);
+                if('created_at' == $dateTimeCol | 'updated_at' == $dateTimeCol){
+                    $rowArr[$dateTimeCol] = Carbon::now()->toDateTimeString();
+                  continue;
+                }
+                $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($rowArr[$dateTimeCol]);
             }
 
             $arr = $this->dropdowns->importManyToManyFields($rowArr, $model);
@@ -244,7 +255,10 @@ class SpreadsheetHelper
         /** @var Model $model */
         $model = $modelClass::find($rowArr[$keyName]);
         if ($model) {
-            unset($rowArr['created_at']);
+//            unset($rowArr['created_at']);
+            if (!$model->created_at) {
+                $rowArr['created_at'] = Carbon::now()->toDateTimeString();
+            }
             $rowArr['updated_at'] = Carbon::now()->toDateTimeString();
             DB::table($model->getTable())
                 ->where($keyName, $rowArr[$keyName])

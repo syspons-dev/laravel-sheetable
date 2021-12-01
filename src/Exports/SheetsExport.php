@@ -8,12 +8,13 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Schema;
 use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 
-class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitle //, WithColumnFormatting, WithMapping
+class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitle, WithStrictNullComparison //, WithColumnFormatting, WithMapping
 {
     use Exportable;
 

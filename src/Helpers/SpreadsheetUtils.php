@@ -207,7 +207,7 @@ class SpreadsheetUtils
         }
         $dateTime = substr($dateTime, 0, 19);
 
-        if (preg_match('/[0-9]{5}\.[0-9]{0,9}?/', $dateTime)) {
+        if (preg_match('/[0-9]{5}\.[0-9]{0,9}?/', $dateTime) || preg_match('/[0-9]{5}/', $dateTime)) {
             return Carbon::createFromDate(Date::excelToDateTimeObject($dateTime));
         } elseif (10 === strlen($dateTime)) {
             return Carbon::createFromFormat('d.m.Y', substr($dateTime, 0, 19))->toDateTimeString();

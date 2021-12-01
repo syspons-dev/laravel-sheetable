@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Nette\UnexpectedValueException;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
@@ -179,11 +180,33 @@ class SpreadsheetHelper
      */
     public function beforeSheetImport(Model|string $modelClass, Worksheet $worksheet)
     {
+        $this->preCheckDcocumentBeforeImport($modelClass, $worksheet);
         /** @var Dropdownable $dropdownable */
         $dropdownable = $modelClass::newModelInstance();
         if (method_exists($modelClass, 'getDropdownFields')) {
             $this->dropdowns->importDropdownFields($dropdownable, $worksheet);
         }
+    }
+
+    private function preCheckDcocumentBeforeImport(Model|string $modelClass, Worksheet $worksheet)
+    {
+
+        $duplicates = $this->getIdDuplicatesInSheet($modelClass, $worksheet);
+        if($duplicates && !empty($duplicates)) {
+            throw new UnexpectedValueException('Following IDs appear more than once in the document: '.implode(",", $duplicates));
+        }
+    }
+
+    private function getIdDuplicatesInSheet(Model|string $modelClass, Worksheet $worksheet)
+    {
+        $colCoord = $this->utils->getColumnByHeading($worksheet, 'id');
+        $highestRow = $worksheet->getHighestDataRow($colCoord);
+        $ids = $worksheet->rangeToArray($colCoord.'2:'.$colCoord.$highestRow);
+        $idValues = [];
+        foreach ($ids as $id) {
+            $idValues[] = $id[0];
+        }
+        return array_unique(array_diff_assoc($idValues, array_unique($idValues)));
     }
 
     public function importCollection(Collection $collection, Model|string $model)

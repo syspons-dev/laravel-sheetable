@@ -14,8 +14,8 @@ use Syspons\Sheetable\Models\Contracts\Dropdownable;
 
 class SpreadsheetHelper
 {
+    private string $codebookSheetNameHorizontal = 'codebook-horizontal';
     private string $codebookSheetName = 'codebook';
-    private string $codebookSheetName2 = 'codebook2';
 
     private SpreadsheetUtils $utils;
     private SpreadsheetDropdowns $dropdowns;
@@ -31,7 +31,6 @@ class SpreadsheetHelper
      */
     public function afterSheetExport(Dropdownable|Model $model, Worksheet $worksheet)
     {
-        $this->writeCodeBook2($model, $worksheet);
         $this->writeCodeBook($model, $worksheet);
         if (method_exists($model, 'getDropdownFields')) {
             $this->dropdowns->exportDropdownFields($model, $worksheet);
@@ -42,7 +41,7 @@ class SpreadsheetHelper
     /**
      * @throws PhpSpreadsheetException
      */
-    public function writeCodeBook(Model $model, Worksheet $worksheet)
+    public function writeCodeBookHorizontal(Model $model, Worksheet $worksheet)
     {
         $codebookSheet = $this->getCodebookSheet($worksheet->getParent());
 
@@ -97,7 +96,7 @@ class SpreadsheetHelper
     /**
      * @throws PhpSpreadsheetException
      */
-    public function writeCodeBook2(Model $model, Worksheet $worksheet)
+    public function writeCodeBook(Model $model, Worksheet $worksheet)
     {
         $codebookSheet = $this->getCodebookSheet2($worksheet->getParent());
 
@@ -148,9 +147,9 @@ class SpreadsheetHelper
      */
     private function getCodebookSheet(Spreadsheet $spreadsheet): Worksheet
     {
-        $metaSheet = $spreadsheet->getSheetByName($this->codebookSheetName);
+        $metaSheet = $spreadsheet->getSheetByName($this->codebookSheetNameHorizontal);
         if (null === $metaSheet) {
-            $metaSheet = new Worksheet($spreadsheet, $this->codebookSheetName);
+            $metaSheet = new Worksheet($spreadsheet, $this->codebookSheetNameHorizontal);
             $spreadsheet->addSheet($metaSheet, 1);
         }
         $metaSheet->getProtection()->setSheet(true);
@@ -165,9 +164,9 @@ class SpreadsheetHelper
      */
     private function getCodebookSheet2(Spreadsheet $spreadsheet): Worksheet
     {
-        $metaSheet = $spreadsheet->getSheetByName($this->codebookSheetName2);
+        $metaSheet = $spreadsheet->getSheetByName($this->codebookSheetName);
         if (null === $metaSheet) {
-            $metaSheet = new Worksheet($spreadsheet, $this->codebookSheetName2);
+            $metaSheet = new Worksheet($spreadsheet, $this->codebookSheetName);
             $spreadsheet->addSheet($metaSheet, 1);
         }
         $metaSheet->getProtection()->setSheet(true);

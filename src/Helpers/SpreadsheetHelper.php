@@ -189,10 +189,9 @@ class SpreadsheetHelper
 
     private function preCheckDcocumentBeforeImport(Model|string $modelClass, Worksheet $worksheet)
     {
-
         $duplicates = $this->getIdDuplicatesInSheet($modelClass, $worksheet);
-        if($duplicates && !empty($duplicates)) {
-            throw new UnexpectedValueException('Following IDs appear more than once in the document: '.implode(",", $duplicates));
+        if ($duplicates && !empty($duplicates)) {
+            throw new UnexpectedValueException('Following IDs appear more than once in the document: '.implode(',', $duplicates));
         }
     }
 
@@ -205,6 +204,7 @@ class SpreadsheetHelper
         foreach ($ids as $id) {
             $idValues[] = $id[0];
         }
+
         return array_unique(array_diff_assoc($idValues, array_unique($idValues)));
     }
 
@@ -216,15 +216,13 @@ class SpreadsheetHelper
             $dateTimeCols = $this->utils->getDateTimeCols($model);
 
             foreach (array_keys($rowArr) as $rowItem) {
-
                 if (!$rowItem || 'created_at' === $rowItem || 'updated_at' === $rowItem) {
                     unset($rowArr[$rowItem]);
-
                 }
             }
             $dateTimeCols = $this->utils->getDateTimeCols($model);
             foreach ($dateTimeCols as $dateTimeCol) {
-                if(array_key_exists($dateTimeCol, $rowArr)){
+                if (array_key_exists($dateTimeCol, $rowArr)) {
                     $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($rowArr[$dateTimeCol]);
                 }
             }
@@ -249,7 +247,6 @@ class SpreadsheetHelper
      */
     protected function updateOrCreate(array $rowArr, Model|string $modelClass)
     {
-
 //        $model = $modelClass::updateOrCreate($rowArr);
         $model = null;
 
@@ -273,6 +270,7 @@ class SpreadsheetHelper
 
             $model = $modelClass::find($id);
         }
+
         return $model;
     }
 }

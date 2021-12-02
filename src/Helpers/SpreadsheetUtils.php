@@ -60,11 +60,12 @@ class SpreadsheetUtils
         foreach (DB::getSchemaBuilder()->getColumnListing($tableName) as $colName) {
             $type = DB::getSchemaBuilder()->getColumnType($tableName, $colName);
 //            if( 'created_at' !== $colName && 'updated_at' !== $colName) {
-                if ('datetime' === $type) {
-                    $dateTimeCols[] = $colName;
-                }
+            if ('datetime' === $type) {
+                $dateTimeCols[] = $colName;
+            }
 //            }
         }
+
         return $dateTimeCols;
     }
 

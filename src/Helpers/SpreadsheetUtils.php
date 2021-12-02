@@ -50,7 +50,7 @@ class SpreadsheetUtils
     }
 
     /**
-     * @return string[] names of all datetime columns in given model e.g. ['date_start', 'date_end']
+     * @return string[] names of all datetime columns without created_at/updated_at in given model e.g. ['date_start', 'date_end']
      */
     public function getDateTimeCols(Model|string $model): array
     {
@@ -59,11 +59,12 @@ class SpreadsheetUtils
         $tableName = $model::newModelInstance()->getTable();
         foreach (DB::getSchemaBuilder()->getColumnListing($tableName) as $colName) {
             $type = DB::getSchemaBuilder()->getColumnType($tableName, $colName);
-            if ('datetime' === $type) {
-                $dateTimeCols[] = $colName;
-            }
+//            if( 'created_at' !== $colName && 'updated_at' !== $colName) {
+                if ('datetime' === $type) {
+                    $dateTimeCols[] = $colName;
+                }
+//            }
         }
-
         return $dateTimeCols;
     }
 

@@ -215,19 +215,18 @@ class SpreadsheetHelper
 
             $dateTimeCols = $this->utils->getDateTimeCols($model);
 
-            foreach ($rowArr as $rowItem => $rowValue) {
+            foreach (array_keys($rowArr) as $rowItem) {
 
-                if("" == $rowItem || null === $rowItem){
+                if (!$rowItem || 'created_at' === $rowItem || 'updated_at' === $rowItem) {
                     unset($rowArr[$rowItem]);
 
                 }
             }
+            $dateTimeCols = $this->utils->getDateTimeCols($model);
             foreach ($dateTimeCols as $dateTimeCol) {
-                if('created_at' == $dateTimeCol | 'updated_at' == $dateTimeCol){
-                    $rowArr[$dateTimeCol] = Carbon::now()->toDateTimeString();
-                  continue;
+                if(array_key_exists($dateTimeCol, $rowArr)){
+                    $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($rowArr[$dateTimeCol]);
                 }
-                $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($rowArr[$dateTimeCol]);
             }
 
             $arr = $this->dropdowns->importManyToManyFields($rowArr, $model);
@@ -250,26 +249,30 @@ class SpreadsheetHelper
      */
     protected function updateOrCreate(array $rowArr, Model|string $modelClass)
     {
+
+//        $model = $modelClass::updateOrCreate($rowArr);
+        $model = null;
+
         $keyName = app($modelClass)->getKeyName();
-        /** @var Model $model */
         $model = $modelClass::find($rowArr[$keyName]);
         if ($model) {
-//            unset($rowArr['created_at']);
             if (!$model->created_at) {
                 $rowArr['created_at'] = Carbon::now()->toDateTimeString();
             }
+            if (!$model->created_by) {
+                $rowArr['created_by'] = auth()->user()->getKey();
+            }
+
             $rowArr['updated_at'] = Carbon::now()->toDateTimeString();
+            $rowArr['updated_by'] = auth()->user()->getKey();
             DB::table($model->getTable())
                 ->where($keyName, $rowArr[$keyName])
                 ->update($rowArr);
-
-            return $model;
         } else {
-            $rowArr['created_at'] = Carbon::now()->toDateTimeString();
-            $rowArr['updated_at'] = Carbon::now()->toDateTimeString();
             $id = $modelClass::insertGetId($rowArr);
 
-            return $modelClass::find($id);
+            $model = $modelClass::find($id);
         }
+        return $model;
     }
 }

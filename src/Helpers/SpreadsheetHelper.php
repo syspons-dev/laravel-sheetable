@@ -247,8 +247,9 @@ class SpreadsheetHelper
      */
     protected function updateOrCreate(array $rowArr, Model|string $modelClass)
     {
-//        $model = $modelClass::updateOrCreate($rowArr);
-        $model = null;
+//        $user = $modelClass::updateOrCreate($rowArr); // TODO geht nicht
+
+//        $id = $modelClass::insertGetId($rowArr); // TODO auch geht nicht
 
         $keyName = app($modelClass)->getKeyName();
         $model = $modelClass::find($rowArr[$keyName]);
@@ -265,12 +266,16 @@ class SpreadsheetHelper
             DB::table($model->getTable())
                 ->where($keyName, $rowArr[$keyName])
                 ->update($rowArr);
+
+            return $model;
         } else {
+            $rowArr['created_at'] = Carbon::now()->toDateTimeString();
+            $rowArr['updated_at'] = Carbon::now()->toDateTimeString();
+            $rowArr['created_by'] = auth()->user()->getKey();
+            $rowArr['updated_by'] = auth()->user()->getKey();
             $id = $modelClass::insertGetId($rowArr);
 
-            $model = $modelClass::find($id);
+            return $modelClass::find($id);
         }
-
-        return $model;
     }
 }

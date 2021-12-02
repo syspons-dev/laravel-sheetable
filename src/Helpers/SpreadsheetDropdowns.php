@@ -620,7 +620,7 @@ class SpreadsheetDropdowns
      *
      * @return string|null e.g. 'John'
      */
-    private function getDescValueForId(?int $id, DropdownConfig $config): ?string
+    private function getDescValueForId(int|string|null $id, DropdownConfig $config): ?string
     {
         if (null == $id) {
             return $id;

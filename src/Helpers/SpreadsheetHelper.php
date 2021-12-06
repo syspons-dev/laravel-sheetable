@@ -189,10 +189,9 @@ class SpreadsheetHelper
 
     private function preCheckDcocumentBeforeImport(Model|string $modelClass, Worksheet $worksheet)
     {
-
         $duplicates = $this->getIdDuplicatesInSheet($modelClass, $worksheet);
-        if($duplicates && !empty($duplicates)) {
-            throw new UnexpectedValueException('Following IDs appear more than once in the document: '.implode(",", $duplicates));
+        if ($duplicates && !empty($duplicates)) {
+            throw new UnexpectedValueException('Following IDs appear more than once in the document: '.implode(',', $duplicates));
         }
     }
 
@@ -217,12 +216,10 @@ class SpreadsheetHelper
             $dateTimeCols = $this->utils->getDateTimeCols($model);
 
             foreach (array_keys($rowArr) as $rowItem) {
-
-                if(
+                if (
                     !$rowItem ||
                     'created_at' === $rowItem ||
-                    'updated_at' === $rowItem)
-                {
+                    'updated_at' === $rowItem) {
                     unset($rowArr[$rowItem]);
                 }
             }
@@ -251,7 +248,6 @@ class SpreadsheetHelper
      */
     protected function updateOrCreate(array $rowArr, Model|string $modelClass)
     {
-
 //        $model = $modelClass::updateOrCreate($rowArr);
         $model = null;
 
@@ -281,6 +277,7 @@ class SpreadsheetHelper
 
             $model = $modelClass::find($id);
         }
+
         return $model;
     }
 }

@@ -354,9 +354,7 @@ class SpreadsheetDropdowns
                 $highestValRow = $metaDataSheet->getHighestDataRow($refValCol);
                 $validationFormula = $this->getMetaSheetName().'!$'.$refValCol.'$2:$'.$refValCol.'$'.$highestValRow;
 
-//                $fkText = $fkModel ? $this->getDescValueForId($fkModel->getKey(), $config) : null;
-                // TODO 2-key-problem
-                $fkText = $fkModel ? $this->getDescValueForId($this->getDomainKey($fkModel), $config) : null;
+                $fkText = $fkModel ? $this->getDescValueForId($fkModel->getKey(), $config) : null;
 
                 $this->addDropdownField($worksheet, ++$colCoord.$row, $fkText, $validationFormula);
             }

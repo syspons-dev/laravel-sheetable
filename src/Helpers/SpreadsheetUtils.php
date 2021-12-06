@@ -204,18 +204,22 @@ class SpreadsheetUtils
      */
     public function cleanImportDateTime(?string $dateTime): string
     {
-        if (null === $dateTime) {
-            return Carbon::now()->toDateTimeString();
-        }
-        $dateTime = substr($dateTime, 0, 19);
+        try {
+            if (null === $dateTime) {
+                return Carbon::now()->toDateTimeString();
+            }
+            $dateTime = substr($dateTime, 0, 19);
 
-        if (preg_match('/[0-9]{5}\.[0-9]{0,9}?/', $dateTime) || preg_match('/[0-9]{5}/', $dateTime)) {
-            return Carbon::createFromDate(Date::excelToDateTimeObject($dateTime));
-        } elseif (10 === strlen($dateTime)) {
-            return Carbon::createFromFormat('d.m.Y', substr($dateTime, 0, 19))->toDateTimeString();
-        }
+            if (preg_match('/[0-9]{5}\.[0-9]{0,9}?/', $dateTime) || preg_match('/[0-9]{5}/', $dateTime)) {
+                return Carbon::createFromDate(Date::excelToDateTimeObject($dateTime));
+            } elseif (10 === strlen($dateTime)) {
+                return Carbon::createFromFormat('d.m.Y', $dateTime)->toDateTimeString();
+            }
 
-        return Carbon::createFromFormat('d.m.Y H:i:s', substr($dateTime, 0, 19))->toDateTimeString();
+            return Carbon::createFromFormat('d.m.Y H:i:s', $dateTime)->toDateTimeString();
+        } catch (\Exception $e) {
+            throw new \Exception($dateTime.' is not a valid date. '.$e);
+        }
     }
 
     /**

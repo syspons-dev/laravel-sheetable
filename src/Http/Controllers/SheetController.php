@@ -49,8 +49,7 @@ class SheetController
         Excel::import($import, $filePath);
 
         // return redirect(env('APP_URL').'/api/'.$this->getTableName())->with('success', 'Spreadsheet imported.');
-        // TODO return a JSON with more info or redirect to list of entities?
-        return ['message' => 'ok'];
+        return $this->getAllModels()->toArray();
     }
 
     public function getModel(): Model|string

@@ -189,9 +189,10 @@ class SpreadsheetHelper
 
     private function preCheckDcocumentBeforeImport(Model|string $modelClass, Worksheet $worksheet)
     {
+
         $duplicates = $this->getIdDuplicatesInSheet($modelClass, $worksheet);
-        if ($duplicates && !empty($duplicates)) {
-            throw new UnexpectedValueException('Following IDs appear more than once in the document: '.implode(',', $duplicates));
+        if($duplicates && !empty($duplicates)) {
+            throw new UnexpectedValueException('Following IDs appear more than once in the document: '.implode(",", $duplicates));
         }
     }
 
@@ -216,15 +217,18 @@ class SpreadsheetHelper
             $dateTimeCols = $this->utils->getDateTimeCols($model);
 
             foreach (array_keys($rowArr) as $rowItem) {
-                if (!$rowItem || 'created_at' === $rowItem || 'updated_at' === $rowItem) {
+
+                if(
+                    !$rowItem ||
+                    'created_at' === $rowItem ||
+                    'updated_at' === $rowItem)
+                {
                     unset($rowArr[$rowItem]);
                 }
             }
             $dateTimeCols = $this->utils->getDateTimeCols($model);
             foreach ($dateTimeCols as $dateTimeCol) {
-                if (array_key_exists($dateTimeCol, $rowArr)) {
-                    $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($rowArr[$dateTimeCol]);
-                }
+                $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($rowArr[$dateTimeCol]);
             }
 
             $arr = $this->dropdowns->importManyToManyFields($rowArr, $model);
@@ -247,9 +251,9 @@ class SpreadsheetHelper
      */
     protected function updateOrCreate(array $rowArr, Model|string $modelClass)
     {
-//        $user = $modelClass::updateOrCreate($rowArr); // TODO geht nicht
 
-//        $id = $modelClass::insertGetId($rowArr); // TODO auch geht nicht
+//        $model = $modelClass::updateOrCreate($rowArr);
+        $model = null;
 
         $keyName = app($modelClass)->getKeyName();
         $model = $modelClass::find($rowArr[$keyName]);
@@ -267,15 +271,16 @@ class SpreadsheetHelper
                 ->where($keyName, $rowArr[$keyName])
                 ->update($rowArr);
 
-            return $model;
+//            return $model;
         } else {
-            $rowArr['created_at'] = Carbon::now()->toDateTimeString();
-            $rowArr['updated_at'] = Carbon::now()->toDateTimeString();
-            $rowArr['created_by'] = auth()->user()->getKey();
-            $rowArr['updated_by'] = auth()->user()->getKey();
+//            $rowArr['created_at'] = Carbon::now()->toDateTimeString();
+//            $rowArr['updated_at'] = Carbon::now()->toDateTimeString();
+//            $rowArr['created_by'] = auth()->user()->getKey();
+//            $rowArr['updated_by'] = auth()->user()->getKey();
             $id = $modelClass::insertGetId($rowArr);
 
-            return $modelClass::find($id);
+            $model = $modelClass::find($id);
         }
+        return $model;
     }
 }

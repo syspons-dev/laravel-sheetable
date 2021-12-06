@@ -20,6 +20,8 @@ return [
     |
     | Defines one or multiple model namespaces.
     |
+    | e.g. 'namespace' => 'App\Models\Sheetable',
+    |
     */
 
     'namespace' => 'App\Models',

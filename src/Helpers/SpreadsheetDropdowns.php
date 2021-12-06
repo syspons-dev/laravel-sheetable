@@ -428,7 +428,7 @@ class SpreadsheetDropdowns
         /** @var Dropdownable $modelRow */
         foreach ($allModels as $modelRow) {
             $listOfFkModels = $modelRow->$fkModelTableName;
-            if ($listOfFkModels && $listOfFkModels->count() > $additionalColCount) {
+            if ($listOfFkModels->count() > $additionalColCount) {
                 $additionalColCount = $listOfFkModels->count();
             }
         }

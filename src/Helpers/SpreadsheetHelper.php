@@ -269,10 +269,10 @@ class SpreadsheetHelper
 
 //            return $model;
         } else {
-//            $rowArr['created_at'] = Carbon::now()->toDateTimeString();
-//            $rowArr['updated_at'] = Carbon::now()->toDateTimeString();
-//            $rowArr['created_by'] = auth()->user()->getKey();
-//            $rowArr['updated_by'] = auth()->user()->getKey();
+            $rowArr['created_at'] = Carbon::now()->toDateTimeString();
+            $rowArr['updated_at'] = Carbon::now()->toDateTimeString();
+            $rowArr['created_by'] = auth()->user()->getKey();
+            $rowArr['updated_by'] = auth()->user()->getKey();
             $id = $modelClass::insertGetId($rowArr);
 
             $model = $modelClass::find($id);

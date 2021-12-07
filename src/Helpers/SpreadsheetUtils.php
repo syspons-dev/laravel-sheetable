@@ -100,7 +100,7 @@ class SpreadsheetUtils
         $this->formatExportCols($model, $worksheet);
 
         $dateTimeCols = $this->getDateTimeCols($model);
-        $dateTimeColValues = 0 === count($dateTimeCols) ? []:  $model::select($dateTimeCols)->get();
+        $dateTimeColValues = 0 === count($dateTimeCols) ? [] : $model::select($dateTimeCols)->get();
         $rowNr = 1;
 
         // set width for all date fields

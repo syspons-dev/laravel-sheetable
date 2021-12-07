@@ -60,7 +60,7 @@ class SheetController
 //        try {
             Excel::import($import, $filePath);
 //        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-//            return $e;
+//            do stuff with $e;
 //        }
 
         // return redirect(env('APP_URL').'/api/'.$this->getTableName())->with('success', 'Spreadsheet imported.');

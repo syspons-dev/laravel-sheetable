@@ -16,7 +16,7 @@ use Syspons\Sheetable\Models\Contracts\Dropdownable;
 
 class SpreadsheetDropdowns
 {
-    public const ADD_DROPDOWN_FIELDS_NUM = 100;
+    public const ADD_DROPDOWN_FIELDS_NUM = 200;
 
     private SpreadsheetUtils $utils;
     private string $metaSheetName = 'metadata';

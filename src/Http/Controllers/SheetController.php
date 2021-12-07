@@ -39,6 +39,17 @@ class SheetController
     }
 
     /**
+     * @throws Exception
+     */
+    public function template(): BinaryFileResponse
+    {
+        return Excel::download(
+            new SheetsExport($this->getAllModels(), $this->getModel(), $this->spreadsheetHelper, true),
+            $this->getTableName().'.'.$this->sheetableService->getExportExtension()
+        );
+    }
+
+    /**
      * Import TABLENAME.xlsx via upload.
      */
     public function import(Request $request): array

@@ -22,16 +22,19 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
     private Collection $models;
     private string $tableName;
     private SpreadsheetHelper $helper;
+    private bool $isTemplate=false;
 
     public function __construct(
         Collection $models,
         Model|string $model,
-        SpreadsheetHelper $helper
+        SpreadsheetHelper $helper,
+        bool $isTemplate=false
     ) {
         $this->models = $models;
         $this->model = $model;
         $this->tableName = $model::newModelInstance()->getTable();
         $this->helper = $helper;
+        $this->isTemplate = $isTemplate;
     }
 
     public function title(): string
@@ -65,6 +68,10 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
                 $dropdownable = $this->model::newModelInstance();
 
                 $this->helper->afterSheetExport($dropdownable, $workSheet);
+
+                if ($this->isTemplate) {
+                    $this->helper->clearValues($workSheet);
+                }
             },
         ];
     }

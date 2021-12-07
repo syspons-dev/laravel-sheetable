@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Nette\UnexpectedValueException;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
@@ -36,6 +37,22 @@ class SpreadsheetHelper
             $this->dropdowns->exportDropdownFields($model, $worksheet);
         }
         $this->utils->formatSpecialFields($model, $worksheet);
+    }
+
+    /**
+     * @throws PhpSpreadsheetException
+     */
+    public function clearValues(Worksheet $worksheet)
+    {
+        $colCoord = $worksheet->getHighestDataColumn();
+        $colNumMax = Coordinate::columnIndexFromString($colCoord);
+        $rowNumMax = $worksheet->getHighestDataRow();
+
+        for ($col = 1; $col <= $colNumMax; $col++) {
+            for ($row = 2; $row <= $rowNumMax; $row++) {
+                $worksheet->getCellByColumnAndRow($col, $row)->setValue(null);
+            }
+        }
     }
 
     /**

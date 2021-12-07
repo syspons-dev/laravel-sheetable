@@ -51,8 +51,7 @@ class SheetableServiceProvider extends ServiceProvider
                 Route::get(
                     '/template/'.$tableName,
                     [SheetController::class, 'template']
-                )->name('export.'.$tableName);
-
+                )->name('template.'.$tableName);
                 Route::post(
                     '/import/'.$tableName,
                     [SheetController::class, 'import']

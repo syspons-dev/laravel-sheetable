@@ -29,6 +29,5 @@ class ExcelImportValidationException extends Exception
     public function render(/* Request $request */): JsonResponse
     {
         return response()->json(['errors' => $this->validationException->errors()], 422);
-
     }
 }

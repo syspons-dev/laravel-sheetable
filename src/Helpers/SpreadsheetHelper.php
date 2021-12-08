@@ -60,7 +60,7 @@ class SpreadsheetHelper
      */
     public function writeCodeBookHorizontal(Model $model, Worksheet $worksheet)
     {
-        $codebookSheet = $this->getCodebookSheet($worksheet->getParent());
+        $codebookSheet = $this->getCodebookSheetHorizontal($worksheet->getParent());
 
         $lastColumn = $worksheet->getHighestColumn();
         ++$lastColumn;
@@ -115,7 +115,7 @@ class SpreadsheetHelper
      */
     public function writeCodeBook(Model $model, Worksheet $worksheet)
     {
-        $codebookSheet = $this->getCodebookSheet2($worksheet->getParent());
+        $codebookSheet = $this->getCodebookSheet($worksheet->getParent());
 
         $lastColumn = $worksheet->getHighestColumn();
         ++$lastColumn;
@@ -154,6 +154,20 @@ class SpreadsheetHelper
             $codebookSheet->setCellValue('D'.$rowNum, $row->example);
             $codebookSheet->getCell('D'.$rowNum)->getStyle()->getAlignment()->setWrapText(true);
             $codebookSheet->getColumnDimension('D')->setWidth(30);
+
+            $type = strtolower($row->data_type);
+            $type = trim($type);
+
+            if (str_starts_with($type, 'date')) {
+                $codebookSheet->getStyle('D' . $rowNum)->getNumberFormat()
+                    ->setFormatCode(SpreadsheetUtils::FORMAT_DATE_DATETIME);
+            } elseif ('bigint' === $type || 'integer' === $type || 'int' === $type) {
+                $codebookSheet->getStyle('D' . $rowNum)->getNumberFormat()
+                    ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
+            } elseif ('decimal' === $type || 'float' === $type || 'double' === $type) {
+                $codebookSheet->getStyle('D' . $rowNum)->getNumberFormat()
+                    ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+            }
         }
     }
 
@@ -162,7 +176,7 @@ class SpreadsheetHelper
      *
      * @throws PhpSpreadsheetException
      */
-    private function getCodebookSheet(Spreadsheet $spreadsheet): Worksheet
+    private function getCodebookSheetHorizontal(Spreadsheet $spreadsheet): Worksheet
     {
         $metaSheet = $spreadsheet->getSheetByName($this->codebookSheetNameHorizontal);
         if (null === $metaSheet) {
@@ -179,7 +193,7 @@ class SpreadsheetHelper
      *
      * @throws PhpSpreadsheetException
      */
-    private function getCodebookSheet2(Spreadsheet $spreadsheet): Worksheet
+    private function getCodebookSheet(Spreadsheet $spreadsheet): Worksheet
     {
         $metaSheet = $spreadsheet->getSheetByName($this->codebookSheetName);
         if (null === $metaSheet) {

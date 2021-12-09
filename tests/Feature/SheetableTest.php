@@ -13,12 +13,12 @@ use Syspons\Sheetable\Tests\User;
  */
 class SheetableTest extends TestCase
 {
-
     public function test_user_routes_exist(): void
     {
         $expectedRoutes = [
-            'import.users',
-            'export.users'
+            'users.import',
+            'users.export',
+            'users.template',
         ];
         $registeredRoutes = array_keys(Route::getRoutes()->getRoutesByName());
         foreach ($expectedRoutes as $route) {
@@ -79,5 +79,4 @@ class SheetableTest extends TestCase
 //            ]
 //        ));
 //    }
-
 }

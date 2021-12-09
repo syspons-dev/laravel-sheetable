@@ -48,8 +48,8 @@ class SpreadsheetHelper
         $colNumMax = Coordinate::columnIndexFromString($colCoord);
         $rowNumMax = $worksheet->getHighestDataRow();
 
-        for ($col = 1; $col <= $colNumMax; $col++) {
-            for ($row = 2; $row <= $rowNumMax; $row++) {
+        for ($col = 1; $col <= $colNumMax; ++$col) {
+            for ($row = 2; $row <= $rowNumMax; ++$row) {
                 $worksheet->getCellByColumnAndRow($col, $row)->setValue(null);
             }
         }
@@ -159,13 +159,13 @@ class SpreadsheetHelper
             $type = trim($type);
 
             if (str_starts_with($type, 'date')) {
-                $codebookSheet->getStyle('D' . $rowNum)->getNumberFormat()
+                $codebookSheet->getStyle('D'.$rowNum)->getNumberFormat()
                     ->setFormatCode(SpreadsheetUtils::FORMAT_DATE_DATETIME);
             } elseif ('bigint' === $type || 'integer' === $type || 'int' === $type) {
-                $codebookSheet->getStyle('D' . $rowNum)->getNumberFormat()
+                $codebookSheet->getStyle('D'.$rowNum)->getNumberFormat()
                     ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
             } elseif ('decimal' === $type || 'float' === $type || 'double' === $type) {
-                $codebookSheet->getStyle('D' . $rowNum)->getNumberFormat()
+                $codebookSheet->getStyle('D'.$rowNum)->getNumberFormat()
                     ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
             }
         }
@@ -244,8 +244,6 @@ class SpreadsheetHelper
         foreach ($collection as $row) {
             $rowArr = $row->toArray();
 
-            $dateTimeCols = $this->utils->getDateTimeCols($model);
-
             foreach (array_keys($rowArr) as $rowItem) {
                 if (
                     !$rowItem ||
@@ -256,7 +254,9 @@ class SpreadsheetHelper
             }
             $dateTimeCols = $this->utils->getDateTimeCols($model);
             foreach ($dateTimeCols as $dateTimeCol) {
-                $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($rowArr[$dateTimeCol]);
+                if ($rowArr[$dateTimeCol]) {
+                    $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($rowArr[$dateTimeCol]);
+                }
             }
 
             $arr = $this->dropdowns->importManyToManyFields($rowArr, $model);

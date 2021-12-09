@@ -53,6 +53,7 @@ class SheetController
 
     /**
      * Import TABLENAME.xlsx via upload.
+     *
      * @throws ExcelImportValidationException
      */
     public function import(Request $request): array
@@ -65,6 +66,7 @@ class SheetController
         } catch (ValidationException $e) {
             throw new ExcelImportValidationException($e);
         }
+
         return $this->getAllModels()->toArray();
     }
 

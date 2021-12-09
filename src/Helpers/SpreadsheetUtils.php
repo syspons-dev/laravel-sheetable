@@ -52,14 +52,14 @@ class SpreadsheetUtils
     /**
      * @return string[] names of all datetime columns without created_at/updated_at in given model e.g. ['date_start', 'date_end']
      */
-    public function getDateTimeCols(Model|string $model): array
+    public function getDateTimeCols(Model|string $model, bool $inclCreateUpd = false): array
     {
         $dateTimeCols = [];
 
         $tableName = $model::newModelInstance()->getTable();
         foreach (DB::getSchemaBuilder()->getColumnListing($tableName) as $colName) {
             $type = DB::getSchemaBuilder()->getColumnType($tableName, $colName);
-            if ('created_at' !== $colName && 'updated_at' !== $colName) {
+            if ($inclCreateUpd || ('created_at' !== $colName && 'updated_at' !== $colName)) {
                 if ('datetime' === $type) {
                     $dateTimeCols[] = $colName;
                 }
@@ -76,7 +76,7 @@ class SpreadsheetUtils
      */
     public function formatAllCols(Worksheet $worksheet)
     {
-        $lastColumn = $worksheet->getHighestColumn();
+        $lastColumn = $worksheet->getHighestDataColumn();
         ++$lastColumn;
         for ($column = 'A'; $column != $lastColumn; ++$column) {
             $cell = $worksheet->getCell($column.'1');
@@ -84,6 +84,9 @@ class SpreadsheetUtils
             $width = self::COL_WIDTH_IN_PT;
             if (self::COL_WIDTH_IN_PT < strlen($val)) {
                 $width = strlen($val);
+            }
+            if(!$val) {
+                $worksheet->removeColumn($column);
             }
             $worksheet->getColumnDimension($column)->setWidth($width);
         }
@@ -99,7 +102,7 @@ class SpreadsheetUtils
 
         $this->formatExportCols($model, $worksheet);
 
-        $dateTimeCols = $this->getDateTimeCols($model);
+        $dateTimeCols = $this->getDateTimeCols($model, true);
         $dateTimeColValues = 0 === count($dateTimeCols) ? [] : $model::select($dateTimeCols)->get();
         $rowNr = 1;
 
@@ -118,7 +121,9 @@ class SpreadsheetUtils
                 $colCoord = $this->getColumnByHeading($worksheet, $dateTimeCol);
 
                 $worksheet->getStyle($colCoord.$rowNr)->getNumberFormat()->setFormatCode(self::FORMAT_DATE_DATETIME);
-                $worksheet->setCellValue($colCoord.$rowNr, Date::PHPToExcel($val));
+                if ($val) {
+                    $worksheet->setCellValue($colCoord.$rowNr, Date::PHPToExcel($val));
+                }
             }
         }
     }
@@ -205,11 +210,7 @@ class SpreadsheetUtils
     public function cleanImportDateTime(?string $dateTime): string
     {
         try {
-            if (null === $dateTime) {
-                return Carbon::now()->toDateTimeString();
-            }
             $dateTime = substr($dateTime, 0, 19);
-
             if (preg_match('/[0-9]{5}\.[0-9]{0,9}?/', $dateTime) || preg_match('/[0-9]{5}/', $dateTime)) {
                 return Carbon::createFromDate(Date::excelToDateTimeObject($dateTime));
             } elseif (10 === strlen($dateTime)) {

@@ -3,7 +3,6 @@
 namespace Syspons\Sheetable\Exceptions;
 
 use Exception;
-use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\JsonResponse;
 use Maatwebsite\Excel\Validators\ValidationException;
 

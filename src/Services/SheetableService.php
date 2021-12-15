@@ -5,8 +5,11 @@ namespace Syspons\Sheetable\Services;
 use Exception;
 use HaydenPierce\ClassFinder\ClassFinder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Syspons\Sheetable\Models\Contracts\Sheetable;
+
+const CACHE_KEY = 'SheetableService-Cache-Key';
 
 class SheetableService
 {
@@ -42,16 +45,18 @@ class SheetableService
      */
     private function initSheetableClasses(): void
     {
-        $sheetables = [];
-        $namespaces = config('sheetable.namespace');
-        foreach (is_array($namespaces) ? $namespaces : [$namespaces] as $namespace) {
-            foreach (ClassFinder::getClassesInNamespace($namespace) as $class) {
-                if (in_array(Sheetable::class, class_implements($class), true)) {
-                    array_push($sheetables, $class);
+        $this->sheetables = Cache::sear(CACHE_KEY, function () {
+            $sheetables = [];
+            $namespaces = config('sheetable.namespace');
+            foreach (is_array($namespaces) ? $namespaces : [$namespaces] as $namespace) {
+                foreach (ClassFinder::getClassesInNamespace($namespace, ClassFinder::RECURSIVE_MODE) as $class) {
+                    if (in_array(Sheetable::class, class_implements($class), true)) {
+                        array_push($sheetables, $class);
+                    }
                 }
             }
-        }
-        $this->sheetables = $sheetables;
+            return $sheetables;
+        });
     }
 
     /**

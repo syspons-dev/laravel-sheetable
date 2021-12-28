@@ -283,7 +283,8 @@ class SpreadsheetHelper
         $model = null;
 
         $keyName = app($modelClass)->getKeyName();
-        $model = $modelClass::find($rowArr[$keyName]);
+        $keyVal = $rowArr[$keyName];
+        $model = $modelClass::find($keyVal);
         if ($model) {
             if (!$model->created_at) {
                 $rowArr['created_at'] = Carbon::now()->toDateTimeString();
@@ -297,16 +298,13 @@ class SpreadsheetHelper
             DB::table($model->getTable())
                 ->where($keyName, $rowArr[$keyName])
                 ->update($rowArr);
-
-//            return $model;
         } else {
             $rowArr['created_at'] = Carbon::now()->toDateTimeString();
             $rowArr['updated_at'] = Carbon::now()->toDateTimeString();
             $rowArr['created_by'] = auth()->user()->getKey();
             $rowArr['updated_by'] = auth()->user()->getKey();
-            $id = $modelClass::insertGetId($rowArr);
-
-            $model = $modelClass::find($id);
+            DB::table($modelClass::newModelInstance()->getTable())->insert($rowArr);
+            $model = $modelClass::find($keyVal);
         }
 
         return $model;

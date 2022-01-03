@@ -277,7 +277,7 @@ class SpreadsheetHelper
      *
      * @SuppressWarnings(PHPMD.ElseExpression)
      */
-    protected function updateOrCreate(array $rowArr, Model|string $modelClass)
+    public function updateOrCreate(array $rowArr, Model|string $modelClass)
     {
 //        $model = $modelClass::updateOrCreate($rowArr);
         $model = null;

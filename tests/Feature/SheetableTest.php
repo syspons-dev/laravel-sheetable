@@ -2,9 +2,14 @@
 
 namespace Syspons\Sheetable\Tests\Feature;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
+use Mockery;
 use Syspons\Sheetable\Exports\SheetsExport;
+use Syspons\Sheetable\Helpers\SpreadsheetDropdowns;
+use Syspons\Sheetable\Helpers\SpreadsheetHelper;
+use Syspons\Sheetable\Helpers\SpreadsheetUtils;
 use Syspons\Sheetable\Tests\TestCase;
 use Syspons\Sheetable\Tests\User;
 
@@ -60,23 +65,54 @@ class SheetableTest extends TestCase
         });
     }
 
-//    public function test_import_users(): void
-//    {
-//        Excel::fake();
+    public function test_import_users(): void
+    {
+        Excel::fake();
+
+        $file = new UploadedFile(
+            __DIR__ . '/users-upload.xlsx', '
+                users-upload.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true
+        );
+
+        $response = $this->postJson('/api/import/users', [
+            'file' => $file
+        ]);
+
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // TODO AJ does not work
+//        Excel::assertImported('users-upload.xlsx');
 //
-//        $response = $this->postJson('/api/users/import', [
-//            'file' => new \Illuminate\Http\UploadedFile(
-//                __DIR__ . '/users-upload.xlsx', '
-//                users-upload.xlsx',
-//                null, null, true),
-//        ]);
-//
-//
-//        $this->assertDatabaseHas('users', array_merge(
-//            [
-//                'firtname' => 'Rick',
-//                'lastname' => 'Sanchez',
-//            ]
-//        ));
-//    }
+//        $this->assertDatabaseCount('users', 10);
+//        $this->assertDatabaseHas(
+//            'users',
+//            ['firstname' => 'Rick', 'lastname' => 'Sanchez']
+//        );
+    }
+
+    public function  testUpdateOrCreate(){
+
+
+        $utilsMock = Mockery::mock(SpreadsheetUtils::class);
+        $dropdownsMock = Mockery::mock(SpreadsheetDropdowns::class);
+
+        $spreadsheetHelper = new SpreadsheetHelper($utilsMock, $dropdownsMock);
+
+        $rowArr = [
+            'id' => 1,
+            'fistname' => 'Rick',
+            'lastname' => 'Sanchez',
+        ];
+
+        $this->assertNotNull($spreadsheetHelper);
+        // TODO
+//        $spreadsheetHelper->updateOrCreate($rowArr, User::class);
+//        $this->assertCount(1, User::all());
+//        $this->assertDatabaseCount('users', 1);
+//        $this->assertDatabaseHas('users', ['firstname' => 'Rick'] );
+        
+    }
 }

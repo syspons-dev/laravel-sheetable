@@ -2,14 +2,13 @@
   "name": "syspons/laravel-sheetable",
   "description": "Laravel Helper for spreadsheet im-/export",
   "license": "MIT",
-  "version": "1.0.2",
   "authors": [
       {
           "name": "Andreas Jabusch",
           "email": "andreas.jabusch@syspons.com"
       }
   ],
-
+  "minimum-stability": "dev",
   "autoload" : {
       "psr-4" : {
           "Syspons\\Sheetable\\": "src"

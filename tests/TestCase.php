@@ -2,6 +2,7 @@
 
 namespace Syspons\Sheetable\Tests;
 
+use Carbon\Carbon;
 use Syspons\Sheetable\SheetableServiceProvider;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Config;
@@ -25,17 +26,53 @@ abstract class TestCase extends BaseTestCase
 
     protected function getEnvironmentSetUp($app)
     {
-        $this->setUpUserTable();
+        $this->setupTables();
         Config::set('sheetable.namespace', 'Syspons\Sheetable\Tests');
     }
 
-    private function setUpUserTable(): void
+    private function setupTables(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('firstname');
             $table->string('lastname');
+            $table->integer('created_by');
+            $table->integer('updated_by');
+            $table->timestamps();
+        });
+
+        Schema::create('model_dummies', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('title');
+            $table->string('description');
+            $table->string('country_main_id');
+            $table->integer('created_by');
+            $table->integer('updated_by');
+            $table->timestamps();
+        });
+
+        Schema::create('countries', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('label');
+            $table->integer('created_by');
+            $table->integer('updated_by');
+            $table->timestamps();
+        });
+
+        Schema::create('sdgs', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('label');
+            $table->integer('created_by');
+            $table->integer('updated_by');
+            $table->timestamps();
+        });
+
+        Schema::create('country_model_dummy', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->bigInteger('country_id');
+            $table->bigInteger('model_dummy_id');
             $table->timestamps();
         });
     }
 }
+

@@ -13,8 +13,11 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            'id' => 1,
             'firstname' => $this->faker->firstName(),
             'lastname' => $this->faker->lastName(),
+            'created_by' => 0,
+            'updated_by' => 0,
         ];
     }
 }

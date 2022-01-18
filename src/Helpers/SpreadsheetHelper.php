@@ -48,8 +48,8 @@ class SpreadsheetHelper
         $colNumMax = Coordinate::columnIndexFromString($colCoord);
         $rowNumMax = $worksheet->getHighestDataRow();
 
-        for ($col = 1; $col <= $colNumMax; $col++) {
-            for ($row = 2; $row <= $rowNumMax; $row++) {
+        for ($col = 1; $col <= $colNumMax; ++$col) {
+            for ($row = 2; $row <= $rowNumMax; ++$row) {
                 $worksheet->getCellByColumnAndRow($col, $row)->setValue(null);
             }
         }
@@ -60,7 +60,7 @@ class SpreadsheetHelper
      */
     public function writeCodeBookHorizontal(Model $model, Worksheet $worksheet)
     {
-        $codebookSheet = $this->getCodebookSheet($worksheet->getParent());
+        $codebookSheet = $this->getCodebookSheetHorizontal($worksheet->getParent());
 
         $lastColumn = $worksheet->getHighestColumn();
         ++$lastColumn;
@@ -115,7 +115,7 @@ class SpreadsheetHelper
      */
     public function writeCodeBook(Model $model, Worksheet $worksheet)
     {
-        $codebookSheet = $this->getCodebookSheet2($worksheet->getParent());
+        $codebookSheet = $this->getCodebookSheet($worksheet->getParent());
 
         $lastColumn = $worksheet->getHighestColumn();
         ++$lastColumn;
@@ -154,6 +154,20 @@ class SpreadsheetHelper
             $codebookSheet->setCellValue('D'.$rowNum, $row->example);
             $codebookSheet->getCell('D'.$rowNum)->getStyle()->getAlignment()->setWrapText(true);
             $codebookSheet->getColumnDimension('D')->setWidth(30);
+
+            $type = strtolower($row->data_type);
+            $type = trim($type);
+
+            if (str_starts_with($type, 'date')) {
+                $codebookSheet->getStyle('D'.$rowNum)->getNumberFormat()
+                    ->setFormatCode(SpreadsheetUtils::FORMAT_DATE_DATETIME);
+            } elseif ('bigint' === $type || 'integer' === $type || 'int' === $type) {
+                $codebookSheet->getStyle('D'.$rowNum)->getNumberFormat()
+                    ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
+            } elseif ('decimal' === $type || 'float' === $type || 'double' === $type) {
+                $codebookSheet->getStyle('D'.$rowNum)->getNumberFormat()
+                    ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+            }
         }
     }
 
@@ -162,7 +176,7 @@ class SpreadsheetHelper
      *
      * @throws PhpSpreadsheetException
      */
-    private function getCodebookSheet(Spreadsheet $spreadsheet): Worksheet
+    private function getCodebookSheetHorizontal(Spreadsheet $spreadsheet): Worksheet
     {
         $metaSheet = $spreadsheet->getSheetByName($this->codebookSheetNameHorizontal);
         if (null === $metaSheet) {
@@ -179,7 +193,7 @@ class SpreadsheetHelper
      *
      * @throws PhpSpreadsheetException
      */
-    private function getCodebookSheet2(Spreadsheet $spreadsheet): Worksheet
+    private function getCodebookSheet(Spreadsheet $spreadsheet): Worksheet
     {
         $metaSheet = $spreadsheet->getSheetByName($this->codebookSheetName);
         if (null === $metaSheet) {
@@ -230,8 +244,6 @@ class SpreadsheetHelper
         foreach ($collection as $row) {
             $rowArr = $row->toArray();
 
-            $dateTimeCols = $this->utils->getDateTimeCols($model);
-
             foreach (array_keys($rowArr) as $rowItem) {
                 if (
                     !$rowItem ||
@@ -242,7 +254,9 @@ class SpreadsheetHelper
             }
             $dateTimeCols = $this->utils->getDateTimeCols($model);
             foreach ($dateTimeCols as $dateTimeCol) {
-                $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($rowArr[$dateTimeCol]);
+                if ($rowArr[$dateTimeCol]) {
+                    $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($rowArr[$dateTimeCol]);
+                }
             }
 
             $arr = $this->dropdowns->importManyToManyFields($rowArr, $model);
@@ -263,38 +277,26 @@ class SpreadsheetHelper
      *
      * @SuppressWarnings(PHPMD.ElseExpression)
      */
-    protected function updateOrCreate(array $rowArr, Model|string $modelClass)
+    public function updateOrCreate(array $rowArr, Model|string $modelClass)
     {
-//        $model = $modelClass::updateOrCreate($rowArr);
-        $model = null;
 
-        $keyName = app($modelClass)->getKeyName();
-        $model = $modelClass::find($rowArr[$keyName]);
-        if ($model) {
-            if (!$model->created_at) {
-                $rowArr['created_at'] = Carbon::now()->toDateTimeString();
-            }
-            if (!$model->created_by) {
-                $rowArr['created_by'] = auth()->user()->getKey();
-            }
+        $model = $modelClass::find($rowArr['id']);
 
-            $rowArr['updated_at'] = Carbon::now()->toDateTimeString();
-            $rowArr['updated_by'] = auth()->user()->getKey();
-            DB::table($model->getTable())
-                ->where($keyName, $rowArr[$keyName])
-                ->update($rowArr);
+        $now = Carbon::now()->toDateTimeString();
+        $userId = auth()->user()->getKey();
 
-//            return $model;
+        if($model) {
+            $model->fill($rowArr);
+            $model->updated_at = $now;
+            $model->updated_by = $userId;
+            $model->save();
         } else {
-            $rowArr['created_at'] = Carbon::now()->toDateTimeString();
-            $rowArr['updated_at'] = Carbon::now()->toDateTimeString();
-            $rowArr['created_by'] = auth()->user()->getKey();
-            $rowArr['updated_by'] = auth()->user()->getKey();
-            $id = $modelClass::insertGetId($rowArr);
-
-            $model = $modelClass::find($id);
+            $rowArr['created_at'] = $now;
+            $rowArr['updated_at'] = $now;
+            $rowArr['created_by'] = $userId;
+            $rowArr['updated_by'] = $userId;
+            $model = $modelClass::create($rowArr);
         }
-
         return $model;
     }
 }

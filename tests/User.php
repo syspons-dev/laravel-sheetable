@@ -20,6 +20,8 @@ class User extends Model implements Sheetable
     protected $fillable = [
         'firstname',
         'lastname',
+        'updated_by',
+        'created_by',
     ];
 
     /**
@@ -35,7 +37,6 @@ class User extends Model implements Sheetable
 
     protected static function newFactory(): UserFactory
     {
-
         return UserFactory::new();
     }
 }

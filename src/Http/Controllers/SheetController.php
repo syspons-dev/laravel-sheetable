@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException;
 use PhpOffice\PhpSpreadsheet\Exception;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Syspons\Sheetable\Exceptions\ExcelImportValidationException;
 use Syspons\Sheetable\Exports\SheetsExport;
 use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 use Syspons\Sheetable\Imports\SheetsImport;
@@ -51,15 +53,20 @@ class SheetController
 
     /**
      * Import TABLENAME.xlsx via upload.
+     *
+     * @throws ExcelImportValidationException
      */
     public function import(Request $request): array
     {
         $import = new SheetsImport($this->getModel(), $this->spreadsheetHelper);
         $filePath = $request->file('file')->store(sys_get_temp_dir());
 
-        Excel::import($import, $filePath);
+        try {
+            Excel::import($import, $filePath);
+        } catch (ValidationException $e) {
+            throw new ExcelImportValidationException($e);
+        }
 
-        // return redirect(env('APP_URL').'/api/'.$this->getTableName())->with('success', 'Spreadsheet imported.');
         return $this->getAllModels()->toArray();
     }
 

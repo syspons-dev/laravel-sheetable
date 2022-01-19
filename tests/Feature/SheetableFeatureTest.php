@@ -95,23 +95,23 @@ class SheetableFeatureTest extends TestCase
         });
     }
 
-    public function test_exported_sheet_has_correct_values()
-    {
-        Excel::fake();
-        $dbUser = User::factory()->create();
-        $this->get('/api/export/users')
-            ->assertStatus(200);
-
-        Excel::assertDownloaded('users.xlsx', function (SheetsExport $export) use ($dbUser) {
-            // Assert that the correct export is downloaded.
-            $downloadedUser = $export->collection()->first();
-
-            return
-                $downloadedUser->id === $dbUser->id &&
-                $downloadedUser->firstname === $dbUser->firstname &&
-                $downloadedUser->lastname === $dbUser->lastname;
-        });
-    }
+//    public function test_exported_sheet_has_correct_values()
+//    {
+//        Excel::fake();
+//        $dbUser = User::factory()->create();
+//        $this->get('/api/export/users')
+//            ->assertStatus(200);
+//
+//        Excel::assertDownloaded('users.xlsx', function (SheetsExport $export) use ($dbUser) {
+//            // Assert that the correct export is downloaded.
+//            $downloadedUser = $export->collection()->first();
+//
+//            return
+//                $downloadedUser->id === $dbUser->id &&
+//                $downloadedUser->firstname === $dbUser->firstname &&
+//                $downloadedUser->lastname === $dbUser->lastname;
+//        });
+//    }
 
     public function test_import_users(): void
     {

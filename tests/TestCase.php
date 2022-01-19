@@ -36,8 +36,8 @@ abstract class TestCase extends BaseTestCase
             $table->bigIncrements('id');
             $table->string('firstname');
             $table->string('lastname');
-            $table->integer('created_by');
-            $table->integer('updated_by');
+//            $table->integer('created_by');
+//            $table->integer('updated_by');
             $table->timestamps();
         });
 
@@ -46,24 +46,24 @@ abstract class TestCase extends BaseTestCase
             $table->string('title');
             $table->string('description');
             $table->string('country_main_id');
-            $table->integer('created_by');
-            $table->integer('updated_by');
+//            $table->integer('created_by');
+//            $table->integer('updated_by');
             $table->timestamps();
         });
 
         Schema::create('countries', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('label');
-            $table->integer('created_by');
-            $table->integer('updated_by');
+//            $table->integer('created_by');
+//            $table->integer('updated_by');
             $table->timestamps();
         });
 
         Schema::create('sdgs', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('label');
-            $table->integer('created_by');
-            $table->integer('updated_by');
+//            $table->integer('created_by');
+//            $table->integer('updated_by');
             $table->timestamps();
         });
 

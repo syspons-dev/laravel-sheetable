@@ -14,8 +14,6 @@ class CountryFactory extends Factory
         return [
             'id' => self::$number++,
             'label' => $this->faker->country,
-            'created_by' => 1,
-            'updated_by' => 1,
         ];
     }
 }

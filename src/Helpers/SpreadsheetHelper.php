@@ -279,24 +279,6 @@ class SpreadsheetHelper
      */
     public function updateOrCreate(array $rowArr, Model|string $modelClass)
     {
-
-        $model = $modelClass::find($rowArr['id']);
-
-        $now = Carbon::now()->toDateTimeString();
-        $userId = auth()->user()->getKey();
-
-        if($model) {
-            $model->fill($rowArr);
-            $model->updated_at = $now;
-            $model->updated_by = $userId;
-            $model->save();
-        } else {
-            $rowArr['created_at'] = $now;
-            $rowArr['updated_at'] = $now;
-            $rowArr['created_by'] = $userId;
-            $rowArr['updated_by'] = $userId;
-            $model = $modelClass::create($rowArr);
-        }
-        return $model;
+        return $modelClass::updateOrCreate(['id' => $rowArr['id']], $rowArr);
     }
 }

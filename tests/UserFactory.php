@@ -16,8 +16,6 @@ class UserFactory extends Factory
             'id' => 1,
             'firstname' => $this->faker->firstName(),
             'lastname' => $this->faker->lastName(),
-            'created_by' => 0,
-            'updated_by' => 0,
         ];
     }
 }

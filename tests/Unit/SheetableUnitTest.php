@@ -43,7 +43,6 @@ class SheetableUnitTest extends TestCase
 
     public function  testUpdateOrCreate() {
 
-        $user1 = User::factory()->make();
         $user2 = User::factory()->make();
         $user2->setAttribute('id', 2);
 
@@ -60,9 +59,7 @@ class SheetableUnitTest extends TestCase
 
         $this->assertNotNull($spreadsheetHelper);
 
-        Auth::shouldReceive('user')->times(1)->andreturn($user1);
         $returnedModel1 = $spreadsheetHelper->updateOrCreate($rowArr, User::class);
-
         $this->assertCount(1, User::all(), '1 User');
         $this->assertDatabaseHas(
             'users', ['firstname' => 'Rick', 'lastname' => 'Sanchez']
@@ -72,9 +69,6 @@ class SheetableUnitTest extends TestCase
         $dbUser = User::find(1);
         $this->assertTrue($dbUser->created_at->eq($dbUser->updated_at), 'Created_at equals updated_at');
         $this->assertTrue($dbUser->created_by === $dbUser->updated_by, 'Created_by equals updated_by');
-        $this->assertTrue($dbUser->created_by == $user1->id, 'Created by user 1');
-        $this->assertTrue($dbUser->updated_by == $user1->id, 'Updated by user 1');
-
         $this->assertTrue(Carbon::now()->addSeconds(-1)->isBefore($dbUser->created_at), 'Is created now.');
         $this->assertTrue(Carbon::now()->addSeconds(-1)->isBefore($dbUser->updated_at), 'Is updated now.');
 
@@ -86,7 +80,6 @@ class SheetableUnitTest extends TestCase
 
         sleep(1);
 
-        Auth::shouldReceive('user')->times(1)->andreturn($user2);
         $returnedModel2 = $spreadsheetHelper->updateOrCreate($rowArr2, User::class);
         $this->assertDatabaseCount('users', 1);
         $this->assertDatabaseHas(
@@ -96,10 +89,6 @@ class SheetableUnitTest extends TestCase
 
         $dbUser2 = User::find(1);
         $this->assertFalse($dbUser->created_at->eq($dbUser2->updated_at), 'Created_at does not equal updated_at');
-        $this->assertFalse($dbUser2->created_by === $dbUser2->updated_by, 'user 2 updated_by must not equal created_by');
-        $this->assertTrue($dbUser2->created_by == $user1->id, 'Db User 2 was created by user 1');
-        $this->assertTrue($dbUser2->updated_by == $user2->id, 'Db User 2 was updated by user 2');
-
         $this->assertTrue(Carbon::now()->addSeconds(-10)->isBefore($dbUser2->updated_at), 'Is created now.');
         $this->assertTrue(Carbon::now()->addSeconds(-10)->isBefore($dbUser2->created_at), 'Is created now.');
         $this->assertTrue($dbUser2->updated_at->isAfter($dbUser2->created_at), 'Is created now.');

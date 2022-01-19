@@ -15,8 +15,6 @@ class ModelDummyFactory extends Factory
             'id' => self::$number++,
             'title' => $this->faker->word,
             'description' => $this->faker->text,
-            'created_by' => 1,
-            'updated_by' => 1,
         ];
     }
 }

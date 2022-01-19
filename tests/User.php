@@ -19,9 +19,7 @@ class User extends Model implements Sheetable
      */
     protected $fillable = [
         'firstname',
-        'lastname',
-        'updated_by',
-        'created_by',
+        'lastname'
     ];
 
     /**

@@ -85,8 +85,6 @@ class SheetableFeatureTest extends TestCase
         $this->get('/api/export/users')
             ->assertStatus(200);
 
-
-
         Excel::assertDownloaded('users.xlsx', function (SheetsExport $export) {
             // Assert that the correct export is downloaded.
 
@@ -133,7 +131,6 @@ class SheetableFeatureTest extends TestCase
 
         $this->assertEquals(200, $response->getStatusCode());
 
-//        Excel::assertImported('users-upload.xlsx');
         // TODO AJ does not work
 //        Excel::assertImported('users-upload.xlsx');
 //        $this->assertDatabaseCount('users', 10);

@@ -248,7 +248,9 @@ class SpreadsheetHelper
                 if (
                     !$rowItem ||
                     'created_at' === $rowItem ||
-                    'updated_at' === $rowItem) {
+                    'updated_at' === $rowItem ||
+                    'created_by' === $rowItem ||
+                    'updated_by' === $rowItem) {
                     unset($rowArr[$rowItem]);
                 }
             }

@@ -85,7 +85,7 @@ class SpreadsheetUtils
             if (self::COL_WIDTH_IN_PT < strlen($val)) {
                 $width = strlen($val);
             }
-            if(!$val) {
+            if (!$val) {
                 $worksheet->removeColumn($column);
             }
             $worksheet->getColumnDimension($column)->setWidth($width);

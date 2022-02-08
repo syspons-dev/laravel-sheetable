@@ -2,6 +2,7 @@
 
 namespace Syspons\Sheetable\Helpers;
 
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
@@ -11,6 +12,8 @@ use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Syspons\Sheetable\Exceptions\ExcelExportValidationException;
+use Syspons\Sheetable\Exceptions\ExcelImportValidationException;
 use Syspons\Sheetable\Exports\DropdownConfig;
 use Syspons\Sheetable\Models\Contracts\Dropdownable;
 
@@ -436,10 +439,12 @@ class SpreadsheetDropdowns
 
     /**
      * @param Sheet|Worksheet $worksheet
-     * @param DropdownConfig  $config            Field-DropdownConfig
-     * @param string          $validationFormula e.g. 'foo, bar' or 'metadata!B1:B3'
+     * @param DropdownConfig $config Field-DropdownConfig
+     * @param string $validationFormula e.g. 'foo, bar' or 'metadata!B1:B3'
      *
      * @throws PhpSpreadsheetException
+     * @throws ExcelExportValidationException
+     * @throws \Exception
      */
     private function addForeignKeyDropdownField(
         Sheet|Worksheet $worksheet,
@@ -448,6 +453,15 @@ class SpreadsheetDropdowns
         string $validationFormula
     ): void {
         $colCoord = $this->utils->getColumnByHeading($worksheet, $config->getField());
+        if (null === $colCoord) {
+            throw new Exception(
+                'Trying to add the foreign key dropdown field '
+                .$config->getField()
+                .', but the field '
+                .$config->getField()
+                .'does not exist in the db table '
+                .$config->getFkModel()->getTable());
+        }
         $cellCoord = $colCoord.$rowNr;
         $fkId = $worksheet->getCell($cellCoord)->getValue();
         $fkText = $this->getDescValueForId($fkId, $config);

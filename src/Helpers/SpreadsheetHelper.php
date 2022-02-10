@@ -126,11 +126,14 @@ class SpreadsheetHelper
         $codebookSheet->setCellValue('B1', 'Typ');
         $codebookSheet->getCell('B1')->getStyle()->getFont()->setBold(true);
 
-        $codebookSheet->setCellValue('C1', 'Erklärung');
+        $codebookSheet->setCellValue('C1', 'Pflichtfeld');
         $codebookSheet->getCell('C1')->getStyle()->getFont()->setBold(true);
 
-        $codebookSheet->setCellValue('D1', 'Beispiel');
+        $codebookSheet->setCellValue('D1', 'Erklärung');
         $codebookSheet->getCell('D1')->getStyle()->getFont()->setBold(true);
+
+        $codebookSheet->setCellValue('E1', 'Beispiel');
+        $codebookSheet->getCell('E1')->getStyle()->getFont()->setBold(true);
 
         $codeBook = DB::table('code_book')
             ->where('table_name', $model->getTable())->get();
@@ -146,25 +149,28 @@ class SpreadsheetHelper
             $codebookSheet->setCellValue('B'.$rowNum, $row->data_type);
             $codebookSheet->getColumnDimension('B')->setWidth(30);
 
-            $codebookSheet->setCellValue('C'.$rowNum, $row->description);
-            $codebookSheet->getCell('C'.$rowNum)->getStyle()->getAlignment()->setWrapText(true);
-            $codebookSheet->getColumnDimension('C')->setWidth(50);
+            $codebookSheet->setCellValue('C'.$rowNum, $row->mandatory);
+            $codebookSheet->getColumnDimension('C')->setWidth(30);
 
-            $codebookSheet->setCellValue('D'.$rowNum, $row->example);
+            $codebookSheet->setCellValue('D'.$rowNum, $row->description);
             $codebookSheet->getCell('D'.$rowNum)->getStyle()->getAlignment()->setWrapText(true);
-            $codebookSheet->getColumnDimension('D')->setWidth(30);
+            $codebookSheet->getColumnDimension('D')->setWidth(50);
+
+            $codebookSheet->setCellValue('E'.$rowNum, $row->example);
+            $codebookSheet->getCell('E'.$rowNum)->getStyle()->getAlignment()->setWrapText(true);
+            $codebookSheet->getColumnDimension('E')->setWidth(30);
 
             $type = strtolower($row->data_type);
             $type = trim($type);
 
             if (str_starts_with($type, 'date')) {
-                $codebookSheet->getStyle('D'.$rowNum)->getNumberFormat()
+                $codebookSheet->getStyle('E'.$rowNum)->getNumberFormat()
                     ->setFormatCode(SpreadsheetUtils::FORMAT_DATE_DATETIME);
             } elseif ('bigint' === $type || 'integer' === $type || 'int' === $type) {
-                $codebookSheet->getStyle('D'.$rowNum)->getNumberFormat()
+                $codebookSheet->getStyle('E'.$rowNum)->getNumberFormat()
                     ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
             } elseif ('decimal' === $type || 'float' === $type || 'double' === $type) {
-                $codebookSheet->getStyle('D'.$rowNum)->getNumberFormat()
+                $codebookSheet->getStyle('E'.$rowNum)->getNumberFormat()
                     ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
             }
         }

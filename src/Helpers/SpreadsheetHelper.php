@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Nette\UnexpectedValueException;
+use PhpOffice\PhpSpreadsheet\Calculation\Exception;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -48,8 +49,8 @@ class SpreadsheetHelper
         $colNumMax = Coordinate::columnIndexFromString($colCoord);
         $rowNumMax = $worksheet->getHighestDataRow();
 
-        for ($col = 1; $col <= $colNumMax; $col++) {
-            for ($row = 2; $row <= $rowNumMax; $row++) {
+        for ($col = 1; $col <= $colNumMax; ++$col) {
+            for ($row = 2; $row <= $rowNumMax; ++$row) {
                 $worksheet->getCellByColumnAndRow($col, $row)->setValue(null);
             }
         }
@@ -196,7 +197,8 @@ class SpreadsheetHelper
      */
     public function beforeSheetImport(Model|string $modelClass, Worksheet $worksheet)
     {
-        $this->preCheckDcocumentBeforeImport($modelClass, $worksheet);
+        $this->preCheckDocumentBeforeImport($worksheet);
+        $this->preProcessDocument($worksheet);
         /** @var Dropdownable $dropdownable */
         $dropdownable = $modelClass::newModelInstance();
         if (method_exists($modelClass, 'getDropdownFields')) {
@@ -204,15 +206,39 @@ class SpreadsheetHelper
         }
     }
 
-    private function preCheckDcocumentBeforeImport(Model|string $modelClass, Worksheet $worksheet)
+    private function preCheckDocumentBeforeImport(Worksheet $worksheet)
     {
-        $duplicates = $this->getIdDuplicatesInSheet($modelClass, $worksheet);
+        $duplicates = $this->getIdDuplicatesInSheet($worksheet);
         if ($duplicates && !empty($duplicates)) {
             throw new UnexpectedValueException('Following IDs appear more than once in the document: '.implode(',', $duplicates));
         }
     }
 
-    private function getIdDuplicatesInSheet(Model|string $modelClass, Worksheet $worksheet)
+    /**
+     * Pre process all fields, use only calculated values, no formulas, trim spaces, remove double spaces.
+     *
+     * @throws PhpSpreadsheetException
+     * @throws Exception
+     */
+    private function preProcessDocument(Worksheet $worksheet)
+    {
+        foreach ($worksheet->getRowIterator() as $row) {
+            $cellIterator = $row->getCellIterator();
+            $cellIterator->setIterateOnlyExistingCells(true);
+            foreach ($cellIterator as $cell) {
+                $value = $cell->getCalculatedValue();
+                if (is_string($value)) {
+                    $value = preg_replace('/\s+/', ' ',$value);
+                    $value = trim($value);
+                }
+                if($value) {
+                    $cell->setValue($value);
+                }
+            }
+        }
+    }
+
+    private function getIdDuplicatesInSheet(Worksheet $worksheet)
     {
         $colCoord = $this->utils->getColumnByHeading($worksheet, 'id');
         $highestRow = $worksheet->getHighestDataRow($colCoord);

@@ -5,12 +5,14 @@ namespace Syspons\Sheetable\Helpers;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Validators\ValidationException;
 use Nette\UnexpectedValueException;
 use PhpOffice\PhpSpreadsheet\Calculation\Exception;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Syspons\Sheetable\Exceptions\ExcelImportValidationException;
 use Syspons\Sheetable\Models\Contracts\Dropdownable;
 
 class SpreadsheetHelper
@@ -40,6 +42,7 @@ class SpreadsheetHelper
     }
 
     /**
+     * Removes all values, keeps the headings.
      * @throws PhpSpreadsheetException
      */
     public function clearValues(Worksheet $worksheet)
@@ -51,6 +54,27 @@ class SpreadsheetHelper
         for ($col = 1; $col <= $colNumMax; ++$col) {
             for ($row = 2; $row <= $rowNumMax; ++$row) {
                 $worksheet->getCellByColumnAndRow($col, $row)->setValue(null);
+            }
+        }
+    }
+
+    /**
+     * @throws PhpSpreadsheetException
+     */
+    public function clearStamps(Worksheet $worksheet)
+    {
+        $colCoord = $worksheet->getHighestDataColumn();
+        $colNumMax = Coordinate::columnIndexFromString($colCoord);
+
+        for ($col = 1; $col <= $colNumMax; ++$col) {
+            $cell = $worksheet->getCellByColumnAndRow($col, 1);
+            if (
+                'created_by' === $cell->getValue() ||
+                'updated_by' === $cell->getValue() ||
+                'created_at' === $cell->getValue() ||
+                'updated_at' === $cell->getValue()
+            ) {
+                $worksheet->getCellByColumnAndRow($col, 1)->setValue(null);
             }
         }
     }
@@ -225,11 +249,17 @@ class SpreadsheetHelper
         }
     }
 
+    /**
+     * @throws ExcelImportValidationException
+     */
     private function preCheckDocumentBeforeImport(Worksheet $worksheet)
     {
         $duplicates = $this->getIdDuplicatesInSheet($worksheet);
         if ($duplicates && !empty($duplicates)) {
-            throw new UnexpectedValueException('Following IDs appear more than once in the document: '.implode(',', $duplicates));
+            $uvException = new PhpSpreadsheetException(
+                'Following IDs appear more than once in the document: '.implode(',', $duplicates)
+            );
+            throw new ExcelImportValidationException($uvException);
         }
     }
 

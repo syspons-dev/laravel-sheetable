@@ -71,6 +71,7 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
 
                 if ($this->isTemplate) {
                     $this->helper->clearValues($workSheet);
+                    $this->helper->clearStamps($workSheet);
                 }
             },
         ];

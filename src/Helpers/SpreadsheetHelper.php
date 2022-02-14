@@ -5,8 +5,6 @@ namespace Syspons\Sheetable\Helpers;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Validators\ValidationException;
-use Nette\UnexpectedValueException;
 use PhpOffice\PhpSpreadsheet\Calculation\Exception;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
@@ -43,6 +41,7 @@ class SpreadsheetHelper
 
     /**
      * Removes all values, keeps the headings.
+     *
      * @throws PhpSpreadsheetException
      */
     public function clearValues(Worksheet $worksheet)
@@ -277,10 +276,10 @@ class SpreadsheetHelper
             foreach ($cellIterator as $cell) {
                 $value = $cell->getCalculatedValue();
                 if (is_string($value)) {
-                    $value = preg_replace('/\s+/', ' ',$value);
+                    $value = preg_replace('/\s+/', ' ', $value);
                     $value = trim($value);
                 }
-                if($value) {
+                if ($value) {
                     $cell->setValue($value);
                 }
             }

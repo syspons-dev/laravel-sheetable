@@ -334,8 +334,8 @@ class SpreadsheetDropdowns
             $fkModelTable = $fkModelClass::newModelInstance()->getTable();
 
             // 2-key-problem resolved
-            $listOfFkModels = $modelRow?->$fkModelTable;
-//            $listOfFkModels = $this->getFkModelsForField($modelRow, $fkModelTable);
+            $listOfFkModels = $modelRow?->$fkModelTable()->orderByPivot('id')->get();
+            // $listOfFkModels = $this->getFkModelsForField($modelRow, $fkModelTable);
 
             /** @var Model $fkModel */
             $colCoord = $firstColCoord;

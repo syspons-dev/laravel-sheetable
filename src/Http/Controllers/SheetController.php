@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Syspons\Sheetable\Exceptions\ExcelImportValidationException;
 use Syspons\Sheetable\Exports\SheetsExport;
 use Syspons\Sheetable\Helpers\SpreadsheetHelper;
+use Syspons\Sheetable\Http\Requests\ExportRequest;
 use Syspons\Sheetable\Imports\SheetsImport;
 use Syspons\Sheetable\Services\SheetableService;
 
@@ -32,10 +33,10 @@ class SheetController
     /**
      * @throws Exception
      */
-    public function export(): BinaryFileResponse
+    public function export(ExportRequest $request): BinaryFileResponse
     {
         return Excel::download(
-            new SheetsExport($this->getAllModels(), $this->getModel(), $this->spreadsheetHelper),
+            new SheetsExport($this->getExportModels($request->input('ids', [])), $this->getModel(), $this->spreadsheetHelper),
             $this->getTableName().'.'.$this->sheetableService->getExportExtension()
         );
     }
@@ -73,6 +74,14 @@ class SheetController
     public function getModel(): Model|string
     {
         return $this->sheetableService->getModelClassFromRequest();
+    }
+
+    private function getExportModels(array $ids = []): Collection
+    {
+        if (!$ids || empty($ids)) {
+            return $this->getModel()::all();
+        }
+        return $this->getModel()::whereIn('id', $ids)->get();
     }
 
     private function getAllModels(): Collection

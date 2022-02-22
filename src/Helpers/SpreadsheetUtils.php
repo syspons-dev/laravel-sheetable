@@ -116,6 +116,10 @@ class SpreadsheetUtils
 
         foreach ($dateTimeColValues as $dateTimeColValue) {
             ++$rowNr;
+            // in case only a subset of models is selected for export
+            if ($rowNr > $worksheet->getHighestDataRow()) {
+                break;
+            }
             foreach ($dateTimeCols as $dateTimeCol) {
                 $val = $dateTimeColValue[$dateTimeCol];
                 $colCoord = $this->getColumnByHeading($worksheet, $dateTimeCol);

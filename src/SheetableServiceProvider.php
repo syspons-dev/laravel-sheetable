@@ -3,7 +3,9 @@
 namespace Syspons\Sheetable;
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use JetBrains\PhpStorm\ArrayShape;
 use Syspons\Sheetable\Exceptions\Handler;
@@ -58,6 +60,9 @@ class SheetableServiceProvider extends ServiceProvider
                 )->name($tableName.'.import');
             }
         });
+
+        // extend validator
+        $this->extendValidator();
     }
 
     #[ArrayShape(['middleware' => 'mixed', 'prefix' => 'mixed'])]
@@ -67,5 +72,30 @@ class SheetableServiceProvider extends ServiceProvider
             'middleware' => config('sheetable.middleware'),
             'prefix' => config('sheetable.prefix'),
         ];
+    }
+
+    protected function extendValidator()
+    {
+        Validator::extend('exists_strict', function ($attribute, $value, $parameters, $validator) {
+            if (count($parameters) < 1) {
+                throw new \InvalidArgumentException("Validation rule exists_strict requires at least 1 parameter.");
+            }
+
+            $collection = $parameters[0];
+            $column     = $parameters[1] ?: 'id';
+
+            $entries = DB::table($collection)->where($column, $value)->get();
+            if (!$entries->count()) {
+                return false;
+            }
+
+            foreach ($entries as $entry) {
+                if ($entry->id !== $value) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
     }
 }

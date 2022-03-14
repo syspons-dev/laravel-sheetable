@@ -314,12 +314,6 @@ class SpreadsheetHelper
                     unset($rowArr[$rowItem]);
                 }
             }
-            $dateTimeCols = $this->utils->getDateTimeCols($model);
-            foreach ($dateTimeCols as $dateTimeCol) {
-                if ($rowArr[$dateTimeCol]) {
-                    $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($rowArr[$dateTimeCol]);
-                }
-            }
 
             $arr = $this->dropdowns->importManyToManyFields($rowArr, $model);
             if ($arr && array_key_exists('rowArr', $arr)) {
@@ -332,6 +326,17 @@ class SpreadsheetHelper
                 $this->dropdowns->attachManyToManyValues($storedModel, $arr['attachToFields']);
             }
         }
+    }
+
+    public function cleanRowDateTimes(array &$rowArr, Model|string $model): array
+    {
+        $dateTimeCols = $this->utils->getDateTimeCols($model);
+        foreach ($dateTimeCols as $dateTimeCol) {
+            if ($rowArr[$dateTimeCol]) {
+                $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($rowArr[$dateTimeCol]);
+            }
+        }
+        return $rowArr;
     }
 
     /**

@@ -4,6 +4,8 @@ namespace Syspons\Sheetable\Exports;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Schema\Grammars\MySqlGrammar;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithEvents;
@@ -55,7 +57,12 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
      */
     public function headings(): array
     {
-        return Schema::getColumnListing($this->tableName);
+        return collect(
+            DB::select(
+                (new MySqlGrammar)->compileColumnListing().' order by ordinal_position',
+                [DB::getDatabaseName(), $this->tableName]
+            )
+        )->pluck('column_name')->toArray();
     }
 
     public function registerEvents(): array

@@ -44,7 +44,7 @@ class SheetableFeatureTest extends TestCase
 
         // Assert that the correct export is downloaded.
         Excel::assertDownloaded('model_dummies.xlsx', function (SheetsExport $export) {
-        // TODO $export->registerEvents()['Maatwebsite\Excel\Events\AfterSheet'](EVENT); IS NOT CALLED ??
+            // TODO $export->registerEvents()['Maatwebsite\Excel\Events\AfterSheet'](EVENT); IS NOT CALLED ??
             return
                 in_array('id', $export->headings()) &&
                 in_array('country_main_id', $export->headings());
@@ -115,7 +115,7 @@ class SheetableFeatureTest extends TestCase
 
     public function test_exported_selected_values()
     {
-        Excel::fake();
+        /* Excel::fake();
         $users = User::factory()->count(4)->create();
         $ids = array_slice($users->pluck('id')->toArray(), 0, 2);
         $this->call('GET', route('users.export'), [
@@ -123,6 +123,25 @@ class SheetableFeatureTest extends TestCase
         ])->assertStatus(200);
 
         Excel::assertDownloaded('users.xlsx', function (SheetsExport $export) use ($ids) {
+            $ret = $export->collection();
+            $plucked = $ret->pluck('id')->toArray();
+            return $ret->count() === count($ids) && $plucked == $ids;
+        }); */
+
+
+        Excel::fake();
+        $modelDummies = ModelDummy::factory()->count(4)
+            ->for(Country::factory())
+            ->has(Country::factory()->count(4))
+            ->create();
+        $ids = array_slice($modelDummies->pluck('id')->toArray(), 0, 2);
+
+
+        $this->call('GET', route('model_dummies.export'), [
+            'ids' => $ids,
+        ])->assertStatus(200);
+
+        Excel::assertDownloaded('model_dummies.xlsx', function (SheetsExport $export) use ($ids) {
             $ret = $export->collection();
             $plucked = $ret->pluck('id')->toArray();
             return $ret->count() === count($ids) && $plucked == $ids;
@@ -155,5 +174,4 @@ class SheetableFeatureTest extends TestCase
 //            ['firstname' => 'Rick', 'lastname' => 'Sanchez']
 //        );
     }
-
 }

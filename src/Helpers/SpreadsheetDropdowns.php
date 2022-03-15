@@ -174,7 +174,8 @@ class SpreadsheetDropdowns
 
             // Set Headings
             $metaDataSheet->setCellValue($metaIdCol.$row, $foreignModelShort.'.id');
-            $metaDataSheet->setCellValue($metaValueCol.$row,
+            $metaDataSheet->setCellValue(
+                $metaValueCol.$row,
                 $foreignModelShort.'.'.$config->getFkTextCol()
             );
 
@@ -230,7 +231,8 @@ class SpreadsheetDropdowns
         $foreignModelShort = $this->utils->getModelShortname($dropdownConfig->getFkModel());
 
         $this->createRefColumnsForField($sheet->getParent(), $dropdownConfig);
-        $refValCol = $this->utils->getColumnByHeading($metaDataSheet,
+        $refValCol = $this->utils->getColumnByHeading(
+            $metaDataSheet,
             $foreignModelShort.'.'.$dropdownConfig->getFkTextCol()
         );
 
@@ -349,7 +351,8 @@ class SpreadsheetDropdowns
 
                 $foreignModelShort = $this->utils->getModelShortname($config->getFkModel());
 
-                $refValCol = $this->utils->getColumnByHeading($metaDataSheet,
+                $refValCol = $this->utils->getColumnByHeading(
+                    $metaDataSheet,
                     $foreignModelShort.'.'.$config->getFkTextCol()
                 );
 
@@ -516,7 +519,8 @@ class SpreadsheetDropdowns
         $foreignModelShort = $this->utils->getModelShortname($dropdownConfig->getFkModel());
 
         $refIdCol = $this->utils->getColumnByHeading($metaDataSheet, $foreignModelShort.'.id');
-        $refValCol = $this->utils->getColumnByHeading($metaDataSheet,
+        $refValCol = $this->utils->getColumnByHeading(
+            $metaDataSheet,
             $foreignModelShort.'.'.$dropdownConfig->getFkTextCol()
         );
 

@@ -128,7 +128,7 @@ class SpreadsheetDropdowns
      *
      * @throws PhpSpreadsheetException
      */
-    public function exportDropdownFields(Dropdownable|Model $dropdownable, Worksheet $worksheet)
+    public function exportDropdownFields(Dropdownable|Model $dropdownable, Worksheet $worksheet, Collection $models)
     {
         $dropdownFields = $dropdownable::getDropdownFields();
         foreach ($dropdownFields as $dropdownConfig) {
@@ -137,7 +137,7 @@ class SpreadsheetDropdowns
                 continue;
             } elseif (0 < $dropdownConfig->getMappingMinFields()) {
                 $this->createRefColumnsForField($worksheet->getParent(), $dropdownConfig);
-                $this->addManyToManyColumnsForField($worksheet, $dropdownable, $dropdownConfig);
+                $this->addManyToManyColumnsForField($worksheet, $dropdownable, $dropdownConfig, $models);
                 continue;
             } elseif (0 < count($dropdownConfig->getFixedList())) {
                 $this->createRefColumnsForFixedField($worksheet->getParent(), $dropdownConfig);
@@ -306,19 +306,17 @@ class SpreadsheetDropdowns
      *
      * @throws PhpSpreadsheetException
      */
-    private function addManyToManyColumnsForField(Worksheet $worksheet, Model $model, DropdownConfig $config): void
+    private function addManyToManyColumnsForField(Worksheet $worksheet, Model $model, DropdownConfig $config, Collection $models): void
     {
         $rightOfField = $config->getMappingRightOfField();
         $colCoord = $this->utils->getColumnByHeading($worksheet, $rightOfField);
         $firstColCoord = $colCoord;
         $metaDataSheet = $this->getMetadataSheet($worksheet->getParent());
 
-        $allModels = $model::all();
-
         $fkModelClass = $config->getFkModel();
         $fkModelTable = $fkModelClass::newModelInstance()->getTable();
 
-        $additionalColCount = $this->colCountForManyToManyField($allModels, $fkModelTable, $config);
+        $additionalColCount = $this->colCountForManyToManyField($models, $fkModelTable, $config);
 
         $additionalFieldName = $config->getField() ?: strtolower($config->getFkModel());
 
@@ -329,8 +327,8 @@ class SpreadsheetDropdowns
         }
 
         // iterate over models/rows - fill additional_1-n cols with values
-        for ($i = 0; $i < ($allModels->count() + self::ADD_DROPDOWN_FIELDS_NUM); ++$i) {
-            $modelRow = $allModels->get($i);
+        for ($i = 0; $i < ($models->count() + self::ADD_DROPDOWN_FIELDS_NUM); ++$i) {
+            $modelRow = $models->get($i);
             $row = $i + 2;
 
             $fkModelTable = $fkModelClass::newModelInstance()->getTable();

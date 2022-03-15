@@ -4,6 +4,7 @@ namespace Syspons\Sheetable\Helpers;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
@@ -95,7 +96,7 @@ class SpreadsheetUtils
     /**
      * @throws PhpSpreadsheetException
      */
-    public function formatSpecialFields(Model $model, Worksheet $worksheet)
+    public function formatSpecialFields(Model $model, Worksheet $worksheet, Collection $models)
     {
         $this->formatAllCols($worksheet);
         $worksheet->getPageSetup()->setFitToWidth(1);
@@ -103,7 +104,6 @@ class SpreadsheetUtils
         $this->formatExportCols($model, $worksheet);
 
         $dateTimeCols = $this->getDateTimeCols($model, true);
-        $dateTimeColValues = 0 === count($dateTimeCols) ? [] : $model::select($dateTimeCols)->get();
         $rowNr = 1;
 
         // set width for all date fields
@@ -114,14 +114,10 @@ class SpreadsheetUtils
             $worksheet->getCell($colCoord.'1')->getStyle()->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         }
 
-        foreach ($dateTimeColValues as $dateTimeColValue) {
+        foreach ($models as $singleModel) {
             ++$rowNr;
-            // in case only a subset of models is selected for export
-            if ($rowNr > $worksheet->getHighestDataRow()) {
-                break;
-            }
             foreach ($dateTimeCols as $dateTimeCol) {
-                $val = $dateTimeColValue[$dateTimeCol];
+                $val = $singleModel[$dateTimeCol];
                 $colCoord = $this->getColumnByHeading($worksheet, $dateTimeCol);
 
                 $worksheet->getStyle($colCoord.$rowNr)->getNumberFormat()->setFormatCode(self::FORMAT_DATE_DATETIME);

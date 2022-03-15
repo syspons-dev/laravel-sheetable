@@ -115,20 +115,6 @@ class SheetableFeatureTest extends TestCase
 
     public function test_exported_selected_values()
     {
-        /* Excel::fake();
-        $users = User::factory()->count(4)->create();
-        $ids = array_slice($users->pluck('id')->toArray(), 0, 2);
-        $this->call('GET', route('users.export'), [
-            'ids' => $ids,
-        ])->assertStatus(200);
-
-        Excel::assertDownloaded('users.xlsx', function (SheetsExport $export) use ($ids) {
-            $ret = $export->collection();
-            $plucked = $ret->pluck('id')->toArray();
-            return $ret->count() === count($ids) && $plucked == $ids;
-        }); */
-
-
         Excel::fake();
         $modelDummies = ModelDummy::factory()->count(4)
             ->for(Country::factory())

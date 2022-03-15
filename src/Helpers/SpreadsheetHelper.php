@@ -30,13 +30,13 @@ class SpreadsheetHelper
     /**
      * @throws PhpSpreadsheetException
      */
-    public function afterSheetExport(Dropdownable|Model $model, Worksheet $worksheet)
+    public function afterSheetExport(Dropdownable|Model $model, Worksheet $worksheet, Collection $models)
     {
         $this->writeCodeBook($model, $worksheet);
         if (method_exists($model, 'getDropdownFields')) {
-            $this->dropdowns->exportDropdownFields($model, $worksheet);
+            $this->dropdowns->exportDropdownFields($model, $worksheet, $models);
         }
-        $this->utils->formatSpecialFields($model, $worksheet);
+        $this->utils->formatSpecialFields($model, $worksheet, $models);
     }
 
     /**

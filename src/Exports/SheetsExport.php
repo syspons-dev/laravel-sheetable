@@ -2,10 +2,12 @@
 
 namespace Syspons\Sheetable\Exports;
 
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Grammars\MySqlGrammar;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithEvents;
@@ -13,7 +15,6 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
-use Schema;
 use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 
 class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitle, WithStrictNullComparison //, WithColumnFormatting, WithMapping
@@ -57,12 +58,16 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
      */
     public function headings(): array
     {
-        return collect(
-            DB::select(
-                (new MySqlGrammar)->compileColumnListing().' order by ordinal_position',
-                [DB::getDatabaseName(), $this->tableName]
-            )
-        )->pluck('column_name')->toArray();
+        try {
+            return collect(
+                DB::select(
+                    (new MySqlGrammar)->compileColumnListing().' order by ordinal_position',
+                    [DB::getDatabaseName(), $this->tableName]
+                )
+            )->pluck('column_name')->toArray();
+        } catch (Exception $e) {
+            return Schema::getColumnListing($this->tableName);
+        }
     }
 
     public function registerEvents(): array
@@ -74,7 +79,7 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
 
                 $dropdownable = $this->model::newModelInstance();
 
-                $this->helper->afterSheetExport($dropdownable, $workSheet);
+                $this->helper->afterSheetExport($dropdownable, $workSheet, $this->models);
 
                 if ($this->isTemplate) {
                     $this->helper->clearValues($workSheet);

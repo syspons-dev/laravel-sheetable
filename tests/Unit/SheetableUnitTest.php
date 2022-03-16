@@ -3,25 +3,23 @@
 namespace Syspons\Sheetable\Tests\Unit;
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Mockery;
 use Syspons\Sheetable\Helpers\SpreadsheetDropdowns;
 use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 use Syspons\Sheetable\Helpers\SpreadsheetUtils;
-use Syspons\Sheetable\Tests\Country;
-use Syspons\Sheetable\Tests\CountryFactory;
-use Syspons\Sheetable\Tests\ModelDummy;
+use Syspons\Sheetable\Tests\Models\Country;
+use Syspons\Sheetable\Tests\Models\CountryFactory;
+use Syspons\Sheetable\Tests\Models\ModelDummy;
+use Syspons\Sheetable\Tests\Models\User;
 use Syspons\Sheetable\Tests\TestCase;
-use Syspons\Sheetable\Tests\User;
 
 /**
  *
  */
 class SheetableUnitTest extends TestCase
 {
-
-    public function  testRelations(){
-
+    public function testRelations()
+    {
         CountryFactory::$number = 1;
 
         /** @var ModelDummy $modelDummy */
@@ -41,8 +39,8 @@ class SheetableUnitTest extends TestCase
         $this->assertEquals(7, $modelDummies[1]->countries[2]->id);
     }
 
-    public function  testUpdateOrCreate() {
-
+    public function testUpdateOrCreate()
+    {
         $user2 = User::factory()->make();
         $user2->setAttribute('id', 2);
 
@@ -62,7 +60,8 @@ class SheetableUnitTest extends TestCase
         $returnedModel1 = $spreadsheetHelper->updateOrCreate($rowArr, User::class);
         $this->assertCount(1, User::all(), '1 User');
         $this->assertDatabaseHas(
-            'users', ['firstname' => 'Rick', 'lastname' => 'Sanchez']
+            'users',
+            ['firstname' => 'Rick', 'lastname' => 'Sanchez']
         );
         $this->assertTrue('Sanchez' === $returnedModel1->lastname, 'Returned model has correct lastname');
 
@@ -84,7 +83,8 @@ class SheetableUnitTest extends TestCase
         $this->assertDatabaseCount('users', 1);
         $this->assertDatabaseHas(
             'users',
-            ['firstname' => 'Rick', 'lastname' => 'Pickle']);
+            ['firstname' => 'Rick', 'lastname' => 'Pickle']
+        );
         $this->assertTrue('Pickle' === $returnedModel2->lastname, 'Last name is Pickle');
 
         $dbUser2 = User::find(1);

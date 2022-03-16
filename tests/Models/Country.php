@@ -1,6 +1,6 @@
 <?php
 
-namespace Syspons\Sheetable\Tests;
+namespace Syspons\Sheetable\Tests\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;

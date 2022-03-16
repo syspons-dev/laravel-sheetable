@@ -6,10 +6,10 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
 use Syspons\Sheetable\Exports\SheetsExport;
-use Syspons\Sheetable\Tests\Country;
-use Syspons\Sheetable\Tests\ModelDummy;
+use Syspons\Sheetable\Tests\Models\Country;
+use Syspons\Sheetable\Tests\Models\ModelDummy;
+use Syspons\Sheetable\Tests\Models\User;
 use Syspons\Sheetable\Tests\TestCase;
-use Syspons\Sheetable\Tests\User;
 
 /**
  *

@@ -11,7 +11,6 @@ use Orchestra\Testbench\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
-
     public function setUp(): void
     {
         parent::setUp();
@@ -27,17 +26,15 @@ abstract class TestCase extends BaseTestCase
     protected function getEnvironmentSetUp($app)
     {
         $this->setupTables();
-        Config::set('sheetable.namespace', 'Syspons\Sheetable\Tests');
+        Config::set('sheetable.namespace', __NAMESPACE__);
     }
 
     private function setupTables(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('simples', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('firstname');
             $table->string('lastname');
-//            $table->integer('created_by');
-//            $table->integer('updated_by');
             $table->timestamps();
         });
 
@@ -46,24 +43,12 @@ abstract class TestCase extends BaseTestCase
             $table->string('title');
             $table->string('description');
             $table->string('country_main_id');
-//            $table->integer('created_by');
-//            $table->integer('updated_by');
             $table->timestamps();
         });
 
         Schema::create('countries', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('label');
-//            $table->integer('created_by');
-//            $table->integer('updated_by');
-            $table->timestamps();
-        });
-
-        Schema::create('sdgs', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('label');
-//            $table->integer('created_by');
-//            $table->integer('updated_by');
             $table->timestamps();
         });
 
@@ -75,4 +60,3 @@ abstract class TestCase extends BaseTestCase
         });
     }
 }
-

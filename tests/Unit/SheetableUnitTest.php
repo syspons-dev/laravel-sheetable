@@ -10,7 +10,7 @@ use Syspons\Sheetable\Helpers\SpreadsheetUtils;
 use Syspons\Sheetable\Tests\Models\Country;
 use Syspons\Sheetable\Tests\Models\CountryFactory;
 use Syspons\Sheetable\Tests\Models\ModelDummy;
-use Syspons\Sheetable\Tests\Models\User;
+use Syspons\Sheetable\Tests\Models\Simple;
 use Syspons\Sheetable\Tests\TestCase;
 
 /**
@@ -41,8 +41,8 @@ class SheetableUnitTest extends TestCase
 
     public function testUpdateOrCreate()
     {
-        $user2 = User::factory()->make();
-        $user2->setAttribute('id', 2);
+        $simple2 = Simple::factory()->make();
+        $simple2->setAttribute('id', 2);
 
         $utilsMock = Mockery::mock(SpreadsheetUtils::class);
         $dropdownsMock = Mockery::mock(SpreadsheetDropdowns::class);
@@ -57,19 +57,19 @@ class SheetableUnitTest extends TestCase
 
         $this->assertNotNull($spreadsheetHelper);
 
-        $returnedModel1 = $spreadsheetHelper->updateOrCreate($rowArr, User::class);
-        $this->assertCount(1, User::all(), '1 User');
+        $returnedModel1 = $spreadsheetHelper->updateOrCreate($rowArr, Simple::class);
+        $this->assertCount(1, Simple::all(), '1 Simple');
         $this->assertDatabaseHas(
-            'users',
+            'simples',
             ['firstname' => 'Rick', 'lastname' => 'Sanchez']
         );
         $this->assertTrue('Sanchez' === $returnedModel1->lastname, 'Returned model has correct lastname');
 
-        $dbUser = User::find(1);
-        $this->assertTrue($dbUser->created_at->eq($dbUser->updated_at), 'Created_at equals updated_at');
-        $this->assertTrue($dbUser->created_by === $dbUser->updated_by, 'Created_by equals updated_by');
-        $this->assertTrue(Carbon::now()->addSeconds(-1)->isBefore($dbUser->created_at), 'Is created now.');
-        $this->assertTrue(Carbon::now()->addSeconds(-1)->isBefore($dbUser->updated_at), 'Is updated now.');
+        $dbSimple = Simple::find(1);
+        $this->assertTrue($dbSimple->created_at->eq($dbSimple->updated_at), 'Created_at equals updated_at');
+        $this->assertTrue($dbSimple->created_by === $dbSimple->updated_by, 'Created_by equals updated_by');
+        $this->assertTrue(Carbon::now()->addSeconds(-1)->isBefore($dbSimple->created_at), 'Is created now.');
+        $this->assertTrue(Carbon::now()->addSeconds(-1)->isBefore($dbSimple->updated_at), 'Is updated now.');
 
         $rowArr2 = [
             'id' => 1,
@@ -79,18 +79,18 @@ class SheetableUnitTest extends TestCase
 
         sleep(1);
 
-        $returnedModel2 = $spreadsheetHelper->updateOrCreate($rowArr2, User::class);
-        $this->assertDatabaseCount('users', 1);
+        $returnedModel2 = $spreadsheetHelper->updateOrCreate($rowArr2, Simple::class);
+        $this->assertDatabaseCount('simples', 1);
         $this->assertDatabaseHas(
-            'users',
+            'simples',
             ['firstname' => 'Rick', 'lastname' => 'Pickle']
         );
         $this->assertTrue('Pickle' === $returnedModel2->lastname, 'Last name is Pickle');
 
-        $dbUser2 = User::find(1);
-        $this->assertFalse($dbUser->created_at->eq($dbUser2->updated_at), 'Created_at does not equal updated_at');
-        $this->assertTrue(Carbon::now()->addSeconds(-10)->isBefore($dbUser2->updated_at), 'Is created now.');
-        $this->assertTrue(Carbon::now()->addSeconds(-10)->isBefore($dbUser2->created_at), 'Is created now.');
-        $this->assertTrue($dbUser2->updated_at->isAfter($dbUser2->created_at), 'Is created now.');
+        $dbSimple2 = Simple::find(1);
+        $this->assertFalse($dbSimple->created_at->eq($dbSimple2->updated_at), 'Created_at does not equal updated_at');
+        $this->assertTrue(Carbon::now()->addSeconds(-10)->isBefore($dbSimple2->updated_at), 'Is created now.');
+        $this->assertTrue(Carbon::now()->addSeconds(-10)->isBefore($dbSimple2->created_at), 'Is created now.');
+        $this->assertTrue($dbSimple2->updated_at->isAfter($dbSimple2->created_at), 'Is created now.');
     }
 }

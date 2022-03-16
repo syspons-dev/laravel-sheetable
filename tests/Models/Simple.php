@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use JetBrains\PhpStorm\ArrayShape;
 use Syspons\Sheetable\Models\Contracts\Sheetable;
 
-class User extends Model implements Sheetable
+class Simple extends Model implements Sheetable
 {
     use HasFactory;
 
@@ -26,14 +26,15 @@ class User extends Model implements Sheetable
      * @return array
      */
     #[ArrayShape(['firstname' => "string"])]
-    public static function importRules(): array {
+    public static function importRules(): array
+    {
         return [
             'firstname' => 'required',
         ];
     }
 
-    protected static function newFactory(): UserFactory
+    protected static function newFactory(): SimpleFactory
     {
-        return UserFactory::new();
+        return SimpleFactory::new();
     }
 }

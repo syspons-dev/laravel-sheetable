@@ -8,7 +8,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Syspons\Sheetable\Exports\SheetsExport;
 use Syspons\Sheetable\Tests\Models\Country;
 use Syspons\Sheetable\Tests\Models\ModelDummy;
-use Syspons\Sheetable\Tests\Models\User;
+use Syspons\Sheetable\Tests\Models\Simple;
 use Syspons\Sheetable\Tests\TestCase;
 
 /**
@@ -16,12 +16,12 @@ use Syspons\Sheetable\Tests\TestCase;
  */
 class SheetableFeatureTest extends TestCase
 {
-    public function test_user_routes_exist(): void
+    public function test_simple_routes_exist(): void
     {
         $expectedRoutes = [
-            'users.import',
-            'users.export',
-            'users.template',
+            'simples.import',
+            'simples.export',
+            'simples.template',
             'model_dummies.import',
             'model_dummies.export',
             'model_dummies.template',
@@ -78,14 +78,14 @@ class SheetableFeatureTest extends TestCase
         });
     }
 
-    public function test_exported_user_sheet_has_correct_headings()
+    public function test_exported_simple_sheet_has_correct_headings()
     {
         Excel::fake();
 
-        $this->get('/api/export/users')
+        $this->get('/api/export/simples')
             ->assertStatus(200);
 
-        Excel::assertDownloaded('users.xlsx', function (SheetsExport $export) {
+        Excel::assertDownloaded('simples.xlsx', function (SheetsExport $export) {
             // Assert that the correct export is downloaded.
 
             return
@@ -98,18 +98,18 @@ class SheetableFeatureTest extends TestCase
     public function test_exported_sheet_has_correct_values()
     {
         Excel::fake();
-        $dbUser = User::factory()->create();
-        $this->get('/api/export/users')
+        $dbSimple = Simple::factory()->create();
+        $this->get('/api/export/simples')
             ->assertStatus(200);
 
-        Excel::assertDownloaded('users.xlsx', function (SheetsExport $export) use ($dbUser) {
+        Excel::assertDownloaded('simples.xlsx', function (SheetsExport $export) use ($dbSimple) {
             // Assert that the correct export is downloaded.
-            $downloadedUser = $export->collection()->first();
+            $downloadedSimple = $export->collection()->first();
 
             return
-                $downloadedUser->id === $dbUser->id &&
-                $downloadedUser->firstname === $dbUser->firstname &&
-                $downloadedUser->lastname === $dbUser->lastname;
+                $downloadedSimple->id === $dbSimple->id &&
+                $downloadedSimple->firstname === $dbSimple->firstname &&
+                $downloadedSimple->lastname === $dbSimple->lastname;
         });
     }
 
@@ -134,29 +134,29 @@ class SheetableFeatureTest extends TestCase
         });
     }
 
-    public function test_import_users(): void
+    public function test_import_simples(): void
     {
         Excel::fake();
 
         $file = new UploadedFile(
-            __DIR__ . '/users-upload.xlsx',
-            'users-upload.xlsx',
+            __DIR__ . '/simples-upload.xlsx',
+            'simples-upload.xlsx',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             null,
             true
         );
 
-        $response = $this->postJson('/api/import/users', [
+        $response = $this->postJson('/api/import/simples', [
             'file' => $file
         ]);
 
         $this->assertEquals(200, $response->getStatusCode());
 
         // TODO AJ does not work
-//        Excel::assertImported('users-upload.xlsx');
-//        $this->assertDatabaseCount('users', 10);
+//        Excel::assertImported('simples-upload.xlsx');
+//        $this->assertDatabaseCount('simples', 10);
 //        $this->assertDatabaseHas(
-//            'users',
+//            'simples',
 //            ['firstname' => 'Rick', 'lastname' => 'Sanchez']
 //        );
     }

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
 use Syspons\Sheetable\Exports\SheetsExport;
 use Syspons\Sheetable\Tests\Models\ManyToManyRelation;
+use Syspons\Sheetable\Tests\Models\OneToManyRelation;
 use Syspons\Sheetable\Tests\Models\WithRelationDummy;
 use Syspons\Sheetable\Tests\Models\SimpleDummy;
 use Syspons\Sheetable\Tests\TestCase;
@@ -28,7 +29,7 @@ class ExportTest extends TestCase
             // TODO $export->registerEvents()['Maatwebsite\Excel\Events\AfterSheet'](EVENT); IS NOT CALLED ??
             return
                 in_array('id', $export->headings()) &&
-                in_array('many_to_many_relation_main_id', $export->headings());
+                in_array('one_to_many_relation_id', $export->headings());
 //                && in_array('relation_additional_id_1', $export->headings());
         });
     }
@@ -37,7 +38,7 @@ class ExportTest extends TestCase
     {
         Excel::fake();
         $withRelationDummies = WithRelationDummy::factory()->count(3)
-            ->for(ManyToManyRelation::factory())
+            ->for(OneToManyRelation::factory())
             ->has(ManyToManyRelation::factory()->count(3))
             ->create();
 
@@ -98,7 +99,7 @@ class ExportTest extends TestCase
     {
         Excel::fake();
         $withRelationDummies = WithRelationDummy::factory()->count(4)
-            ->for(ManyToManyRelation::factory())
+            ->for(OneToManyRelation::factory())
             ->has(ManyToManyRelation::factory()->count(4))
             ->create();
         $ids = array_slice($withRelationDummies->pluck('id')->toArray(), 0, 2);

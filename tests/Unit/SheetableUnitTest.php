@@ -8,7 +8,7 @@ use Syspons\Sheetable\Helpers\SpreadsheetDropdowns;
 use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 use Syspons\Sheetable\Helpers\SpreadsheetUtils;
 use Syspons\Sheetable\Tests\Models\ManyToManyRelation;
-use Syspons\Sheetable\Tests\Models\ManyToManyRelationFactory;
+use Syspons\Sheetable\Tests\Models\OneToManyRelation;
 use Syspons\Sheetable\Tests\Models\WithRelationDummy;
 use Syspons\Sheetable\Tests\Models\SimpleDummy;
 use Syspons\Sheetable\Tests\TestCase;
@@ -21,19 +21,19 @@ class SheetableUnitTest extends TestCase
     public function test_relations()
     {
         $withRelationDummies = WithRelationDummy::factory()->count(3)
-            ->for(ManyToManyRelation::factory())
+            ->for(OneToManyRelation::factory())
             ->has(ManyToManyRelation::factory()->count(3))
             ->create();
 
         $this->assertEquals(3, count($withRelationDummies[0]->manyToManyRelations));
-        $this->assertEquals(1, $withRelationDummies[0]->manyToManyRelation->id);
-        $this->assertEquals(2, $withRelationDummies[0]->manyToManyRelations[0]->id);
-        $this->assertEquals(3, $withRelationDummies[0]->manyToManyRelations[1]->id);
-        $this->assertEquals(4, $withRelationDummies[0]->manyToManyRelations[2]->id);
-        $this->assertEquals(1, $withRelationDummies[1]->manyToManyRelation->id);
-        $this->assertEquals(5, $withRelationDummies[1]->manyToManyRelations[0]->id);
-        $this->assertEquals(6, $withRelationDummies[1]->manyToManyRelations[1]->id);
-        $this->assertEquals(7, $withRelationDummies[1]->manyToManyRelations[2]->id);
+        $this->assertEquals(1, $withRelationDummies[0]->oneToManyRelation->id);
+        $this->assertEquals(1, $withRelationDummies[0]->manyToManyRelations[0]->id);
+        $this->assertEquals(2, $withRelationDummies[0]->manyToManyRelations[1]->id);
+        $this->assertEquals(3, $withRelationDummies[0]->manyToManyRelations[2]->id);
+        $this->assertEquals(1, $withRelationDummies[1]->oneToManyRelation->id);
+        $this->assertEquals(4, $withRelationDummies[1]->manyToManyRelations[0]->id);
+        $this->assertEquals(5, $withRelationDummies[1]->manyToManyRelations[1]->id);
+        $this->assertEquals(6, $withRelationDummies[1]->manyToManyRelations[2]->id);
     }
 
     public function testUpdateOrCreate()

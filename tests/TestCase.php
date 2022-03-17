@@ -42,7 +42,13 @@ abstract class TestCase extends BaseTestCase
             $table->bigIncrements('id');
             $table->string('title');
             $table->string('description');
-            $table->string('many_to_many_relation_main_id');
+            $table->string('one_to_many_relation_id');
+            $table->timestamps();
+        });
+
+        Schema::create('one_to_many_relations', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('label');
             $table->timestamps();
         });
 

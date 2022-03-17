@@ -33,15 +33,14 @@ class WithRelationDummy extends Model implements Sheetable, Dropdownable
         return self::rules(null);
     }
 
-    public function manyToManyRelation()
+    public function oneToManyRelation()
     {
-        return $this->belongsTo(ManyToManyRelation::class, 'many_to_many_relation_main_id');
+        return $this->belongsTo(OneToManyRelation::class);
     }
 
     public function manyToManyRelations()
     {
-        return $this->belongsToMany(ManyToManyRelation::class)
-            ->withPivot('id');
+        return $this->belongsToMany(ManyToManyRelation::class);
     }
 
     protected static function newFactory(): WithRelationDummyFactory

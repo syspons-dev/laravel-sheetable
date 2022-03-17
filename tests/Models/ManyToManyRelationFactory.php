@@ -4,9 +4,9 @@ namespace Syspons\Sheetable\Tests\Models;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class RelationFactory extends Factory
+class ManyToManyRelationFactory extends Factory
 {
-    protected $model = Relation::class;
+    protected $model = ManyToManyRelation::class;
     public static int $number = 1;
 
     public function definition(): array

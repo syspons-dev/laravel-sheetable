@@ -33,14 +33,14 @@ class WithRelationDummy extends Model implements Sheetable, Dropdownable
         return self::rules(null);
     }
 
-    public function relation()
+    public function manyToManyRelation()
     {
-        return $this->belongsTo(Relation::class, 'relation_main_id');
+        return $this->belongsTo(ManyToManyRelation::class, 'many_to_many_relation_main_id');
     }
 
-    public function relations()
+    public function manyToManyRelations()
     {
-        return $this->belongsToMany(Relation::class)
+        return $this->belongsToMany(ManyToManyRelation::class)
             ->withPivot('id');
     }
 
@@ -57,11 +57,11 @@ class WithRelationDummy extends Model implements Sheetable, Dropdownable
         return [
             (new DropdownConfig())
                 ->setField('relation_main_id')
-                ->setFkModel(Relation::class)
+                ->setFkModel(ManyToManyRelation::class)
                 ->setFkTextCol('label'),
             (new DropdownConfig())
                 ->setField('relation_additional_id')
-                ->setFkModel(Relation::class)
+                ->setFkModel(ManyToManyRelation::class)
                 ->setFkTextCol('label')
                 ->setMappingRightOfField('relation_main_id')
                 ->setMappingMinFields(5),

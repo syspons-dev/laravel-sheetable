@@ -6,7 +6,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
 use Syspons\Sheetable\Exports\SheetsExport;
-use Syspons\Sheetable\Tests\Models\Relation;
+use Syspons\Sheetable\Tests\Models\ManyToManyRelation;
 use Syspons\Sheetable\Tests\Models\WithRelationDummy;
 use Syspons\Sheetable\Tests\Models\SimpleDummy;
 use Syspons\Sheetable\Tests\TestCase;
@@ -25,9 +25,9 @@ class SheetableFeatureTest extends TestCase
             'with_relation_dummies.import',
             'with_relation_dummies.export',
             'with_relation_dummies.template',
-            'relations.import',
-            'relations.export',
-            'relations.template',
+            'many_to_many_relations.import',
+            'many_to_many_relations.export',
+            'many_to_many_relations.template',
         ];
         $registeredRoutes = array_keys(Route::getRoutes()->getRoutesByName());
         foreach ($expectedRoutes as $route) {
@@ -47,7 +47,7 @@ class SheetableFeatureTest extends TestCase
             // TODO $export->registerEvents()['Maatwebsite\Excel\Events\AfterSheet'](EVENT); IS NOT CALLED ??
             return
                 in_array('id', $export->headings()) &&
-                in_array('relation_main_id', $export->headings());
+                in_array('many_to_many_relation_main_id', $export->headings());
 //                && in_array('relation_additional_id_1', $export->headings());
         });
     }
@@ -56,8 +56,8 @@ class SheetableFeatureTest extends TestCase
     {
         Excel::fake();
         $withRelationDummies = WithRelationDummy::factory()->count(3)
-            ->for(Relation::factory())
-            ->has(Relation::factory()->count(3))
+            ->for(ManyToManyRelation::factory())
+            ->has(ManyToManyRelation::factory()->count(3))
             ->create();
 
         $this->get('/api/export/with_relation_dummies')
@@ -117,8 +117,8 @@ class SheetableFeatureTest extends TestCase
     {
         Excel::fake();
         $withRelationDummies = WithRelationDummy::factory()->count(4)
-            ->for(Relation::factory())
-            ->has(Relation::factory()->count(4))
+            ->for(ManyToManyRelation::factory())
+            ->has(ManyToManyRelation::factory()->count(4))
             ->create();
         $ids = array_slice($withRelationDummies->pluck('id')->toArray(), 0, 2);
 

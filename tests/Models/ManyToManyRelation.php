@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Syspons\Sheetable\Models\Contracts\Sheetable;
 
-class Relation extends Model implements Sheetable
+class ManyToManyRelation extends Model implements Sheetable
 {
     use HasFactory;
 
@@ -17,13 +17,13 @@ class Relation extends Model implements Sheetable
         ];
     }
 
-    protected static function newFactory(): RelationFactory
+    protected static function newFactory(): ManyToManyRelationFactory
     {
-        return RelationFactory::new();
+        return ManyToManyRelationFactory::new();
     }
 
     public function with_relation_dummies()
     {
-        return $this->hasMany(WithRelationDummy::class, 'relation_main_id');
+        return $this->hasMany(WithRelationDummy::class, 'many_to_many_relation_main_id');
     }
 }

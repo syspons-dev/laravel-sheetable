@@ -10,7 +10,7 @@ use Syspons\Sheetable\Helpers\SpreadsheetUtils;
 use Syspons\Sheetable\Tests\Models\Relation;
 use Syspons\Sheetable\Tests\Models\RelationFactory;
 use Syspons\Sheetable\Tests\Models\WithRelationDummy;
-use Syspons\Sheetable\Tests\Models\Simple;
+use Syspons\Sheetable\Tests\Models\SimpleDummy;
 use Syspons\Sheetable\Tests\TestCase;
 
 /**
@@ -53,19 +53,19 @@ class SheetableUnitTest extends TestCase
 
         $this->assertNotNull($spreadsheetHelper);
 
-        $returnedModel1 = $spreadsheetHelper->updateOrCreate($rowArr, Simple::class);
-        $this->assertCount(1, Simple::all(), '1 Simple');
+        $returnedModel1 = $spreadsheetHelper->updateOrCreate($rowArr, SimpleDummy::class);
+        $this->assertCount(1, SimpleDummy::all(), '1 SimpleDummy');
         $this->assertDatabaseHas(
-            'simples',
+            'simple_dummies',
             ['firstname' => 'Rick', 'lastname' => 'Sanchez']
         );
         $this->assertTrue('Sanchez' === $returnedModel1->lastname, 'Returned model has correct lastname');
 
-        $dbSimple = Simple::find(1);
-        $this->assertTrue($dbSimple->created_at->eq($dbSimple->updated_at), 'Created_at equals updated_at');
-        $this->assertTrue($dbSimple->created_by === $dbSimple->updated_by, 'Created_by equals updated_by');
-        $this->assertTrue(Carbon::now()->addSeconds(-1)->isBefore($dbSimple->created_at), 'Is created now.');
-        $this->assertTrue(Carbon::now()->addSeconds(-1)->isBefore($dbSimple->updated_at), 'Is updated now.');
+        $dbSimpleDummy = SimpleDummy::find(1);
+        $this->assertTrue($dbSimpleDummy->created_at->eq($dbSimpleDummy->updated_at), 'Created_at equals updated_at');
+        $this->assertTrue($dbSimpleDummy->created_by === $dbSimpleDummy->updated_by, 'Created_by equals updated_by');
+        $this->assertTrue(Carbon::now()->addSeconds(-1)->isBefore($dbSimpleDummy->created_at), 'Is created now.');
+        $this->assertTrue(Carbon::now()->addSeconds(-1)->isBefore($dbSimpleDummy->updated_at), 'Is updated now.');
 
         $rowArr2 = [
             'id' => 1,
@@ -75,18 +75,18 @@ class SheetableUnitTest extends TestCase
 
         sleep(1);
 
-        $returnedModel2 = $spreadsheetHelper->updateOrCreate($rowArr2, Simple::class);
-        $this->assertDatabaseCount('simples', 1);
+        $returnedModel2 = $spreadsheetHelper->updateOrCreate($rowArr2, SimpleDummy::class);
+        $this->assertDatabaseCount('simple_dummies', 1);
         $this->assertDatabaseHas(
-            'simples',
+            'simple_dummies',
             ['firstname' => 'Rick', 'lastname' => 'Pickle']
         );
         $this->assertTrue('Pickle' === $returnedModel2->lastname, 'Last name is Pickle');
 
-        $dbSimple2 = Simple::find(1);
-        $this->assertFalse($dbSimple->created_at->eq($dbSimple2->updated_at), 'Created_at does not equal updated_at');
-        $this->assertTrue(Carbon::now()->addSeconds(-10)->isBefore($dbSimple2->updated_at), 'Is created now.');
-        $this->assertTrue(Carbon::now()->addSeconds(-10)->isBefore($dbSimple2->created_at), 'Is created now.');
-        $this->assertTrue($dbSimple2->updated_at->isAfter($dbSimple2->created_at), 'Is created now.');
+        $dbSimpleDummy2 = SimpleDummy::find(1);
+        $this->assertFalse($dbSimpleDummy->created_at->eq($dbSimpleDummy2->updated_at), 'Created_at does not equal updated_at');
+        $this->assertTrue(Carbon::now()->addSeconds(-10)->isBefore($dbSimpleDummy2->updated_at), 'Is created now.');
+        $this->assertTrue(Carbon::now()->addSeconds(-10)->isBefore($dbSimpleDummy2->created_at), 'Is created now.');
+        $this->assertTrue($dbSimpleDummy2->updated_at->isAfter($dbSimpleDummy2->created_at), 'Is created now.');
     }
 }

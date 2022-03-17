@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use JetBrains\PhpStorm\ArrayShape;
 use Syspons\Sheetable\Models\Contracts\Sheetable;
 
-class Simple extends Model implements Sheetable
+class SimpleDummy extends Model implements Sheetable
 {
     use HasFactory;
 
@@ -33,8 +33,8 @@ class Simple extends Model implements Sheetable
         ];
     }
 
-    protected static function newFactory(): SimpleFactory
+    protected static function newFactory(): SimpleDummyFactory
     {
-        return SimpleFactory::new();
+        return SimpleDummyFactory::new();
     }
 }

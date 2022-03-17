@@ -31,7 +31,7 @@ abstract class TestCase extends BaseTestCase
 
     private function setupTables(): void
     {
-        Schema::create('simples', function (Blueprint $table) {
+        Schema::create('simple_dummies', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('firstname');
             $table->string('lastname');

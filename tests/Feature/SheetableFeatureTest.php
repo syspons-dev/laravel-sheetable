@@ -8,7 +8,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Syspons\Sheetable\Exports\SheetsExport;
 use Syspons\Sheetable\Tests\Models\Relation;
 use Syspons\Sheetable\Tests\Models\WithRelationDummy;
-use Syspons\Sheetable\Tests\Models\Simple;
+use Syspons\Sheetable\Tests\Models\SimpleDummy;
 use Syspons\Sheetable\Tests\TestCase;
 
 /**
@@ -16,12 +16,12 @@ use Syspons\Sheetable\Tests\TestCase;
  */
 class SheetableFeatureTest extends TestCase
 {
-    public function test_simple_routes_exist(): void
+    public function test_simpleDummy_routes_exist(): void
     {
         $expectedRoutes = [
-            'simples.import',
-            'simples.export',
-            'simples.template',
+            'simple_dummies.import',
+            'simple_dummies.export',
+            'simple_dummies.template',
             'with_relation_dummies.import',
             'with_relation_dummies.export',
             'with_relation_dummies.template',
@@ -78,14 +78,14 @@ class SheetableFeatureTest extends TestCase
         });
     }
 
-    public function test_exported_simple_sheet_has_correct_headings()
+    public function test_exported_simpleDummy_sheet_has_correct_headings()
     {
         Excel::fake();
 
-        $this->get('/api/export/simples')
+        $this->get('/api/export/simple_dummies')
             ->assertStatus(200);
 
-        Excel::assertDownloaded('simples.xlsx', function (SheetsExport $export) {
+        Excel::assertDownloaded('simple_dummies.xlsx', function (SheetsExport $export) {
             // Assert that the correct export is downloaded.
 
             return
@@ -98,18 +98,18 @@ class SheetableFeatureTest extends TestCase
     public function test_exported_sheet_has_correct_values()
     {
         Excel::fake();
-        $dbSimple = Simple::factory()->create();
-        $this->get('/api/export/simples')
+        $dbSimpleDummy = SimpleDummy::factory()->create();
+        $this->get('/api/export/simple_dummies')
             ->assertStatus(200);
 
-        Excel::assertDownloaded('simples.xlsx', function (SheetsExport $export) use ($dbSimple) {
+        Excel::assertDownloaded('simple_dummies.xlsx', function (SheetsExport $export) use ($dbSimpleDummy) {
             // Assert that the correct export is downloaded.
-            $downloadedSimple = $export->collection()->first();
+            $downloadedSimpleDummy = $export->collection()->first();
 
             return
-                $downloadedSimple->id === $dbSimple->id &&
-                $downloadedSimple->firstname === $dbSimple->firstname &&
-                $downloadedSimple->lastname === $dbSimple->lastname;
+                $downloadedSimpleDummy->id === $dbSimpleDummy->id &&
+                $downloadedSimpleDummy->firstname === $dbSimpleDummy->firstname &&
+                $downloadedSimpleDummy->lastname === $dbSimpleDummy->lastname;
         });
     }
 
@@ -134,29 +134,29 @@ class SheetableFeatureTest extends TestCase
         });
     }
 
-    public function test_import_simples(): void
+    public function test_import_simple_dummies(): void
     {
         Excel::fake();
 
         $file = new UploadedFile(
-            __DIR__ . '/simples-upload.xlsx',
-            'simples-upload.xlsx',
+            __DIR__ . '/simple-dummies-upload.xlsx',
+            'simple-dummies-upload.xlsx',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             null,
             true
         );
 
-        $response = $this->postJson('/api/import/simples', [
+        $response = $this->postJson('/api/import/simple_dummies', [
             'file' => $file
         ]);
 
         $this->assertEquals(200, $response->getStatusCode());
 
         // TODO AJ does not work
-//        Excel::assertImported('simples-upload.xlsx');
-//        $this->assertDatabaseCount('simples', 10);
+//        Excel::assertImported('simpleDummys-upload.xlsx');
+//        $this->assertDatabaseCount('simpleDummys', 10);
 //        $this->assertDatabaseHas(
-//            'simples',
+//            'simpleDummys',
 //            ['firstname' => 'Rick', 'lastname' => 'Sanchez']
 //        );
     }

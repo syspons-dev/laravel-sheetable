@@ -1,6 +1,6 @@
 <?php
 
-namespace Syspons\Sheetable\Tests\Feature;
+namespace Syspons\Sheetable\Tests\Feature\ExportTest;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
@@ -14,27 +14,8 @@ use Syspons\Sheetable\Tests\TestCase;
 /**
  *
  */
-class SheetableFeatureTest extends TestCase
+class ExportTest extends TestCase
 {
-    public function test_simpleDummy_routes_exist(): void
-    {
-        $expectedRoutes = [
-            'simple_dummies.import',
-            'simple_dummies.export',
-            'simple_dummies.template',
-            'with_relation_dummies.import',
-            'with_relation_dummies.export',
-            'with_relation_dummies.template',
-            'many_to_many_relations.import',
-            'many_to_many_relations.export',
-            'many_to_many_relations.template',
-        ];
-        $registeredRoutes = array_keys(Route::getRoutes()->getRoutesByName());
-        foreach ($expectedRoutes as $route) {
-            $this->assertContains($route, $registeredRoutes);
-        }
-    }
-
     public function test_exported_with_relation_dummies_sheet_has_correct_headings()
     {
         Excel::fake();
@@ -132,32 +113,5 @@ class SheetableFeatureTest extends TestCase
             $plucked = $ret->pluck('id')->toArray();
             return $ret->count() === count($ids) && $plucked == $ids;
         });
-    }
-
-    public function test_import_simple_dummies(): void
-    {
-        Excel::fake();
-
-        $file = new UploadedFile(
-            __DIR__ . '/simple-dummies-upload.xlsx',
-            'simple-dummies-upload.xlsx',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            null,
-            true
-        );
-
-        $response = $this->postJson('/api/import/simple_dummies', [
-            'file' => $file
-        ]);
-
-        $this->assertEquals(200, $response->getStatusCode());
-
-        // TODO AJ does not work
-//        Excel::assertImported('simpleDummys-upload.xlsx');
-//        $this->assertDatabaseCount('simpleDummys', 10);
-//        $this->assertDatabaseHas(
-//            'simpleDummys',
-//            ['firstname' => 'Rick', 'lastname' => 'Sanchez']
-//        );
     }
 }

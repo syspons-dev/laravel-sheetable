@@ -11,25 +11,16 @@ class SimpleDummy extends Model implements Sheetable
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
-        'firstname',
-        'lastname'
+        'title',
     ];
 
-    /**
-     * @param mixed|null $id
-     * @return array
-     */
-    #[ArrayShape(['firstname' => "string"])]
+    public $timestamps = false;
+
     public static function importRules(): array
     {
         return [
-            'firstname' => 'required',
+            'title' => 'required',
         ];
     }
 

@@ -2,8 +2,6 @@
 
 namespace Syspons\Sheetable\Tests\Feature\ExportTest;
 
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
 use Syspons\Sheetable\Exports\SheetsExport;
 use Syspons\Sheetable\Tests\Models\ManyToManyRelation;
@@ -17,11 +15,25 @@ use Syspons\Sheetable\Tests\TestCase;
  */
 class ExportTest extends TestCase
 {
-    public function test_exported_with_relation_dummies_sheet_has_correct_headings()
+    public function test_store_simple_file()
+    {
+        $expectedName = 'simple_dummies.xlsx';
+        SimpleDummy::insert([
+            [ 'title' => 'test 1' ],
+            [ 'title' => 'test 2' ],
+            [ 'title' => 'test 3' ],
+        ]);
+        $response = $this->get(route('simple_dummies.export'))
+            ->assertStatus(200)
+            ->assertDownload($expectedName);
+        $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName);
+    }
+
+    public function test_with_relation_dummies_sheet_has_correct_headings()
     {
         Excel::fake();
 
-        $this->get('/api/export/with_relation_dummies')
+        $this->get(route('with_relation_dummies.export'))
             ->assertStatus(200);
 
         // Assert that the correct export is downloaded.
@@ -72,8 +84,7 @@ class ExportTest extends TestCase
 
             return
                 in_array('id', $export->headings()) &&
-                in_array('firstname', $export->headings()) &&
-                in_array('lastname', $export->headings());
+                in_array('title', $export->headings());
         });
     }
 
@@ -90,8 +101,7 @@ class ExportTest extends TestCase
 
             return
                 $downloadedSimpleDummy->id === $dbSimpleDummy->id &&
-                $downloadedSimpleDummy->firstname === $dbSimpleDummy->firstname &&
-                $downloadedSimpleDummy->lastname === $dbSimpleDummy->lastname;
+                $downloadedSimpleDummy->title === $dbSimpleDummy->title;
         });
     }
 

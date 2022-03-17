@@ -19,9 +19,6 @@ class BasicTest extends TestCase
             'with_relation_dummies.import',
             'with_relation_dummies.export',
             'with_relation_dummies.template',
-            'many_to_many_relations.import',
-            'many_to_many_relations.export',
-            'many_to_many_relations.template',
         ];
         $registeredRoutes = array_keys(Route::getRoutes()->getRoutesByName());
         foreach ($expectedRoutes as $route) {

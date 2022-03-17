@@ -18,10 +18,8 @@ use Syspons\Sheetable\Tests\TestCase;
  */
 class SheetableUnitTest extends TestCase
 {
-    public function testRelations()
+    public function test_relations()
     {
-        ManyToManyRelationFactory::$number = 1;
-
         $withRelationDummies = WithRelationDummy::factory()->count(3)
             ->for(ManyToManyRelation::factory())
             ->has(ManyToManyRelation::factory()->count(3))

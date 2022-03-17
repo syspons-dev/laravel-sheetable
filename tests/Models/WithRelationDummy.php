@@ -2,32 +2,16 @@
 
 namespace Syspons\Sheetable\Tests\Models;
 
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Syspons\Sheetable\Exports\DropdownConfig;
 use Syspons\Sheetable\Models\Contracts\Dropdownable;
 use Syspons\Sheetable\Models\Contracts\Sheetable;
 
-/**
- * Class ModelDummy.
- *
- * @property int $id
- * @property string $title
- * @property string $description
- * @property int|null $relation_main_id
- * @property int|null $created_by
- * @property int|null $updated_by
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
- * @property Relation|null $relation
- * @property Collection|Relation[] $relations
- */
-class ModelDummy  extends Model implements Sheetable, Dropdownable
+class WithRelationDummy extends Model implements Sheetable, Dropdownable
 {
-
     use HasFactory;
+    
     /**
      * The attributes that are mass assignable.
      *
@@ -60,9 +44,9 @@ class ModelDummy  extends Model implements Sheetable, Dropdownable
             ->withPivot('id');
     }
 
-    protected static function newFactory(): ModelDummyFactory
+    protected static function newFactory(): WithRelationDummyFactory
     {
-        return ModelDummyFactory::new();
+        return WithRelationDummyFactory::new();
     }
 
     /**

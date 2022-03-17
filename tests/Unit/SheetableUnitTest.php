@@ -9,7 +9,7 @@ use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 use Syspons\Sheetable\Helpers\SpreadsheetUtils;
 use Syspons\Sheetable\Tests\Models\Relation;
 use Syspons\Sheetable\Tests\Models\RelationFactory;
-use Syspons\Sheetable\Tests\Models\ModelDummy;
+use Syspons\Sheetable\Tests\Models\WithRelationDummy;
 use Syspons\Sheetable\Tests\Models\Simple;
 use Syspons\Sheetable\Tests\TestCase;
 
@@ -22,21 +22,20 @@ class SheetableUnitTest extends TestCase
     {
         RelationFactory::$number = 1;
 
-        /** @var ModelDummy $modelDummy */
-        $modelDummies = ModelDummy::factory()->count(3)
+        $withRelationDummies = WithRelationDummy::factory()->count(3)
             ->for(Relation::factory())
             ->has(Relation::factory()->count(3))
             ->create();
 
-        $this->assertEquals(3, count($modelDummies[0]->relations));
-        $this->assertEquals(1, $modelDummies[0]->relation->id);
-        $this->assertEquals(2, $modelDummies[0]->relations[0]->id);
-        $this->assertEquals(3, $modelDummies[0]->relations[1]->id);
-        $this->assertEquals(4, $modelDummies[0]->relations[2]->id);
-        $this->assertEquals(1, $modelDummies[1]->relation->id);
-        $this->assertEquals(5, $modelDummies[1]->relations[0]->id);
-        $this->assertEquals(6, $modelDummies[1]->relations[1]->id);
-        $this->assertEquals(7, $modelDummies[1]->relations[2]->id);
+        $this->assertEquals(3, count($withRelationDummies[0]->relations));
+        $this->assertEquals(1, $withRelationDummies[0]->relation->id);
+        $this->assertEquals(2, $withRelationDummies[0]->relations[0]->id);
+        $this->assertEquals(3, $withRelationDummies[0]->relations[1]->id);
+        $this->assertEquals(4, $withRelationDummies[0]->relations[2]->id);
+        $this->assertEquals(1, $withRelationDummies[1]->relation->id);
+        $this->assertEquals(5, $withRelationDummies[1]->relations[0]->id);
+        $this->assertEquals(6, $withRelationDummies[1]->relations[1]->id);
+        $this->assertEquals(7, $withRelationDummies[1]->relations[2]->id);
     }
 
     public function testUpdateOrCreate()

@@ -4,9 +4,9 @@ namespace Syspons\Sheetable\Tests\Models;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class ModelDummyFactory extends Factory
+class WithRelationDummyFactory extends Factory
 {
-    protected $model = ModelDummy::class;
+    protected $model = WithRelationDummy::class;
     static int $number = 1;
 
     public function definition(): array

@@ -22,8 +22,8 @@ class Relation extends Model implements Sheetable
         return RelationFactory::new();
     }
 
-    public function model_dummies()
+    public function with_relation_dummies()
     {
-        return $this->hasMany(ModelDummy::class, 'relation_main_id');
+        return $this->hasMany(WithRelationDummy::class, 'relation_main_id');
     }
 }

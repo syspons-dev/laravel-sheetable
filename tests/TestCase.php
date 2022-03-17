@@ -38,7 +38,7 @@ abstract class TestCase extends BaseTestCase
             $table->timestamps();
         });
 
-        Schema::create('model_dummies', function (Blueprint $table) {
+        Schema::create('with_relation_dummies', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('title');
             $table->string('description');
@@ -52,10 +52,10 @@ abstract class TestCase extends BaseTestCase
             $table->timestamps();
         });
 
-        Schema::create('model_dummy_relation', function (Blueprint $table) {
+        Schema::create('relation_with_relation_dummy', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->bigInteger('relation_id');
-            $table->bigInteger('model_dummy_id');
+            $table->bigInteger('with_relation_dummy_id');
             $table->timestamps();
         });
     }

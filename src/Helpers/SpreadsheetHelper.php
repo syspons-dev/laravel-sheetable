@@ -5,6 +5,7 @@ namespace Syspons\Sheetable\Helpers;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use PhpOffice\PhpSpreadsheet\Calculation\Exception;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
@@ -83,6 +84,10 @@ class SpreadsheetHelper
      */
     public function writeCodeBookHorizontal(Model $model, Worksheet $worksheet)
     {
+        if (!Schema::hasTable('code_book')) {
+            return;
+        }
+
         $codebookSheet = $this->getCodebookSheetHorizontal($worksheet->getParent());
 
         $lastColumn = $worksheet->getHighestColumn();
@@ -138,6 +143,10 @@ class SpreadsheetHelper
      */
     public function writeCodeBook(Model $model, Worksheet $worksheet)
     {
+        if (!Schema::hasTable('code_book')) {
+            return;
+        }
+        
         $codebookSheet = $this->getCodebookSheet($worksheet->getParent());
 
         $lastColumn = $worksheet->getHighestColumn();

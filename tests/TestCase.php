@@ -42,19 +42,19 @@ abstract class TestCase extends BaseTestCase
             $table->bigIncrements('id');
             $table->string('title');
             $table->string('description');
-            $table->string('country_main_id');
+            $table->string('relation_main_id');
             $table->timestamps();
         });
 
-        Schema::create('countries', function (Blueprint $table) {
+        Schema::create('relations', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('label');
             $table->timestamps();
         });
 
-        Schema::create('country_model_dummy', function (Blueprint $table) {
+        Schema::create('model_dummy_relation', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('country_id');
+            $table->bigInteger('relation_id');
             $table->bigInteger('model_dummy_id');
             $table->timestamps();
         });

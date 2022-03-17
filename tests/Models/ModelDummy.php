@@ -16,27 +16,18 @@ use Syspons\Sheetable\Models\Contracts\Sheetable;
  * @property int $id
  * @property string $title
  * @property string $description
- * @property int|null $country_main_id
+ * @property int|null $relation_main_id
  * @property int|null $created_by
  * @property int|null $updated_by
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property Country|null $country
- * @property Collection|Country[] $countries
+ * @property Relation|null $relation
+ * @property Collection|Relation[] $relations
  */
 class ModelDummy  extends Model implements Sheetable, Dropdownable
 {
 
     use HasFactory;
-
-    protected $table = 'model_dummies';
-
-    protected $casts = [
-        'country_main_id' => 'int',
-        'created_by' => 'int',
-        'updated_by' => 'int',
-    ];
-
     /**
      * The attributes that are mass assignable.
      *
@@ -58,14 +49,14 @@ class ModelDummy  extends Model implements Sheetable, Dropdownable
         return self::rules(null);
     }
 
-    public function country()
+    public function relation()
     {
-        return $this->belongsTo(Country::class, 'country_main_id');
+        return $this->belongsTo(Relation::class, 'relation_main_id');
     }
 
-    public function countries()
+    public function relations()
     {
-        return $this->belongsToMany(Country::class)
+        return $this->belongsToMany(Relation::class)
             ->withPivot('id');
     }
 
@@ -81,14 +72,14 @@ class ModelDummy  extends Model implements Sheetable, Dropdownable
     {
         return [
             (new DropdownConfig())
-                ->setField('country_main_id')
-                ->setFkModel(Country::class)
+                ->setField('relation_main_id')
+                ->setFkModel(Relation::class)
                 ->setFkTextCol('label'),
             (new DropdownConfig())
-                ->setField('country_additional_id')
-                ->setFkModel(Country::class)
+                ->setField('relation_additional_id')
+                ->setFkModel(Relation::class)
                 ->setFkTextCol('label')
-                ->setMappingRightOfField('country_main_id')
+                ->setMappingRightOfField('relation_main_id')
                 ->setMappingMinFields(5),
         ];
     }

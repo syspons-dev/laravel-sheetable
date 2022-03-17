@@ -7,8 +7,8 @@ use Mockery;
 use Syspons\Sheetable\Helpers\SpreadsheetDropdowns;
 use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 use Syspons\Sheetable\Helpers\SpreadsheetUtils;
-use Syspons\Sheetable\Tests\Models\Country;
-use Syspons\Sheetable\Tests\Models\CountryFactory;
+use Syspons\Sheetable\Tests\Models\Relation;
+use Syspons\Sheetable\Tests\Models\RelationFactory;
 use Syspons\Sheetable\Tests\Models\ModelDummy;
 use Syspons\Sheetable\Tests\Models\Simple;
 use Syspons\Sheetable\Tests\TestCase;
@@ -20,30 +20,27 @@ class SheetableUnitTest extends TestCase
 {
     public function testRelations()
     {
-        CountryFactory::$number = 1;
+        RelationFactory::$number = 1;
 
         /** @var ModelDummy $modelDummy */
         $modelDummies = ModelDummy::factory()->count(3)
-            ->for(Country::factory())
-            ->has(Country::factory()->count(3))
+            ->for(Relation::factory())
+            ->has(Relation::factory()->count(3))
             ->create();
 
-        $this->assertEquals(3, count($modelDummies[0]->countries));
-        $this->assertEquals(1, $modelDummies[0]->country->id);
-        $this->assertEquals(2, $modelDummies[0]->countries[0]->id);
-        $this->assertEquals(3, $modelDummies[0]->countries[1]->id);
-        $this->assertEquals(4, $modelDummies[0]->countries[2]->id);
-        $this->assertEquals(1, $modelDummies[1]->country->id);
-        $this->assertEquals(5, $modelDummies[1]->countries[0]->id);
-        $this->assertEquals(6, $modelDummies[1]->countries[1]->id);
-        $this->assertEquals(7, $modelDummies[1]->countries[2]->id);
+        $this->assertEquals(3, count($modelDummies[0]->relations));
+        $this->assertEquals(1, $modelDummies[0]->relation->id);
+        $this->assertEquals(2, $modelDummies[0]->relations[0]->id);
+        $this->assertEquals(3, $modelDummies[0]->relations[1]->id);
+        $this->assertEquals(4, $modelDummies[0]->relations[2]->id);
+        $this->assertEquals(1, $modelDummies[1]->relation->id);
+        $this->assertEquals(5, $modelDummies[1]->relations[0]->id);
+        $this->assertEquals(6, $modelDummies[1]->relations[1]->id);
+        $this->assertEquals(7, $modelDummies[1]->relations[2]->id);
     }
 
     public function testUpdateOrCreate()
     {
-        $simple2 = Simple::factory()->make();
-        $simple2->setAttribute('id', 2);
-
         $utilsMock = Mockery::mock(SpreadsheetUtils::class);
         $dropdownsMock = Mockery::mock(SpreadsheetDropdowns::class);
 

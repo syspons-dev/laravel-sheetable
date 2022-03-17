@@ -6,7 +6,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
 use Syspons\Sheetable\Exports\SheetsExport;
-use Syspons\Sheetable\Tests\Models\Country;
+use Syspons\Sheetable\Tests\Models\Relation;
 use Syspons\Sheetable\Tests\Models\ModelDummy;
 use Syspons\Sheetable\Tests\Models\Simple;
 use Syspons\Sheetable\Tests\TestCase;
@@ -25,9 +25,9 @@ class SheetableFeatureTest extends TestCase
             'model_dummies.import',
             'model_dummies.export',
             'model_dummies.template',
-            'countries.import',
-            'countries.export',
-            'countries.template',
+            'relations.import',
+            'relations.export',
+            'relations.template',
         ];
         $registeredRoutes = array_keys(Route::getRoutes()->getRoutesByName());
         foreach ($expectedRoutes as $route) {
@@ -47,8 +47,8 @@ class SheetableFeatureTest extends TestCase
             // TODO $export->registerEvents()['Maatwebsite\Excel\Events\AfterSheet'](EVENT); IS NOT CALLED ??
             return
                 in_array('id', $export->headings()) &&
-                in_array('country_main_id', $export->headings());
-//                && in_array('country_additional_id_1', $export->headings());
+                in_array('relation_main_id', $export->headings());
+//                && in_array('relation_additional_id_1', $export->headings());
         });
     }
 
@@ -56,8 +56,8 @@ class SheetableFeatureTest extends TestCase
     {
         Excel::fake();
         $modelDummies = ModelDummy::factory()->count(3)
-            ->for(Country::factory())
-            ->has(Country::factory()->count(3))
+            ->for(Relation::factory())
+            ->has(Relation::factory()->count(3))
             ->create();
 
         $this->get('/api/export/model_dummies')
@@ -117,8 +117,8 @@ class SheetableFeatureTest extends TestCase
     {
         Excel::fake();
         $modelDummies = ModelDummy::factory()->count(4)
-            ->for(Country::factory())
-            ->has(Country::factory()->count(4))
+            ->for(Relation::factory())
+            ->has(Relation::factory()->count(4))
             ->create();
         $ids = array_slice($modelDummies->pluck('id')->toArray(), 0, 2);
 

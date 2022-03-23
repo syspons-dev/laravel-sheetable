@@ -27,13 +27,12 @@
       }
   },
   "require-dev": {
-    "orchestra/testbench": "^6.0",
+    "orchestra/testbench": "^7.0",
     "phpunit/phpunit": "^9.5"
   },
   "require": {
-    "php": "^8.0",
     "haydenpierce/class-finder": "^0.4.3",
-    "barryvdh/laravel-ide-helper": "2.8.2",
-    "maatwebsite/excel": "4.0.x-dev"
+    "barryvdh/laravel-ide-helper": "2.12.3",
+    "maatwebsite/excel": "^3.0"
   }
 }

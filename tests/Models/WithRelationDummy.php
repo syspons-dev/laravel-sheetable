@@ -19,7 +19,7 @@ class WithRelationDummy extends Model implements Sheetable, Dropdownable
      * @var array
      */
     protected $fillable = [
-        'title', 'description',
+        'title', 'description', 'one_to_many_relation_id',
     ];
 
     public $timestamps = false;
@@ -74,7 +74,7 @@ class WithRelationDummy extends Model implements Sheetable, Dropdownable
     {
         return self::factory()->count($count)->for(OneToManyRelation::factory(), 'one_to_many_relation')->create()->each(function ($item, $key) {
             $item->title = 'test '.++$key;
-            $item->description = 'description '.++$key;
+            $item->description = 'description '.$key;
             $item->one_to_many_relation->label = 'one_to_many';
             $item->one_to_many_relation->save();
             $item->many_to_many_relations()->attach(ManyToManyRelation::factory()->count(3)->create()->each(function ($item, $rel_key) use ($key) {

@@ -4,8 +4,6 @@ namespace Syspons\Sheetable\Tests\Feature\ExportTest;
 
 use Maatwebsite\Excel\Facades\Excel;
 use Syspons\Sheetable\Exports\SheetsExport;
-use Syspons\Sheetable\Tests\Models\ManyToManyRelation;
-use Syspons\Sheetable\Tests\Models\OneToManyRelation;
 use Syspons\Sheetable\Tests\Models\WithRelationDummy;
 use Syspons\Sheetable\Tests\Models\SimpleDummy;
 use Syspons\Sheetable\Tests\TestCase;
@@ -35,7 +33,7 @@ class ExportTest extends TestCase
         $response = $this->get(route('with_relation_dummies.export'))
             ->assertStatus(200)
             ->assertDownload($expectedName);
-        $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName);
+        $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName, false);
     }
 
     public function test_exported_selected_values()

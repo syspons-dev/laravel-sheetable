@@ -41,16 +41,20 @@ abstract class TestCase extends BaseTestCase
             $table->string('title');
         });
 
+        Schema::create('one_to_many_relations', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('label');
+        });
+
         Schema::create('with_relation_dummies', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('title');
             $table->string('description');
-            $table->string('one_to_many_relation_id');
-        });
 
-        Schema::create('one_to_many_relations', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('label');
+            $table->string('one_to_many_relation_id');
+            $table->foreign('one_to_many_relation_id')
+                ->references('id')
+                ->on('one_to_many_relations')->onDelete('cascade');
         });
 
         Schema::create('many_to_many_relations', function (Blueprint $table) {
@@ -61,7 +65,13 @@ abstract class TestCase extends BaseTestCase
         Schema::create('many_to_many_relation_with_relation_dummy', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->bigInteger('many_to_many_relation_id');
+            $table->foreign('many_to_many_relation_id')
+                ->references('id')
+                ->on('many_to_many_relations')->onDelete('cascade');
             $table->bigInteger('with_relation_dummy_id');
+            $table->foreign('with_relation_dummy_id')
+                ->references('id')
+                ->on('with_relation_dummies')->onDelete('cascade');
         });
     }
 

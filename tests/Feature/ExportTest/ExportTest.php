@@ -35,7 +35,21 @@ class ExportTest extends TestCase
         $response = $this->get(route('with_relation_dummies.export'))
             ->assertStatus(200)
             ->assertDownload($expectedName);
-        $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName, false);
+        $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName);
+    }
+
+    public function test_exported_selected_values()
+    {
+        $expectedName = 'with_relation_dummies.xlsx';
+        // create 5, expect 3, ignore metadatasheet
+        $withRelationDummies = WithRelationDummy::createInstances(5);
+        $ids = array_slice($withRelationDummies->pluck('id')->toArray(), 0, 3);
+
+
+        $response = $this->call('GET', route('with_relation_dummies.export'), [
+            'ids' => $ids,
+        ])->assertStatus(200)->assertDownload($expectedName);
+        $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName, true, 0);
     }
 
     public function test_with_relation_dummies_sheet_has_correct_headings()
@@ -108,24 +122,6 @@ class ExportTest extends TestCase
             return
                 $downloadedSimpleDummy->id === $dbSimpleDummy->id &&
                 $downloadedSimpleDummy->title === $dbSimpleDummy->title;
-        });
-    }
-
-    public function test_exported_selected_values()
-    {
-        Excel::fake();
-        $withRelationDummies = WithRelationDummy::createInstances();
-        $ids = array_slice($withRelationDummies->pluck('id')->toArray(), 0, 2);
-
-
-        $this->call('GET', route('with_relation_dummies.export'), [
-            'ids' => $ids,
-        ])->assertStatus(200);
-
-        Excel::assertDownloaded('with_relation_dummies.xlsx', function (SheetsExport $export) use ($ids) {
-            $ret = $export->collection();
-            $plucked = $ret->pluck('id')->toArray();
-            return $ret->count() === count($ids) && $plucked == $ids;
         });
     }
 }

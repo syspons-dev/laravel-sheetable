@@ -69,10 +69,7 @@ class WithRelationDummy extends Model implements Sheetable, Dropdownable
                 ->setMappingMinFields(5),
         ];
     }
-
-    /**
-     * @return DropdownConfig[]
-     */
+    
     public static function createInstances(int $count = 3): Collection
     {
         return self::factory()->count($count)->for(OneToManyRelation::factory(), 'one_to_many_relation')->create()->each(function ($item, $key) {

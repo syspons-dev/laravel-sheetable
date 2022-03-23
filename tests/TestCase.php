@@ -65,14 +65,14 @@ abstract class TestCase extends BaseTestCase
         });
     }
 
-    protected function assertSpreadsheetsAreEqual($expectedFilePath, $actualFilePath)
+    protected function assertSpreadsheetsAreEqual($expectedFilePath, $actualFilePath, $maxSheet = null)
     {
         $reader = new Xlsx();
         $reader->setReadDataOnly(true);
 
         $spreadsheetExpected = $reader->load($expectedFilePath);
         $spreadsheetActual = $reader->load($actualFilePath);
-        $sheetCount = max($spreadsheetExpected->getSheetCount(), $spreadsheetActual->getSheetCount());
+        $sheetCount = min(max($spreadsheetExpected->getSheetCount(), $spreadsheetActual->getSheetCount()), $maxSheet);
         
         foreach (range(0, --$sheetCount) as $sheet) {
             $rowCount = max(
@@ -94,7 +94,7 @@ abstract class TestCase extends BaseTestCase
         }
     }
     
-    protected function assertExpectedSpreadsheetResponse(TestResponse $response, string $expectedPath, bool $delete = true)
+    protected function assertExpectedSpreadsheetResponse(TestResponse $response, string $expectedPath, bool $delete = true, $maxSheet = null)
     {
         $storagePath = __FUNCTION__;
         $expectedName = basename($expectedPath);

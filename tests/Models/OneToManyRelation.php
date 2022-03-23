@@ -9,12 +9,14 @@ class OneToManyRelation extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     protected static function newFactory(): OneToManyRelationFactory
     {
         return OneToManyRelationFactory::new();
     }
 
-    public function withRelationDummies()
+    public function with_relation_dummies()
     {
         return $this->hasMany(WithRelationDummy::class);
     }

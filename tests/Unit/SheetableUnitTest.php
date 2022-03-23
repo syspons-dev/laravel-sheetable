@@ -20,20 +20,17 @@ class SheetableUnitTest extends TestCase
 {
     public function test_relations()
     {
-        $withRelationDummies = WithRelationDummy::factory()->count(3)
-            ->for(OneToManyRelation::factory())
-            ->has(ManyToManyRelation::factory()->count(3))
-            ->create();
+        $withRelationDummies = WithRelationDummy::createInstances();
 
-        $this->assertEquals(3, count($withRelationDummies[0]->manyToManyRelations));
-        $this->assertEquals(1, $withRelationDummies[0]->oneToManyRelation->id);
-        $this->assertEquals(1, $withRelationDummies[0]->manyToManyRelations[0]->id);
-        $this->assertEquals(2, $withRelationDummies[0]->manyToManyRelations[1]->id);
-        $this->assertEquals(3, $withRelationDummies[0]->manyToManyRelations[2]->id);
-        $this->assertEquals(1, $withRelationDummies[1]->oneToManyRelation->id);
-        $this->assertEquals(4, $withRelationDummies[1]->manyToManyRelations[0]->id);
-        $this->assertEquals(5, $withRelationDummies[1]->manyToManyRelations[1]->id);
-        $this->assertEquals(6, $withRelationDummies[1]->manyToManyRelations[2]->id);
+        $this->assertEquals(3, count($withRelationDummies[0]->many_to_many_relations));
+        $this->assertEquals(1, $withRelationDummies[0]->one_to_many_relation->id);
+        $this->assertEquals(1, $withRelationDummies[0]->many_to_many_relations[0]->id);
+        $this->assertEquals(2, $withRelationDummies[0]->many_to_many_relations[1]->id);
+        $this->assertEquals(3, $withRelationDummies[0]->many_to_many_relations[2]->id);
+        $this->assertEquals(1, $withRelationDummies[1]->one_to_many_relation->id);
+        $this->assertEquals(4, $withRelationDummies[1]->many_to_many_relations[0]->id);
+        $this->assertEquals(5, $withRelationDummies[1]->many_to_many_relations[1]->id);
+        $this->assertEquals(6, $withRelationDummies[1]->many_to_many_relations[2]->id);
     }
 
     public function testUpdateOrCreate()
@@ -73,6 +70,5 @@ class SheetableUnitTest extends TestCase
             ['title' => 'Changed']
         );
         $this->assertTrue('Changed' === $returnedModel2->title, 'Title changed');
-
     }
 }

@@ -28,6 +28,16 @@ class ExportTest extends TestCase
         $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName);
     }
 
+    public function test_store_with_relation_file()
+    {
+        $expectedName = 'with_relation_dummies.xlsx';
+        WithRelationDummy::createInstances();
+        $response = $this->get(route('with_relation_dummies.export'))
+            ->assertStatus(200)
+            ->assertDownload($expectedName);
+        $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName, false);
+    }
+
     public function test_with_relation_dummies_sheet_has_correct_headings()
     {
         Excel::fake();
@@ -48,10 +58,7 @@ class ExportTest extends TestCase
     public function test_exported_with_relation_dummies_sheet_has_correct_values()
     {
         Excel::fake();
-        $withRelationDummies = WithRelationDummy::factory()->count(3)
-            ->for(OneToManyRelation::factory())
-            ->has(ManyToManyRelation::factory()->count(3))
-            ->create();
+        $withRelationDummies = WithRelationDummy::createInstances();
 
         $this->get('/api/export/with_relation_dummies')
             ->assertStatus(200);
@@ -107,10 +114,7 @@ class ExportTest extends TestCase
     public function test_exported_selected_values()
     {
         Excel::fake();
-        $withRelationDummies = WithRelationDummy::factory()->count(4)
-            ->for(OneToManyRelation::factory())
-            ->has(ManyToManyRelation::factory()->count(4))
-            ->create();
+        $withRelationDummies = WithRelationDummy::createInstances();
         $ids = array_slice($withRelationDummies->pluck('id')->toArray(), 0, 2);
 
 

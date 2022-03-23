@@ -18,11 +18,10 @@ class ExportTest extends TestCase
     public function test_store_simple_file()
     {
         $expectedName = 'simple_dummies.xlsx';
-        SimpleDummy::insert([
-            [ 'title' => 'test 1' ],
-            [ 'title' => 'test 2' ],
-            [ 'title' => 'test 3' ],
-        ]);
+        SimpleDummy::factory()->count(3)->create()->each(function ($item, $key) {
+            $item->title = 'test '.++$key;
+            $item->save();
+        });
         $response = $this->get(route('simple_dummies.export'))
             ->assertStatus(200)
             ->assertDownload($expectedName);

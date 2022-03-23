@@ -88,7 +88,7 @@ abstract class TestCase extends BaseTestCase
                 $spreadsheetActual->getSheet($sheet)->getCellCollection()->getHighestColumn()
             );
             foreach (range(1, $rowCount) as $row) {
-                for ($column = 'A'; $column != $colCount; $column++) {
+                for ($column = 'A'; $column <= $colCount; $column++) {
                     $cell = $column . $row;
                     $expected = $spreadsheetExpected->getSheet($sheet)->getCell($cell)->getValue();
                     $actual = $spreadsheetActual->getSheet($sheet)->getCell($cell)->getValue();

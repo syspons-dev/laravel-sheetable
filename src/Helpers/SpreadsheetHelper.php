@@ -287,6 +287,11 @@ class SpreadsheetHelper
                 if (is_string($value)) {
                     $value = preg_replace('/\s+/', ' ', $value);
                     $value = trim($value);
+                    
+                    // don't store empty strings
+                    if (empty($value)) {
+                        $cell->setValue(null);
+                    }
                 }
                 if ($value) {
                     $cell->setValue($value);

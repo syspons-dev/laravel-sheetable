@@ -31,6 +31,22 @@ class ImportTest extends TestCase
         $this->assertDatabaseHas('simple_dummies', ['title' => 'test 3']);
     }
 
+    public function test_import_simple_dummies_100(): void
+    {
+        $file = new UploadedFile(
+            __DIR__ . '/simple_dummies_100.xlsx',
+            'simple_dummies_100.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true
+        );
+
+        $response = $this->postJson(route('simple_dummies.import'), [
+            'file' => $file
+        ])->assertStatus(200);
+        $this->assertDatabaseCount('simple_dummies', 100);
+    }
+
     public function test_import_with_relation_dummies(): void
     {
         $file = new UploadedFile(
@@ -66,5 +82,29 @@ class ImportTest extends TestCase
         $this->assertDatabaseHas('many_to_many_relation_with_relation_dummy', ['with_relation_dummy_id' => 3, 'many_to_many_relation_id' => 7]);
         $this->assertDatabaseHas('many_to_many_relation_with_relation_dummy', ['with_relation_dummy_id' => 3, 'many_to_many_relation_id' => 8]);
         $this->assertDatabaseHas('many_to_many_relation_with_relation_dummy', ['with_relation_dummy_id' => 3, 'many_to_many_relation_id' => 9]);
+    }
+
+    public function test_import_with_relation_dummies_100(): void
+    {
+        $file = new UploadedFile(
+            __DIR__ . '/with_relation_dummies_100.xlsx',
+            'with_relation_dummies_100.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true
+        );
+
+        $one = OneToManyRelation::factory()->create(['label' => 'one_to_many']);
+        $count = 3;
+        foreach (range(1, $count) as $key1) {
+            foreach (range(1, $count) as $key2) {
+                OneToManyRelation::factory()->create(['label' => 'many_to_many '.$key1.$key2]);
+            }
+        }
+
+        $response = $this->postJson(route('with_relation_dummies.import'), [
+            'file' => $file
+        ])->assertStatus(200);
+        $this->assertDatabaseCount('with_relation_dummies', 100);
     }
 }

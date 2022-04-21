@@ -315,6 +315,8 @@ class SpreadsheetHelper
 
     public function importCollection(Collection $collection, Model|string $model)
     {
+        // TODO: use upsert instead of updateOrCreate -> import ManyToMany should also upsert to the pivot table instead of manually attaching
+        // $model::upsert($collection->toArray(), ['id']);
         foreach ($collection as $row) {
             $rowArr = $row->toArray();
 

@@ -12,8 +12,11 @@ class DropdownConfig
      */
     private string $field;
 
-    /** @var string|null DB foreign Model name containing the reference foreign id and text columns */
-    private ?string $fkModel = null;
+    /** @var string DB foreign Model name containing the reference foreign id and text columns */
+    private string $fkModel;
+
+    /** @var Model Instance of the fkModel */
+    private Model $fkModelInstance;
 
     /** @var string|null DB column name in the foreign reference Table, containing the descriptive text for this field */
     private ?string $fkTextCol = null;
@@ -33,17 +36,9 @@ class DropdownConfig
 
     private ?int $mappingMinFields = 0;
 
-    /** @var string|null OPTIONAL, only needed if not a standard hasMany relation */
-    private ?string $mappingTable = null;
-
-    /** @var string|null ... */
-    private ?string $mappingFieldIdCol = null;
-
-    /** @var string|null ... */
-    private ?string $mappingFkIdCol = null;
 
     /**
-     * @var string[] fixed array of Dropdown options
+     * @var string[] fixed array of Dropdown options, currently not in use
      */
     private array $fixedList = [];
 
@@ -61,6 +56,7 @@ class DropdownConfig
     public function setFkModel(string $fkModel): self
     {
         $this->fkModel = $fkModel;
+        $this->fkModelInstance = $fkModel::newModelInstance();
 
         return $this;
     }
@@ -126,42 +122,6 @@ class DropdownConfig
      * Many to many mapping table and field informations ...
      *
      ********************************************************************************/
-
-    public function getMappingTable(): string|null
-    {
-        return $this->mappingTable;
-    }
-
-    public function setMappingTable(string $mappingTable): self
-    {
-        $this->mappingTable = $mappingTable;
-
-        return $this;
-    }
-
-    public function getMappingFieldIdCol(): string|null
-    {
-        return $this->mappingFieldIdCol;
-    }
-
-    public function setMappingFieldIdCol(string $mappingFieldIdCol): self
-    {
-        $this->mappingFieldIdCol = $mappingFieldIdCol;
-
-        return $this;
-    }
-
-    public function getMappingFkIdCol(): string|null
-    {
-        return $this->mappingFkIdCol;
-    }
-
-    public function setMappingFkIdCol(string $mappingFkIdCol): self
-    {
-        $this->mappingFkIdCol = $mappingFkIdCol;
-
-        return $this;
-    }
 
     /**
      * @return string[]

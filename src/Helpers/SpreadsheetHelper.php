@@ -250,6 +250,7 @@ class SpreadsheetHelper
     {
         $this->preCheckDocumentBeforeImport($worksheet);
         $this->preProcessDocument($worksheet);
+        $this->cleanDateTimes($worksheet, $modelClass);
         /** @var Dropdownable $dropdownable */
         $dropdownable = $modelClass::newModelInstance();
         if (method_exists($modelClass, 'getDropdownFields')) {
@@ -313,6 +314,18 @@ class SpreadsheetHelper
         return array_unique(array_diff_assoc($idValues, array_unique($idValues)));
     }
 
+    public function cleanDateTimes(Worksheet $worksheet, Model|string $model)
+    {
+        foreach ($this->utils->getDateTimeCols($model) as $dateTimeCol) {
+            $colCoord = $this->utils->getColumnByHeading($worksheet, $dateTimeCol);
+            $highestRow = $worksheet->getHighestDataRow($colCoord);
+            for ($row = 2; $row <= $highestRow; $row++) {
+                $cell = $worksheet->getCell($colCoord.$row);
+                $cell->setValue($this->utils->cleanImportDateTime($cell->getValue()));
+            }
+        }
+    }
+
     public function importCollection(Collection $collection, Model|string $model)
     {
         // TODO: use upsert instead of updateOrCreate -> import ManyToMany should also upsert to the pivot table instead of manually attaching
@@ -342,17 +355,6 @@ class SpreadsheetHelper
                 $this->dropdowns->attachManyToManyValues($storedModel, $arr['attachToFields']);
             }
         }
-    }
-
-    public function cleanRowDateTimes(array &$rowArr, Model|string $model): array
-    {
-        $dateTimeCols = $this->utils->getDateTimeCols($model);
-        foreach ($dateTimeCols as $dateTimeCol) {
-            if ($rowArr[$dateTimeCol]) {
-                $rowArr[$dateTimeCol] = $this->utils->cleanImportDateTime($rowArr[$dateTimeCol]);
-            }
-        }
-        return $rowArr;
     }
 
     /**

@@ -59,13 +59,4 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
 
         return $sheetable::importRules();
     }
-
-    public function prepareForValidation($row, $index)
-    {
-        try {
-            $row = $this->helper->cleanRowDateTimes($row, $this->modelClass);
-        } catch (\Exception $e) {
-        }
-        return $row;
-    }
 }

@@ -33,9 +33,10 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
 
     public function collection(Collection $collection)
     {
+        SheetableLog::log('Parsing ended.');
         SheetableLog::log('Importing...');
         $this->helper->importCollection($collection, $this->modelClass);
-        SheetableLog::log('Imported entries with ids '.$collection->pluck($this->modelClass::newModelInstance()->getKeyName())->join(','));
+        SheetableLog::log('Imported '.$collection->count.' entries: '.$collection->pluck($this->modelClass::newModelInstance()->getKeyName())->join(', '));
     }
 
     public function registerEvents(): array
@@ -43,9 +44,10 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
         return [
             BeforeSheet::class => function (BeforeSheet $event) {
                 $worksheet = $event->sheet->getDelegate();
-                SheetableLog::log('BeforeSheet started for '.$worksheet->getTitle());
+                SheetableLog::log('BeforeSheet started for '.$worksheet->getTitle().'...');
                 $this->helper->beforeSheetImport($this->modelClass, $worksheet);
-                SheetableLog::log('BeforeSheet ended');
+                SheetableLog::log('BeforeSheet ended.');
+                SheetableLog::log('Parsing started...');
             },
         ];
     }

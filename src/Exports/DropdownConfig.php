@@ -117,6 +117,11 @@ class DropdownConfig
         return $this;
     }
 
+    public function getForeignKey(): string|null
+    {
+        return $this->fkModelInstance->getForeignKey();
+    }
+
     /********************************************************************************
      *
      * Many to many mapping table and field informations ...

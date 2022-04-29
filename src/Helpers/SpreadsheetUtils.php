@@ -50,6 +50,11 @@ class SpreadsheetUtils
         return Coordinate::stringFromColumnIndex($colIndex + 1);
     }
 
+    public function getDBColumns(Model|string $model): array
+    {
+        return DB::getSchemaBuilder()->getColumnListing($model::newModelInstance()->getTable());
+    }
+
     /**
      * @return string[] names of all datetime columns without created_at/updated_at in given model e.g. ['date_start', 'date_end']
      */

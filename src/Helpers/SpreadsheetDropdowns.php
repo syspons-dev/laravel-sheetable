@@ -4,7 +4,6 @@ namespace Syspons\Sheetable\Helpers;
 
 use Exception;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Sheet;
@@ -15,6 +14,8 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Syspons\Sheetable\Exceptions\ExcelExportValidationException;
 use Syspons\Sheetable\Exports\DropdownConfig;
 use Syspons\Sheetable\Models\Contracts\Dropdownable;
+
+const MAX_MANY_TO_MANYS = 100;
 
 class SpreadsheetDropdowns
 {
@@ -33,89 +34,52 @@ class SpreadsheetDropdowns
         $this->utils = $utils;
     }
 
-//    /**
-//     * @param Dropdownable|Model $model
-//     * @return string[]
-//     */
-//    public function getManyToManyFields(Dropdownable|Model $model): array
-//    {
-//        $dropdownFields = $model::getDropdownFields();
-//
-//        $fields = [];
-//        foreach ($dropdownFields as $dropdownConfig) {
-//            if($dropdownConfig->getMappingRightOfField()){
-//                $fields[] = $dropdownConfig->getField();
-//            }
-//        }
-//        return $fields;
-//    }
-
-    /**
-     * @param Dropdownable|Model $model
-     *
-     * @return string[]
-     */
-    public function importManyToManyFields(array $rowArr, Model|string $model): array
+    public function importManyToManyPivotEntries(Collection &$collection, string $target)
     {
-        if (method_exists($model, 'getDropdownFields')) {
-            $dropdownFields = $model::getDropdownFields();
+        if (!method_exists($target, 'getDropdownFields')) {
+            return [];
+        }
 
-            $attachToFields = [];
-            foreach ($dropdownFields as $dropdownConfig) {
-                if ($dropdownConfig->getMappingRightOfField()) {
-                    $field = $dropdownConfig->getField();
+        foreach ($target::getDropdownFields() as $dropdownField) {
+            if ($dropdownField->getMappingRightOfField()) {
+                $many_to_many_pivots = [];
+                $field = $dropdownField->getField();
+                $relatedFk = $dropdownField->getForeignKey();
+                $modelInstance = $target::newModelInstance();
+                $pivotTable = $modelInstance->joiningTable($dropdownField->getFkModel());
 
-                    $table = $dropdownConfig->getFkModel()::newModelInstance()->getTable();
+                for ($i = 1; $i < MAX_MANY_TO_MANYS; ++$i) {
+                    $key = $field.'_'.$i;
 
-                    $attach = [];
-
-                    for ($i = 1; $i < 100; ++$i) {
-                        $key = $field.'_'.$i;
-
-                        if (!array_key_exists($key, $rowArr)) {
-                            break;
-                        }
-                        $value = $rowArr[$key];
-                        unset($rowArr[$key]);
-
-                        $attach[] = $value;
-
-//                    $model->sdgs()->attach();
+                    // all items defined in table
+                    $items = $collection->filter(function ($item) use ($key) {
+                        return $item->has($key);
+                    });
+                    if (!$items->count()) {
+                        break;
                     }
-                    $attachToFields[$table] = $attach;
-                }
-            }
 
-            return ['attachToFields' => $attachToFields, 'rowArr' => $rowArr];
-        }
+                    array_push(
+                        $many_to_many_pivots,
+                        // only items with set values
+                        ...$items
+                            ->filter(function ($item) use ($key) {
+                                return !empty($item[$key]);
+                            })
+                            ->map(function ($item) use ($modelInstance, $relatedFk, $key) {
+                                return [
+                                    $modelInstance->getForeignKey() => $item[$modelInstance->getKeyName()],
+                                    $relatedFk => $item[$key],
+                                ];
+                            })->all(),
+                    );
 
-        return [];
-    }
+                    $collection = $collection->map(function ($item) use ($key) {
+                        return $item->except($key);
+                    });
 
-    /**
-     * @param Model|string $model
-     *
-     * ['FIELD_NAME' => [1,2,3,5], 'FIELD_NAME2' => [2,3,4], ]
-     */
-    public function attachManyToManyValues(Model|string $model, array $attachToFields): void
-    {
-        foreach ($attachToFields as $field => $values) {
-            $this->attachManyToManyValuesForField($model, $field, $values);
-        }
-    }
-
-    public function attachManyToManyValuesForField(Model|string $model, $field, array $values): void
-    {
-        if (method_exists($model, $field)) {
-            /** @var BelongsToMany $belongsToMany */
-            $belongsToMany = $model->$field();
-            $foreignPivotKeyName = $belongsToMany->getForeignPivotKeyName();
-
-            DB::table($belongsToMany->getTable())->where($belongsToMany->getForeignPivotKeyName(), $model->getKey())->delete();
-
-            foreach ($values as $value) {
-                if ($value) {
-                    $model->$field()->attach($value);
+                    DB::table($pivotTable)->whereIn($modelInstance->getForeignKey(), $collection->pluck($modelInstance->getKeyName()))->delete();
+                    DB::table($pivotTable)->insert($many_to_many_pivots);
                 }
             }
         }

@@ -316,7 +316,7 @@ class SpreadsheetHelper
 
     public function cleanDateTimes(Worksheet $worksheet, Model|string $model)
     {
-        foreach ($this->utils->getDateTimeCols($model) as $dateTimeCol) {
+        foreach ($this->utils->getDateTimeCols($model, true) as $dateTimeCol) {
             $colCoord = $this->utils->getColumnByHeading($worksheet, $dateTimeCol);
             $highestRow = $worksheet->getHighestDataRow($colCoord);
             for ($row = 2; $row <= $highestRow; $row++) {
@@ -328,42 +328,14 @@ class SpreadsheetHelper
 
     public function importCollection(Collection $collection, Model|string $model)
     {
-        // TODO: use upsert instead of updateOrCreate -> import ManyToMany should also upsert to the pivot table instead of manually attaching
-        // $model::upsert($collection->toArray(), ['id']);
-        foreach ($collection as $row) {
-            $rowArr = $row->toArray();
-
-            foreach (array_keys($rowArr) as $rowItem) {
-                if (
-                    !$rowItem ||
-                    'created_at' === $rowItem ||
-                    'updated_at' === $rowItem ||
-                    'created_by' === $rowItem ||
-                    'updated_by' === $rowItem) {
-                    unset($rowArr[$rowItem]);
-                }
-            }
-
-            $arr = $this->dropdowns->importManyToManyFields($rowArr, $model);
-            if ($arr && array_key_exists('rowArr', $arr)) {
-                $rowArr = $arr['rowArr'];
-            }
-
-            $storedModel = $this->updateOrCreate($rowArr, $model);
-
-            if ($storedModel && $arr && array_key_exists('attachToFields', $arr)) {
-                $this->dropdowns->attachManyToManyValues($storedModel, $arr['attachToFields']);
-            }
-        }
+        $model::upsert($this->constrainedToDbColumns($collection, $model)->toArray(), ['id']);
+        $this->dropdowns->importManyToManyPivotEntries($collection, $model);
     }
 
-    /**
-     * updateOrCreate instance from given row array.
-     *
-     * @SuppressWarnings(PHPMD.ElseExpression)
-     */
-    public function updateOrCreate(array $rowArr, Model|string $modelClass)
+    public function constrainedToDbColumns(Collection $collection, Model|string $model): Collection
     {
-        return $modelClass::updateOrCreate(['id' => $rowArr['id']], $rowArr);
+        return $collection->map(function ($item) use ($model) {
+            return $item->only($this->utils->getDBColumns($model));
+        });
     }
 }

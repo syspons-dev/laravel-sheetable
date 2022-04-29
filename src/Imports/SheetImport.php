@@ -36,7 +36,7 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
         SheetableLog::log('Parsing ended.');
         SheetableLog::log('Importing...');
         $this->helper->importCollection($collection, $this->modelClass);
-        SheetableLog::log('Imported '.$collection->count.' entries: '.$collection->pluck($this->modelClass::newModelInstance()->getKeyName())->join(', '));
+        SheetableLog::log('Imported '.$collection->count().' entries: '.$collection->pluck($this->modelClass::newModelInstance()->getKeyName())->join(', '));
     }
 
     public function registerEvents(): array

@@ -13,6 +13,7 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\BeforeSheet;
+use Syspons\Sheetable\Helpers\SheetableLog;
 use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 use Syspons\Sheetable\Models\Contracts\Sheetable;
 
@@ -25,21 +26,26 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
         string|Model $modelClass,
         SpreadsheetHelper $helper
     ) {
+        SheetableLog::log("Start importing $modelClass");
         $this->modelClass = $modelClass;
         $this->helper = $helper;
     }
 
     public function collection(Collection $collection)
     {
+        SheetableLog::log('Importing...');
         $this->helper->importCollection($collection, $this->modelClass);
+        SheetableLog::log('Imported entries with ids '.$collection->pluck($this->modelClass::newModelInstance()->getKeyName())->join(','));
     }
 
     public function registerEvents(): array
     {
         return [
             BeforeSheet::class => function (BeforeSheet $event) {
-                $sheet = $event->sheet;
-                $this->helper->beforeSheetImport($this->modelClass, $sheet->getDelegate());
+                $worksheet = $event->sheet->getDelegate();
+                SheetableLog::log('BeforeSheet started for '.$worksheet->getTitle());
+                $this->helper->beforeSheetImport($this->modelClass, $worksheet);
+                SheetableLog::log('BeforeSheet ended');
             },
         ];
     }
@@ -52,12 +58,12 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
         return $sheetable::importRules();
     }
 
-    public function prepareForValidation($data, $index)
+    public function prepareForValidation($row, $index)
     {
         try {
-            $data = $this->helper->cleanRowDateTimes($data, $this->modelClass);
+            $row = $this->helper->cleanRowDateTimes($row, $this->modelClass);
         } catch (\Exception $e) {
         }
-        return $data;
+        return $row;
     }
 }

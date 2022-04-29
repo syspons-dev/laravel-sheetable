@@ -41,6 +41,13 @@ class SheetableServiceProvider extends ServiceProvider
             __DIR__.'/../config/config.php' => config_path('sheetable.php'),
         ], 'config');
 
+        // register log channel
+        $this->app->make('config')->set('logging.channels.sheetable', [
+            'driver' => 'daily',
+            'path' => storage_path('logs/sheetable.log'),
+            'level' => 'debug',
+        ]);
+
         // add routes
         Route::group($this->routeConfiguration(), function () use ($sheetableService) {
             foreach ($sheetableService->getSheetableClasses() as $sheetableClass) {

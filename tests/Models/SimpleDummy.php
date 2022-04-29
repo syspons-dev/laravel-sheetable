@@ -13,6 +13,7 @@ class SimpleDummy extends Model implements Sheetable
 
     protected $fillable = [
         'title',
+        'date_time'
     ];
 
     public $timestamps = false;
@@ -21,6 +22,7 @@ class SimpleDummy extends Model implements Sheetable
     {
         return [
             'title' => 'required',
+            'date_time' => 'required|date',
         ];
     }
 

@@ -3,7 +3,6 @@
 namespace Syspons\Sheetable\Tests\Models;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use JetBrains\PhpStorm\ArrayShape;
 
 class SimpleDummyFactory extends Factory
 {
@@ -13,6 +12,7 @@ class SimpleDummyFactory extends Factory
     {
         return [
             'title' => $this->faker->word(),
+            'date_time' => '2020-01-01',
         ];
     }
 }

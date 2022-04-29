@@ -33,7 +33,7 @@ class SheetableUnitTest extends TestCase
         $this->assertEquals(6, $withRelationDummies[1]->many_to_many_relations[2]->id);
     }
 
-    public function testUpdateOrCreate()
+    /* public function testUpdateOrCreate()
     {
         $utilsMock = Mockery::mock(SpreadsheetUtils::class);
         $dropdownsMock = Mockery::mock(SpreadsheetDropdowns::class);
@@ -70,5 +70,5 @@ class SheetableUnitTest extends TestCase
             ['title' => 'Changed']
         );
         $this->assertTrue('Changed' === $returnedModel2->title, 'Title changed');
-    }
+    } */
 }

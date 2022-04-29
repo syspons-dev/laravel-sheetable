@@ -33,7 +33,7 @@ class ExportTest extends TestCase
         $response = $this->get(route('with_relation_dummies.export'))
             ->assertStatus(200)
             ->assertDownload($expectedName);
-        $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName, false);
+        $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName);
     }
 
     public function test_exported_selected_values()

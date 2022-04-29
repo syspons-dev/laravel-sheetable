@@ -39,6 +39,7 @@ abstract class TestCase extends BaseTestCase
         Schema::create('simple_dummies', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('title');
+            $table->dateTime('date_time');
         });
 
         Schema::create('one_to_many_relations', function (Blueprint $table) {

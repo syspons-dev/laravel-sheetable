@@ -96,6 +96,7 @@ class SpreadsheetDropdowns
     {
         $dropdownFields = $dropdownable::getDropdownFields();
         foreach ($dropdownFields as $dropdownConfig) {
+            //SheetableLog::log("Exporting dropdown field {$dropdownConfig->getField()}");
             if ($dropdownConfig->isEmbedded()) {
                 $this->addForeignKeyDropdownColumnEmbedded($worksheet, $dropdownConfig);
                 continue;

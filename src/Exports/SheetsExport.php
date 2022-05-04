@@ -15,6 +15,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
+use Syspons\Sheetable\Helpers\SheetableLog;
 use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 
 class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitle, WithStrictNullComparison //, WithColumnFormatting, WithMapping
@@ -38,6 +39,7 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
         $this->tableName = $model::newModelInstance()->getTable();
         $this->helper = $helper;
         $this->isTemplate = $isTemplate;
+        SheetableLog::log("Start exporting {$this->tableName}".($isTemplate ? ' template' : ''));
     }
 
     public function title(): string
@@ -76,15 +78,19 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet;
                 $workSheet = $sheet->getDelegate();
+                SheetableLog::log('AfterSheet started for '.$workSheet->getTitle().'...');
 
                 $dropdownable = $this->model::newModelInstance();
 
                 $this->helper->afterSheetExport($dropdownable, $workSheet, $this->models);
 
                 if ($this->isTemplate) {
+                    SheetableLog::log('Clearing values...');
                     $this->helper->clearValues($workSheet);
                     $this->helper->clearStamps($workSheet);
+                    SheetableLog::log('Values cleared.');
                 }
+                SheetableLog::log('AfterSheet ended.');
             },
         ];
     }

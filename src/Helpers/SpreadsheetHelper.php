@@ -33,11 +33,17 @@ class SpreadsheetHelper
      */
     public function afterSheetExport(Dropdownable|Model $model, Worksheet $worksheet, Collection $models)
     {
+        SheetableLog::log('Writing Codebook...');
         $this->writeCodeBook($model, $worksheet);
+        SheetableLog::log('Codebook written.');
         if (method_exists($model, 'getDropdownFields')) {
+            SheetableLog::log('Adding dropdown fields...');
             $this->dropdowns->exportDropdownFields($model, $worksheet, $models);
+            SheetableLog::log('Dropdown fields added.');
         }
+        SheetableLog::log('Formatting special fields...');
         $this->utils->formatSpecialFields($model, $worksheet, $models);
+        SheetableLog::log('Special fields formatted.');
     }
 
     /**

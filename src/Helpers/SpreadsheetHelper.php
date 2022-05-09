@@ -322,7 +322,7 @@ class SpreadsheetHelper
 
     public function cleanDateTimes(Worksheet $worksheet, Model|string $model)
     {
-        foreach ($this->utils->getDateTimeCols($model, true) as $dateTimeCol) {
+        foreach ($this->utils->getDateTimeCols($model) as $dateTimeCol) {
             $colCoord = $this->utils->getColumnByHeading($worksheet, $dateTimeCol);
             $highestRow = $worksheet->getHighestDataRow($colCoord);
             for ($row = 2; $row <= $highestRow; $row++) {
@@ -341,7 +341,7 @@ class SpreadsheetHelper
     public function constrainedToDbColumns(Collection $collection, Model|string $model): Collection
     {
         return $collection->map(function ($item) use ($model) {
-            return $item->only($this->utils->getDBColumns($model));
+            return $item->only($this->utils->getDBColumns($model))->except(['created_at', 'updated_at', 'created_by', 'updated_by']);
         });
     }
 }

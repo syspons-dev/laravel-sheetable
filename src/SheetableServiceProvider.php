@@ -53,7 +53,8 @@ class SheetableServiceProvider extends ServiceProvider
             foreach ($sheetableService->getSheetableClasses() as $sheetableClass) {
                 $tableName = $sheetableClass::newModelInstance()->getTable();
 
-                Route::get(
+                Route::match(
+                    ['get', 'post'],
                     '/export/'.$tableName,
                     [SheetController::class, 'export']
                 )->name($tableName.'.export');

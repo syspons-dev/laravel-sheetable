@@ -334,7 +334,13 @@ class SpreadsheetHelper
 
     public function importCollection(Collection $collection, Model|string $model)
     {
-        $model::upsert($this->constrainedToDbColumns($collection, $model)->toArray(), ['id']);
+        // TODO the upsert method will bypass model events (breaks userstamps + caching) and will
+        // update in any case, so with no changes 'updated_at' will be updated.
+        // $model::upsert($this->constrainedToDbColumns($collection, $model)->toArray(), ['id']);
+        $this->constrainedToDbColumns($collection, $model)->each(function ($entity) use ($model) {
+            $arr = $entity->toArray();
+            $model::updateOrCreate(['id' => $arr['id']], $arr);
+        });
         $this->dropdowns->importManyToManyPivotEntries($collection, $model);
     }
 

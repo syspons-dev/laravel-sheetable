@@ -327,7 +327,7 @@ class SpreadsheetHelper
             $highestRow = $worksheet->getHighestDataRow($colCoord);
             for ($row = 2; $row <= $highestRow; $row++) {
                 $cell = $worksheet->getCell($colCoord.$row);
-                $cell->setValue($this->utils->cleanImportDateTime($cell->getValue()));
+                $cell->setValue($this->utils->cleanImportDateTime($cell->getValue(), $row, $dateTimeCol));
             }
         }
     }

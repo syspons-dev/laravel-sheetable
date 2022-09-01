@@ -11,6 +11,7 @@ use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Syspons\Sheetable\Exceptions\ExcelImportDateValidationException;
 
 class SpreadsheetUtils
 {
@@ -212,7 +213,7 @@ class SpreadsheetUtils
      *
      * @return string dateTime-String for db
      */
-    public function cleanImportDateTime(?string $dateTime): string
+    public function cleanImportDateTime(?string $dateTime, int $row, string $attribute): string
     {
         try {
             $dateTime = substr($dateTime, 0, 19);
@@ -224,7 +225,7 @@ class SpreadsheetUtils
 
             return Carbon::createFromFormat('d.m.Y H:i:s', $dateTime)->toDateTimeString();
         } catch (\Exception $e) {
-            throw new \Exception($dateTime.' is not a valid date. '.$e);
+            throw new ExcelImportDateValidationException($row, $attribute);
         }
     }
 

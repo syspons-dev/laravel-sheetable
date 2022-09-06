@@ -3,8 +3,11 @@
 namespace Syspons\Sheetable\Tests\Feature\ImportTest;
 
 use Illuminate\Http\UploadedFile;
-use Maatwebsite\Excel\Facades\Excel;
+use Syspons\Sheetable\Exceptions\ExcelImportScopeableException;
 use Syspons\Sheetable\Tests\Models\OneToManyRelation;
+use Syspons\Sheetable\Tests\Models\ScopeableManyToManyRelation;
+use Syspons\Sheetable\Tests\Models\User;
+use Syspons\Sheetable\Tests\Models\WithScopeableRelationDummy;
 use Syspons\Sheetable\Tests\TestCase;
 
 /**
@@ -106,5 +109,62 @@ class ImportTest extends TestCase
             'file' => $file
         ])->assertStatus(200);
         $this->assertDatabaseCount('with_relation_dummies', 100);
+    }
+
+    public function test_import_with_scopable_relation_dummies_success(): void
+    {
+        $file = new UploadedFile(
+            __DIR__ . '/with_scopeable_relation_dummies_success.xlsx',
+            'with_scopeable_relation_dummies_success.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true
+        );
+
+        $scropableAllowed = ScopeableManyToManyRelation::createInstance();
+        $scropableNotAllowed = ScopeableManyToManyRelation::createInstance();
+
+        $user = User::factory()->hasAttached($scropableAllowed, [], 'scopeable_many_to_many_relations')->create();
+        $this->actingAs($user);
+
+        $response = $this->postJson(route('with_scopeable_relation_dummies.import'), [
+            'file' => $file
+        ])->assertStatus(200);
+        $this->assertDatabaseCount('with_scopeable_relation_dummies', 3);
+        $this->assertDatabaseHas('with_scopeable_relation_dummies', ['title' => 'test 1', 'description' => 'description 1']);
+        $this->assertDatabaseHas('with_scopeable_relation_dummies', ['title' => 'test 2', 'description' => 'description 2']);
+        $this->assertDatabaseHas('with_scopeable_relation_dummies', ['title' => 'test 3', 'description' => 'description 3']);
+
+        $this->assertDatabaseHas('scopeable_many_to_many_relation_with_scopeable_relation_dummy', ['with_scopeable_relation_dummy_id' => 1, 'scopeable_many_to_many_relation_id' => 1]);
+        $this->assertDatabaseHas('scopeable_many_to_many_relation_with_scopeable_relation_dummy', ['with_scopeable_relation_dummy_id' => 2, 'scopeable_many_to_many_relation_id' => 1]);
+        $this->assertDatabaseHas('scopeable_many_to_many_relation_with_scopeable_relation_dummy', ['with_scopeable_relation_dummy_id' => 3, 'scopeable_many_to_many_relation_id' => 1]);
+    }
+
+    public function test_import_with_scopable_relation_dummies_failure(): void
+    {
+        $file = new UploadedFile(
+            __DIR__ . '/with_scopeable_relation_dummies_failure.xlsx',
+            'with_scopeable_relation_dummies_failure.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true
+        );
+
+        $scropableAllowed = ScopeableManyToManyRelation::createInstance();
+        $scropableNotAllowed = ScopeableManyToManyRelation::createInstance();
+
+        // expected count in table
+        WithScopeableRelationDummy::createInstances(2);
+
+        $user = User::factory()->hasAttached($scropableAllowed, [], 'scopeable_many_to_many_relations')->create();
+        $this->actingAs($user);
+
+        //$this->expectException(ExcelImportScopeableException::class);
+        // not thrown as it's transformed to a response
+        $response = $this->postJson(route('with_scopeable_relation_dummies.import'), [
+            'file' => $file
+        ])->assertStatus(422);
+        $this->assertDatabaseCount('with_scopeable_relation_dummies', 2);
+        $this->assertDatabaseCount('scopeable_many_to_many_relation_with_scopeable_relation_dummy', 0);
     }
 }

@@ -56,7 +56,7 @@ class ExportTest extends TestCase
     public function test_exported_scopeable_values()
     {
         $expectedName = 'with_scopeable_relation_dummies.xlsx';
-        // create 5, expect 3, ignore metadatasheet
+        // create 6, expect 3, ignore metadatasheet
         $scropableAllowed = ScopeableManyToManyRelation::createInstance();
         $scropableNotAllowed = ScopeableManyToManyRelation::createInstance();
         $user = User::factory()->hasAttached($scropableAllowed, [], 'scopeable_many_to_many_relations')->create();

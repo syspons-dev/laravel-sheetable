@@ -2,6 +2,7 @@
 
 namespace Syspons\Sheetable\Helpers;
 
+use berthott\Scopeable\Facades\Scopeable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -11,6 +12,7 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Syspons\Sheetable\Exceptions\ExcelImportScopeableException;
 use Syspons\Sheetable\Exceptions\ExcelImportValidationException;
 use Syspons\Sheetable\Models\Contracts\Dropdownable;
 
@@ -337,11 +339,22 @@ class SpreadsheetHelper
         // TODO the upsert method will bypass model events (breaks userstamps + caching) and will
         // update in any case, so with no changes 'updated_at' will be updated.
         // $model::upsert($this->constrainedToDbColumns($collection, $model)->toArray(), ['id']);
+        DB::beginTransaction();
         $this->constrainedToDbColumns($collection, $model)->each(function ($entity) use ($model) {
             $arr = $entity->toArray();
             $model::updateOrCreate(['id' => $arr['id']], $arr);
         });
         $this->dropdowns->importManyToManyPivotEntries($collection, $model);
+        try {
+            $collection->each(function($item, $index) use ($model) {
+                if (!Scopeable::isAllowedInScopes(new $model($item->toArray()))) {
+                    throw new ExcelImportScopeableException(++$index);
+                }
+            });
+        } catch (ExcelImportScopeableException $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     public function constrainedToDbColumns(Collection $collection, Model|string $model): Collection

@@ -2,6 +2,7 @@
 
 namespace Syspons\Sheetable\Http\Controllers;
 
+use berthott\Scopeable\Facades\Scopeable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -36,7 +37,7 @@ class SheetController
     public function export(ExportRequest $request): BinaryFileResponse
     {
         return Excel::download(
-            new SheetsExport($this->getExportModels($request->input('ids', [])), $this->getModel(), $this->spreadsheetHelper),
+            new SheetsExport(Scopeable::filterScopes($this->getExportModels($request->input('ids', []))), $this->getModel(), $this->spreadsheetHelper),
             $this->getTableName().'.'.$this->sheetableService->getExportExtension()
         );
     }

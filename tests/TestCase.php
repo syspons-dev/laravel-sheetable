@@ -2,6 +2,7 @@
 
 namespace Syspons\Sheetable\Tests;
 
+use berthott\Scopeable\ScopeableServiceProvider;
 use Syspons\Sheetable\SheetableServiceProvider;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\UploadedFile;
@@ -25,6 +26,7 @@ abstract class TestCase extends BaseTestCase
         return [
             SheetableServiceProvider::class,
             ExcelServiceProvider::class,
+            ScopeableServiceProvider::class,
         ];
     }
 
@@ -32,6 +34,7 @@ abstract class TestCase extends BaseTestCase
     {
         $this->setupTables();
         Config::set('sheetable.namespace', __NAMESPACE__);
+        Config::set('scopeable.namespace', __NAMESPACE__);
     }
 
     private function setupTables(): void
@@ -58,7 +61,18 @@ abstract class TestCase extends BaseTestCase
                 ->on('one_to_many_relations')->onDelete('cascade');
         });
 
+        Schema::create('with_scopeable_relation_dummies', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('title');
+            $table->string('description');
+        });
+
         Schema::create('many_to_many_relations', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('label');
+        });
+
+        Schema::create('scopeable_many_to_many_relations', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('label');
         });
@@ -73,6 +87,30 @@ abstract class TestCase extends BaseTestCase
             $table->foreign('with_relation_dummy_id')
                 ->references('id')
                 ->on('with_relation_dummies')->onDelete('cascade');
+        });
+
+        Schema::create('scopeable_many_to_many_relation_with_scopeable_relation_dummy', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->bigInteger('scopeable_many_to_many_relation_id');
+            $table->bigInteger('with_scopeable_relation_dummy_id');
+
+            $table->foreign('scopeable_many_to_many_relation_id')->references('id')->on('scopeable_many_to_many_relations')->onDelete('cascade');
+            $table->foreign('with_scopeable_relation_dummy_id')->references('id')->on('with_scopeable_relation_dummies')->onDelete('cascade');
+        });
+
+        Schema::create('users', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('name');
+            $table->timestamps();
+        });
+
+        Schema::create('scopeable_many_to_many_relation_user', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->unsignedBigInteger('scopeable_many_to_many_relation_id');
+            $table->unsignedBigInteger('user_id');
+
+            $table->foreign('scopeable_many_to_many_relation_id')->references('id')->on('scopeable_many_to_many_relations')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

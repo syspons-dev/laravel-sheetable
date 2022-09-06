@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4a9d80b1cdbc916f1526262badd3b5af",
+    "content-hash": "f5054c81ef8e896a3a9491f3963cbd90",
     "packages": [
         {
             "name": "barryvdh/laravel-ide-helper",
@@ -151,6 +151,55 @@
                 "source": "https://github.com/barryvdh/ReflectionDocBlock/tree/v2.0.6"
             },
             "time": "2018-12-13T10:34:14+00:00"
+        },
+        {
+            "name": "berthott/laravel-scopeable",
+            "version": "dev-master",
+            "dist": {
+                "type": "path",
+                "url": "../../laravel_packages/laravel-scopeable",
+                "reference": "2da3329d65f77e5da626da9ea7b65c4972091570"
+            },
+            "require": {
+                "haydenpierce/class-finder": "^0.4.3"
+            },
+            "require-dev": {
+                "doctrine/dbal": "^3.3",
+                "orchestra/testbench": "^7.0",
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "berthott\\Scopeable\\ScopeableServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "berthott\\Scopeable\\": "src"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "berthott\\Scopeable\\Tests\\": "tests"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jan Bladt",
+                    "email": "berthott@web.de"
+                }
+            ],
+            "description": "Laravel helper for permission scopes",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "brick/math",
@@ -8882,7 +8931,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "berthott/laravel-scopeable": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],

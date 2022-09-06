@@ -4,8 +4,11 @@ namespace Syspons\Sheetable\Tests\Feature\ExportTest;
 
 use Maatwebsite\Excel\Facades\Excel;
 use Syspons\Sheetable\Exports\SheetsExport;
+use Syspons\Sheetable\Tests\Models\ScopeableManyToManyRelation;
 use Syspons\Sheetable\Tests\Models\WithRelationDummy;
 use Syspons\Sheetable\Tests\Models\SimpleDummy;
+use Syspons\Sheetable\Tests\Models\User;
+use Syspons\Sheetable\Tests\Models\WithScopeableRelationDummy;
 use Syspons\Sheetable\Tests\TestCase;
 
 /**
@@ -47,6 +50,29 @@ class ExportTest extends TestCase
         $response = $this->call('GET', route('with_relation_dummies.export'), [
             'ids' => $ids,
         ])->assertStatus(200)->assertDownload($expectedName);
+        $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName, true, 0);
+    }
+
+    public function test_exported_scopeable_values()
+    {
+        $expectedName = 'with_scopeable_relation_dummies.xlsx';
+        // create 5, expect 3, ignore metadatasheet
+        $scropableAllowed = ScopeableManyToManyRelation::createInstance();
+        $scropableNotAllowed = ScopeableManyToManyRelation::createInstance();
+        $user = User::factory()->hasAttached($scropableAllowed, [], 'scopeable_many_to_many_relations')->create();
+
+        WithScopeableRelationDummy::createInstances(3)->each(function($instance) use ($scropableAllowed) {
+            $instance->scopeable_many_to_many_relations()->attach($scropableAllowed);
+        });
+        WithScopeableRelationDummy::createInstances(3)->each(function($instance) use ($scropableNotAllowed) {
+            $instance->scopeable_many_to_many_relations()->attach($scropableNotAllowed);
+        });
+        
+        $this->actingAs($user);
+
+        $response = $this->call('GET', route('with_scopeable_relation_dummies.export'))
+            ->assertStatus(200)
+            ->assertDownload($expectedName);
         $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName, true, 0);
     }
 

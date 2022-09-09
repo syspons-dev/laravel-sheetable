@@ -31,18 +31,9 @@
     "brianium/paratest": "^6.4"
   },
   "require": {
-    "berthott/laravel-scopeable": "@dev",
+    "berthott/laravel-scopeable": "^2.0.0",
     "haydenpierce/class-finder": "^0.4.3",
     "barryvdh/laravel-ide-helper": "2.12.3",
     "maatwebsite/excel": "^3.0"
-  },
-  "repositories": [
-      {
-          "type": "path",
-          "url": "../../laravel_packages/laravel-scopeable",
-          "options": {
-              "symlink": true
-          }
-      }
-  ]
+  }
 }

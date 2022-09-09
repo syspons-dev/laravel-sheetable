@@ -345,15 +345,20 @@ class SpreadsheetHelper
             $model::updateOrCreate(['id' => $arr['id']], $arr);
         });
         $this->dropdowns->importManyToManyPivotEntries($collection, $model);
+        $commit = true;
         try {
             $collection->each(function($item, $index) use ($model) {
                 if (!Scopeable::isAllowedInScopes($model::find($item['id']))) {
+                    $commit = false;
                     throw new ExcelImportScopeableException(++$index);
                 }
             });
         } catch (ExcelImportScopeableException $e) {
             DB::rollBack();
             throw $e;
+        }
+        if ($commit) {
+            DB::commit();
         }
     }
 

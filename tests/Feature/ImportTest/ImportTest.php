@@ -121,10 +121,10 @@ class ImportTest extends TestCase
             true
         );
 
-        $scropableAllowed = ScopeableManyToManyRelation::createInstance();
-        $scropableNotAllowed = ScopeableManyToManyRelation::createInstance();
+        $scopeableAllowed = ScopeableManyToManyRelation::createInstance();
+        $scopeableNotAllowed = ScopeableManyToManyRelation::createInstance();
 
-        $user = User::factory()->hasAttached($scropableAllowed, [], 'scopeable_many_to_many_relations')->create();
+        $user = User::factory()->hasAttached($scopeableAllowed, [], 'scopeable_many_to_many_relations')->create();
         $this->actingAs($user);
 
         $response = $this->postJson(route('with_scopeable_relation_dummies.import'), [
@@ -150,13 +150,13 @@ class ImportTest extends TestCase
             true
         );
 
-        $scropableAllowed = ScopeableManyToManyRelation::createInstance();
-        $scropableNotAllowed = ScopeableManyToManyRelation::createInstance();
+        $scopeableAllowed = ScopeableManyToManyRelation::createInstance();
+        $scopeableNotAllowed = ScopeableManyToManyRelation::createInstance();
 
         // expected count in table
         WithScopeableRelationDummy::createInstances(2);
 
-        $user = User::factory()->hasAttached($scropableAllowed, [], 'scopeable_many_to_many_relations')->create();
+        $user = User::factory()->hasAttached($scopeableAllowed, [], 'scopeable_many_to_many_relations')->create();
         $this->actingAs($user);
 
         //$this->expectException(ExcelImportScopeableException::class);

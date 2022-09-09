@@ -347,7 +347,7 @@ class SpreadsheetHelper
         $this->dropdowns->importManyToManyPivotEntries($collection, $model);
         try {
             $collection->each(function($item, $index) use ($model) {
-                if (!Scopeable::isAllowedInScopes(new $model($item->toArray()))) {
+                if (!Scopeable::isAllowedInScopes($model::find($item['id']))) {
                     throw new ExcelImportScopeableException(++$index);
                 }
             });

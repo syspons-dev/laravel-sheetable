@@ -348,9 +348,11 @@ class SpreadsheetHelper
         $commit = true;
         try {
             $collection->each(function($item, $index) use ($model) {
-                if (!Scopeable::isAllowedInScopes($model::find($item['id']))) {
-                    $commit = false;
-                    throw new ExcelImportScopeableException(++$index);
+                if ($instance = $model::find($item['id'])) {
+                    if (!Scopeable::isAllowedInScopes($instance)) {
+                        $commit = false;
+                        throw new ExcelImportScopeableException(++$index);
+                    }
                 }
             });
         } catch (ExcelImportScopeableException $e) {

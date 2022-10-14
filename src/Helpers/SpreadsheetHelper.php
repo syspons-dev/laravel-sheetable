@@ -340,9 +340,17 @@ class SpreadsheetHelper
         // update in any case, so with no changes 'updated_at' will be updated.
         // $model::upsert($this->constrainedToDbColumns($collection, $model)->toArray(), ['id']);
         DB::beginTransaction();
-        $this->constrainedToDbColumns($collection, $model)->each(function ($entity) use ($model) {
+        $this->constrainedToDbColumns($collection, $model)->each(function ($entity, $key) use ($model, $collection) {
             $arr = $entity->toArray();
-            $model::updateOrCreate(['id' => $arr['id']], $arr);
+            $instance = $model::updateOrCreate(['id' => $arr['id']], $arr);
+
+            // this works around missing fillable['id'] and forces the user defined id
+            if ($arr['id']) {
+                $instance->id = $arr['id'];
+                $instance->save();
+            }
+
+            $collection[$key]['id'] = $instance->id;
         });
         $this->dropdowns->importManyToManyPivotEntries($collection, $model);
         $commit = true;

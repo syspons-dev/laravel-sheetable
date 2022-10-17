@@ -274,7 +274,7 @@ class SpreadsheetHelper
         $duplicates = $this->getIdDuplicatesInSheet($worksheet);
         if ($duplicates && !empty($duplicates)) {
             $uvException = new PhpSpreadsheetException(
-                'Following IDs appear more than once in the document: '.implode(',', $duplicates)
+                __('Following IDs appear more than once in the document: ').implode(',', $duplicates)
             );
             throw new ExcelImportValidationException($uvException);
         }

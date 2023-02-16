@@ -26,8 +26,8 @@ $ php artisan vendor:publish --provider="syspons\Sheetable\SheetableServiceProvi
 
 ## Compatibility
 
-Tested with Laravel 8.x.
+Tested with Laravel 10.x.
 
 ## License
 
-See [License File](license.md). Copyright © 2021 Jan Bladt.
+See [License File](license.md). Copyright © 2023 Jan Bladt.

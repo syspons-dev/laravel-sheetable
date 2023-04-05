@@ -53,19 +53,16 @@ class SheetableServiceProvider extends ServiceProvider
             foreach ($sheetableService->getTargetableClasses() as $sheetableClass) {
                 $tableName = $sheetableClass::newModelInstance()->getTable();
 
-                Route::match(
-                    ['get', 'post'],
-                    '/export/'.$tableName,
-                    [SheetController::class, 'export']
-                )->name($tableName.'.export');
-                Route::get(
-                    '/template/'.$tableName,
-                    [SheetController::class, 'template']
-                )->name($tableName.'.template');
-                Route::post(
-                    '/import/'.$tableName,
-                    [SheetController::class, 'import']
-                )->name($tableName.'.import');
+                $crudRoutes = $this->getCrudRoutes($sheetableClass);
+                if (in_array('export', $crudRoutes)) {
+                    Route::match(['get', 'post'], "{$tableName}/export", [SheetController::class, 'export'])->name($tableName.'.export');
+                }
+                if (in_array('template', $crudRoutes)) {
+                    Route::get("{$tableName}/template", [SheetController::class, 'template'])->name($tableName.'.template');
+                }
+                if (in_array('import', $crudRoutes)) {
+                    Route::post("{$tableName}/import", [SheetController::class, 'import'])->name($tableName.'.import');
+                }
             }
         });
 
@@ -105,5 +102,26 @@ class SheetableServiceProvider extends ServiceProvider
 
             return true;
         });
+    }
+
+    /**
+     * Get the applicable resource methods.
+     */
+    protected function getCrudRoutes(string $sheetableClass): array
+    {
+        $methods = ['export', 'template', 'import'];
+        if (!method_exists($sheetableClass, 'routeOptions')) {
+            return $methods;
+        }
+        $options = $sheetableClass::routeOptions();
+        if (isset($options['only'])) {
+            $methods = array_intersect($methods, (array) $options['only']);
+        }
+
+        if (isset($options['except'])) {
+            $methods = array_diff($methods, (array) $options['except']);
+        }
+
+        return $methods;
     }
 }

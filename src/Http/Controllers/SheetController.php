@@ -74,7 +74,7 @@ class SheetController
 
     public function getModel(): Model|string
     {
-        return $this->sheetableService->getModelClassFromRequest();
+        return $this->sheetableService->getTarget();
     }
 
     private function getExportModels(array $ids = []): Collection

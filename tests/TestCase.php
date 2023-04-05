@@ -3,6 +3,7 @@
 namespace Syspons\Sheetable\Tests;
 
 use berthott\Scopeable\ScopeableServiceProvider;
+use HaydenPierce\ClassFinder\ClassFinder;
 use Syspons\Sheetable\SheetableServiceProvider;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\UploadedFile;
@@ -33,8 +34,8 @@ abstract class TestCase extends BaseTestCase
     protected function getEnvironmentSetUp($app)
     {
         $this->setupTables();
-        Config::set('sheetable.namespace', __NAMESPACE__);
-        Config::set('scopeable.namespace', __NAMESPACE__);
+        Config::set('sheetable.namespace', __NAMESPACE__.'\Models');
+        Config::set('scopeable.namespace', __NAMESPACE__.'\Models');
     }
 
     private function setupTables(): void

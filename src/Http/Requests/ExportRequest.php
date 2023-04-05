@@ -11,7 +11,7 @@ class ExportRequest extends FormRequest
 
     public function __construct(SheetableService $sheetableService)
     {
-        $this->target = $sheetableService->getModelClassFromRequest();
+        $this->target = $sheetableService->getTarget();
     }
 
     /**

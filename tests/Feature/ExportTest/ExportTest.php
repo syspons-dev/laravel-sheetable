@@ -98,7 +98,7 @@ class ExportTest extends TestCase
         Excel::fake();
         $withRelationDummies = WithRelationDummy::createInstances();
 
-        $this->get('/api/export/with_relation_dummies')
+        $this->get(route('with_relation_dummies.export'))
             ->assertStatus(200);
 
         Excel::assertDownloaded('with_relation_dummies.xlsx', function (SheetsExport $export) use ($withRelationDummies) {
@@ -120,7 +120,7 @@ class ExportTest extends TestCase
     {
         Excel::fake();
 
-        $this->get('/api/export/simple_dummies')
+        $this->get(route('simple_dummies.export'))
             ->assertStatus(200);
 
         Excel::assertDownloaded('simple_dummies.xlsx', function (SheetsExport $export) {
@@ -136,7 +136,7 @@ class ExportTest extends TestCase
     {
         Excel::fake();
         $dbSimpleDummy = SimpleDummy::factory()->create();
-        $this->get('/api/export/simple_dummies')
+        $this->get(route('simple_dummies.export'))
             ->assertStatus(200);
 
         Excel::assertDownloaded('simple_dummies.xlsx', function (SheetsExport $export) use ($dbSimpleDummy) {

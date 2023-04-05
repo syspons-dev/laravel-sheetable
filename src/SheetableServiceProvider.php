@@ -50,7 +50,7 @@ class SheetableServiceProvider extends ServiceProvider
 
         // add routes
         Route::group($this->routeConfiguration(), function () use ($sheetableService) {
-            foreach ($sheetableService->getSheetableClasses() as $sheetableClass) {
+            foreach ($sheetableService->getTargetableClasses() as $sheetableClass) {
                 $tableName = $sheetableClass::newModelInstance()->getTable();
 
                 Route::match(

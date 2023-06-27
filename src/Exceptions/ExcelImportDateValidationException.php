@@ -7,17 +7,14 @@ use Illuminate\Http\JsonResponse;
 
 class ExcelImportDateValidationException extends Exception
 {
-    private int $row;
-    private string $attribute;
-
     /**
      * Create a new exception instance.
      */
-    public function __construct(int $row, string $attribute)
+    public function __construct(
+        private int $row, 
+        private string $attribute)
     {
         parent::__construct('Validation Error.');
-        $this->row = $row;
-        $this->attribute = $attribute;
     }
 
     /**

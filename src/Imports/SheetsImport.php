@@ -10,16 +10,10 @@ use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 
 class SheetsImport implements WithMultipleSheets
 {
-    private string|Model $modelClass;
-    private SpreadsheetHelper $helper;
-
     public function __construct(
-        string|Model $modelClass,
-        SpreadsheetHelper $helper
-    ) {
-        $this->modelClass = $modelClass;
-        $this->helper = $helper;
-    }
+        private string|Model $modelClass,
+        private SpreadsheetHelper $helper
+    ) {}
 
     public function sheets(): array
     {

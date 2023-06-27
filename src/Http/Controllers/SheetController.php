@@ -22,14 +22,10 @@ use Syspons\Sheetable\Services\SheetableService;
  */
 class SheetController
 {
-    private SheetableService $sheetableService;
-    private SpreadsheetHelper $spreadsheetHelper;
-
-    public function __construct(SheetableService $sheetableService, SpreadsheetHelper $spreadsheetHelper)
-    {
-        $this->sheetableService = $sheetableService;
-        $this->spreadsheetHelper = $spreadsheetHelper;
-    }
+    public function __construct(
+        private SheetableService $sheetableService,
+        private SpreadsheetHelper $spreadsheetHelper
+    ) {}
 
     /**
      * @throws Exception

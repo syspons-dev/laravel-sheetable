@@ -7,15 +7,12 @@ use Illuminate\Http\JsonResponse;
 
 class ExcelImportScopeableException extends Exception
 {
-    private int $row;
-
     /**
      * Create a new exception instance.
      */
-    public function __construct(int $row)
+    public function __construct(private int $row)
     {
         parent::__construct('Scope not allowed.');
-        $this->row = $row;
     }
 
     /**

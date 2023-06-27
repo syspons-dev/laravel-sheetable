@@ -21,14 +21,10 @@ class SpreadsheetHelper
     private string $codebookSheetNameHorizontal = 'codebook-horizontal';
     private string $codebookSheetName = 'codebook';
 
-    private SpreadsheetUtils $utils;
-    private SpreadsheetDropdowns $dropdowns;
-
-    public function __construct(SpreadsheetUtils $utils, SpreadsheetDropdowns $dropdowns)
-    {
-        $this->utils = $utils;
-        $this->dropdowns = $dropdowns;
-    }
+    public function __construct(
+        private SpreadsheetUtils $utils, 
+        private SpreadsheetDropdowns $dropdowns
+    ) {}
 
     /**
      * @throws PhpSpreadsheetException

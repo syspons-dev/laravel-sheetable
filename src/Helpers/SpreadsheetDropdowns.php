@@ -21,7 +21,6 @@ class SpreadsheetDropdowns
 {
     public const ADD_DROPDOWN_FIELDS_NUM = 200;
 
-    private SpreadsheetUtils $utils;
     private string $metaSheetName = 'metadata';
 
     private function getMetaSheetName(): string
@@ -29,10 +28,7 @@ class SpreadsheetDropdowns
         return $this->metaSheetName;
     }
 
-    public function __construct(SpreadsheetUtils $utils)
-    {
-        $this->utils = $utils;
-    }
+    public function __construct(private SpreadsheetUtils $utils) {}
 
     public function importManyToManyPivotEntries(Collection &$collection, string $target)
     {

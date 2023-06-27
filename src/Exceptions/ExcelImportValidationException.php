@@ -10,17 +10,11 @@ use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 class ExcelImportValidationException extends Exception
 {
     /**
-     * The recommended response to send to the client.
-     */
-    private ValidationException|PhpSpreadsheetException $validationException;
-
-    /**
      * Create a new exception instance.
      */
-    public function __construct(ValidationException|PhpSpreadsheetException|null $validationException = null)
+    public function __construct(private ValidationException|PhpSpreadsheetException|null $validationException = null)
     {
         parent::__construct('Validation Error.');
-        $this->validationException = $validationException;
     }
 
     /**

@@ -22,23 +22,18 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
 {
     use Exportable;
 
-    private Model|string $model;
-    private Collection $models;
+    /**
+     * The table name.
+     */
     private string $tableName;
-    private SpreadsheetHelper $helper;
-    private bool $isTemplate = false;
 
     public function __construct(
-        Collection $models,
-        Model|string $model,
-        SpreadsheetHelper $helper,
-        bool $isTemplate = false
+        private Collection $models,
+        private Model|string $model,
+        private SpreadsheetHelper $helper,
+        private bool $isTemplate = false
     ) {
-        $this->models = $models;
-        $this->model = $model;
         $this->tableName = $model::newModelInstance()->getTable();
-        $this->helper = $helper;
-        $this->isTemplate = $isTemplate;
         SheetableLog::log("Start exporting {$this->tableName}".($isTemplate ? ' template' : ''));
     }
 

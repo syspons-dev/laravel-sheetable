@@ -19,16 +19,11 @@ use Syspons\Sheetable\Models\Contracts\Sheetable;
 
 class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithEvents, SkipsEmptyRows, WithCalculatedFormulas
 {
-    private string|Model $modelClass;
-    private SpreadsheetHelper $helper;
-
     public function __construct(
-        string|Model $modelClass,
-        SpreadsheetHelper $helper
+        private string|Model $modelClass,
+        private SpreadsheetHelper $helper
     ) {
         SheetableLog::log("Start importing $modelClass");
-        $this->modelClass = $modelClass;
-        $this->helper = $helper;
     }
 
     public function collection(Collection $collection)

@@ -10,14 +10,28 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Syspons\Sheetable\Exceptions\ExcelImportDateValidationException;
 
+/**
+ * Helper class for spread sheet utility functions
+ */
 class SpreadsheetUtils
 {
+    /**
+     * @var string date format
+     */
     public const FORMAT_DATE_DATETIME = 'dd.mm.yyyy';
-    public const FORMAT_NUMBER_COMMA_SEPARATED_DE = '#,##0.00'; // ??
+
+    /**
+     * @var int column width in points
+     */
     public const COL_WIDTH_IN_PT = 16;
+
+    /**
+     * @var int date column width in points
+     */
     public const COL_DATE_WIDTH_IN_PT = 16;
 
     /**
@@ -51,13 +65,22 @@ class SpreadsheetUtils
         return Coordinate::stringFromColumnIndex($colIndex + 1);
     }
 
+    /**
+     * Get an array of all the table columns.
+     *
+     * @return string[]
+     */
     public function getDBColumns(Model|string $model): array
     {
         return DB::getSchemaBuilder()->getColumnListing($model::newModelInstance()->getTable());
     }
 
     /**
-     * @return string[] names of all datetime columns without created_at/updated_at in given model e.g. ['date_start', 'date_end']
+     * Get an array of all datetime columns.
+     * 
+     * Option to include created_at/updated_at.
+     * 
+     * @return string[] e.g. ['date_start', 'date_end']
      */
     public function getDateTimeCols(Model|string $model, bool $inclCreateUpd = false): array
     {
@@ -77,11 +100,26 @@ class SpreadsheetUtils
     }
 
     /**
-     * Formats all columns (width etc.); call this at the end of an export.
+     * Formats all columns.
+     * 
+     * Call this at the end of an export.
      *
      * @throws PhpSpreadsheetException
      */
-    public function formatAllCols(Worksheet $worksheet)
+    public function formatColumns(Model $model, Worksheet $worksheet, Collection $models)
+    {
+        $this->setColumnWidth($worksheet);
+        $worksheet->getPageSetup()->setFitToWidth(1);
+        $this->setColumnFormat($model, $worksheet);
+        $this->formatDateColumns($model, $worksheet, $models);
+    }
+
+    /**
+     * Set the column width to match it's content.
+     *
+     * @throws PhpSpreadsheetException
+     */
+    private function setColumnWidth(Worksheet $worksheet)
     {
         $lastColumn = $worksheet->getHighestDataColumn();
         ++$lastColumn;
@@ -100,19 +138,16 @@ class SpreadsheetUtils
     }
 
     /**
+     * Special formatting for date columns.
+     * 
      * @throws PhpSpreadsheetException
      */
-    public function formatSpecialFields(Model $model, Worksheet $worksheet, Collection $models)
+    private function formatDateColumns(Model $model, Worksheet $worksheet, Collection $models)
     {
-        $this->formatAllCols($worksheet);
-        $worksheet->getPageSetup()->setFitToWidth(1);
-
-        $this->formatExportCols($model, $worksheet);
-
         $dateTimeCols = $this->getDateTimeCols($model, true);
         $rowNr = 1;
 
-        // set width for all date fields
+        // set width
         foreach ($dateTimeCols as $dateTimeCol) {
             $colCoord = $this->getColumnByHeading($worksheet, $dateTimeCol);
             $worksheet->getColumnDimension($colCoord)->setWidth(self::COL_DATE_WIDTH_IN_PT);
@@ -120,6 +155,7 @@ class SpreadsheetUtils
             $worksheet->getCell($colCoord.'1')->getStyle()->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         }
 
+        // set format
         foreach ($models as $singleModel) {
             ++$rowNr;
             foreach ($dateTimeCols as $dateTimeCol) {
@@ -135,36 +171,38 @@ class SpreadsheetUtils
     }
 
     /**
-     * @return string[] names of all datetime columns in given model e.g. ['date_start', 'date_end']
+     * Set the column format.
      */
-    public function formatExportCols(Model|string $model, Worksheet $worksheet): array
+    private function setColumnFormat(Model|string $model, Worksheet $worksheet)
     {
-        $dateTimeCols = [];
-
         $tableName = $model::newModelInstance()->getTable();
         foreach (DB::getSchemaBuilder()->getColumnListing($tableName) as $colName) {
             $colCoord = $this->getColumnByHeading($worksheet, $colName);
             $type = DB::getSchemaBuilder()->getColumnType($tableName, $colName);
-            if ('datetime' === $type) {
+            $format = '';
+            switch($type) {
+                case 'datetime':
+                    $format = self::FORMAT_DATE_DATETIME;
+                    break;
+                case 'bigint':
+                case 'integer':
+                    $format = NumberFormat::FORMAT_NUMBER;
+                    break;
+                case 'float':
+                    $format = NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1;
+                    break;
+            }
+            if ($format) {
                 $worksheet->getStyle($colCoord.':'.$colCoord)->getNumberFormat()
-                    ->setFormatCode(self::FORMAT_DATE_DATETIME);
-            } elseif ('bigint' === $type) {
-                $worksheet->getStyle($colCoord.':'.$colCoord)->getNumberFormat()
-                    ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
-            } elseif ('integer' === $type) {
-                $worksheet->getStyle($colCoord.':'.$colCoord)->getNumberFormat()
-                    ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
-            } elseif ('float' === $type) {
-                $worksheet->getStyle($colCoord.':'.$colCoord)->getNumberFormat()
-                    ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+                        ->setFormatCode($format);
             }
         }
-
-        return $dateTimeCols;
     }
 
     /**
-     * returns column e.g. "B". or null.
+     * Get the columns by its heading.
+     * 
+     * @return ?string e.g. "B". or null.
      */
     public function getColumnByHeading(Worksheet $worksheet, string $heading): ?string
     {
@@ -181,19 +219,8 @@ class SpreadsheetUtils
         return null;
     }
 
-    public function log(?string ...$logItems)
-    {
-        $line = Carbon::now()->toDateTimeString().': ';
-
-        foreach ($logItems as $logItem) {
-            $line .= $logItem.' ';
-        }
-        $line .= PHP_EOL;
-        file_put_contents('tmp.log', $line, FILE_APPEND);
-    }
-
     /**
-     * shortens qualified class name like 'App\Models\Dummy' to shortname like 'Dummy'.
+     * Shortens qualified class name like 'App\Models\Dummy' to shortname like 'Dummy'.
      *
      * @param string|null $model e.g. App\Models\Dummy
      *
@@ -207,11 +234,11 @@ class SpreadsheetUtils
     }
 
     /**
-     * Converts excel date to db dateTime.
+     * Converts excel date to DB dateTime.
      *
      * @param string|null $dateTime excel date / excel string date
      *
-     * @return string dateTime-String for db
+     * @return string dateTime-String for DB
      */
     public function cleanImportDateTime(?string $dateTime, int $row, string $attribute): string
     {

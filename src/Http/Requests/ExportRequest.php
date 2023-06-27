@@ -5,6 +5,9 @@ namespace Syspons\Sheetable\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Syspons\Sheetable\Services\SheetableService;
 
+/**
+ * Simple FormRequest Implementation for validation.
+ */
 class ExportRequest extends FormRequest
 {
     private string $target;
@@ -16,6 +19,8 @@ class ExportRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
+     * 
+     * @api
      */
     public function rules(): array
     {

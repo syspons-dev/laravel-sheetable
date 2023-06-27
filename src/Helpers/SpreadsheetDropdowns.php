@@ -15,11 +15,24 @@ use Syspons\Sheetable\Exceptions\ExcelExportValidationException;
 use Syspons\Sheetable\Exports\DropdownConfig;
 use Syspons\Sheetable\Models\Contracts\Dropdownable;
 
-const MAX_MANY_TO_MANYS = 100;
-
+/**
+ * Helper class for interaction with dropdowns
+ */
 class SpreadsheetDropdowns
 {
-    public const ADD_DROPDOWN_FIELDS_NUM = 200;
+    /**
+     * The maximum number of columns for a many to many relation.
+     * 
+     * @var int
+     */
+    private const MAX_MANY_TO_MANYS = 100;
+
+    /**
+     * The maximum number of rows in a dropdown.
+     * 
+     * @var int
+     */
+    private const ADD_DROPDOWN_FIELDS_NUM = 200;
 
     private string $metaSheetName = 'metadata';
 
@@ -30,6 +43,12 @@ class SpreadsheetDropdowns
 
     public function __construct(private SpreadsheetUtils $utils) {}
 
+    /**
+     * Import many to many relationships.
+     * 
+     * A many to many relationship, is represented by multiple columns,
+     * that will be processed individually.
+     */
     public function importManyToManyPivotEntries(Collection &$collection, string $target)
     {
         if (!method_exists($target, 'getDropdownFields')) {
@@ -44,7 +63,7 @@ class SpreadsheetDropdowns
                 $modelInstance = $target::newModelInstance();
                 $pivotTable = $modelInstance->joiningTable($dropdownField->getFkModel());
 
-                for ($i = 1; $i < MAX_MANY_TO_MANYS; ++$i) {
+                for ($i = 1; $i < self::MAX_MANY_TO_MANYS; ++$i) {
                     $key = $field.'_'.$i;
 
                     // all items defined in table
@@ -83,8 +102,6 @@ class SpreadsheetDropdowns
 
     /**
      * Adds validation/dropdown-fields for all recipes defined in getDropdownFields.
-     *
-     * @param Dropdownable|Model $dropdownable dropdownable model
      *
      * @throws PhpSpreadsheetException
      */
@@ -142,7 +159,6 @@ class SpreadsheetDropdowns
 
             foreach ($descriptions as $description) {
                 ++$row;
-//                $id = $description->getKey();
                 $id = $description[$config->getFkIdCol()];
                 $value = $description->toArray()[$config->getFkTextCol()];
                 $metaDataSheet->setCellValue($metaIdCol.$row, $id);
@@ -176,6 +192,8 @@ class SpreadsheetDropdowns
      ************************************************************/
 
     /**
+     * Adds a relational dropdown column.
+     * 
      * Adds / replaces the IDs of all fields - containing values - in a given column
      * with the corresponding describing text field and adds a dropdown to all of these fields
      * containing the valid values, referencing a range in the metadata-sheet
@@ -183,7 +201,7 @@ class SpreadsheetDropdowns
      *
      * @throws PhpSpreadsheetException
      */
-    private function addForeignKeyDropdownColumn(Worksheet $sheet, DropdownConfig $dropdownConfig): void
+    private function addForeignKeyDropdownColumn(Worksheet $sheet, DropdownConfig $dropdownConfig)
     {
         $column = $this->utils->getColumnByHeading($sheet, $dropdownConfig->getField());
         $highestRow = $sheet->getHighestDataRow($column);
@@ -211,18 +229,17 @@ class SpreadsheetDropdowns
     }
 
     /**
+     * Adds an embedded relational dropdown column.
+     * 
      * Adds / replaces the IDs of all fields - containing values - in a given column
      * with the corresponding describing text field and adds a dropdown to these fields
      * containing the valid values, embedded formula values.
      * WARNING: The sum of all chars, including commas must not exceed 255! Gets cut otherwise.
      * Uses the DropdownConfig-Object to determine the Field and the recipes.
      *
-     * @param Sheet|Worksheet $sheet
-     * @param DropdownConfig  $dropdownConfig Field-DropdownConfig
-     *
      * @throws PhpSpreadsheetException
      */
-    private function addForeignKeyDropdownColumnEmbedded(Sheet|Worksheet $sheet, DropdownConfig $dropdownConfig): void
+    private function addForeignKeyDropdownColumnEmbedded(Sheet|Worksheet $sheet, DropdownConfig $dropdownConfig)
     {
         $highestRow = $sheet->getHighestRow();
         $selectOptions = $this->getEmbeddedValidationFormulaForForeignModel($dropdownConfig);
@@ -238,12 +255,14 @@ class SpreadsheetDropdowns
     }
 
     /**
+     * Adds a fixed dropdown column.
+     * 
      * Adds dropdown fields to a column referencing a range in the metadata-sheet
      * Uses the DropdownConfig-Object to determine the Field and the recipes.
      *
      * @throws PhpSpreadsheetException
      */
-    private function addFixedListDropdownColumn(Worksheet $worksheet, DropdownConfig $dropdownConfig): void
+    private function addFixedListDropdownColumn(Worksheet $worksheet, DropdownConfig $dropdownConfig)
     {
         $column = $this->utils->getColumnByHeading($worksheet, $dropdownConfig->getField());
         $highestRow = $worksheet->getHighestDataRow($column);
@@ -257,8 +276,8 @@ class SpreadsheetDropdowns
     }
 
     /**
-     * TODO clean up / refactor.
-     *
+     * Add multiple many to many columns.
+     * 
      * Adds multiple columns for an n-to-m field - as many columns as relations exist or the defined min amount -
      * and adds / replaces the IDs of all fields - containing values - in a given column
      * with the corresponding describing text field and adds a dropdown to all of these fields
@@ -266,8 +285,9 @@ class SpreadsheetDropdowns
      * Uses the DropdownConfig-Object to determine the Field and the recipes.
      *
      * @throws PhpSpreadsheetException
+     * @todo clean up / refactor
      */
-    private function addManyToManyColumnsForField(Worksheet $worksheet, Model $model, DropdownConfig $config, Collection $models): void
+    private function addManyToManyColumnsForField(Worksheet $worksheet, Model $model, DropdownConfig $config, Collection $models)
     {
         $rightOfField = $config->getMappingRightOfField();
         $colCoord = $this->utils->getColumnByHeading($worksheet, $rightOfField);
@@ -325,69 +345,14 @@ class SpreadsheetDropdowns
         }
     }
 
-    private function getDomainKey(Model|array|\stdClass $model): string
-    {
-        $keyName = $this->getDomainKeyName($model);
-
-        return $model->$keyName;
-    }
-
-    private function getDomainKeyName(Model|array|\stdClass $model): string
-    {
-        foreach ($model as $key => $value) {
-            if (str_ends_with('_key', $key)) {
-                return $key;
-            }
-        }
-
-        return 'id';
-    }
-
-//    private function getFkModelsForField(Model|null $modelRow, string $fkModelTable): Collection|null
-//    {
-//        if ($modelRow && method_exists($modelRow, $fkModelTable)) {
-//            // TODO this should work automatically, but eloquent does not use the correct key
-//            // return $modelRow?->$fkModelTable;
-//
-//            // The following code is a workaround
-//
-//            /** @var BelongsToMany $belongsToMany */
-//            $belongsToMany = $modelRow->$fkModelTable();
-//
-//            $thisKey = 'id';
-//            $foreignPivotKeyName = $belongsToMany->getForeignPivotKeyName();
-//
-//            if (str_ends_with($foreignPivotKeyName, 'foreign')) {
-//                $thisKey = substr($foreignPivotKeyName, 0, strlen($foreignPivotKeyName) - 8);
-//            }
-//
-//            $mappings = DB::table($belongsToMany->getTable())
-//                ->where($belongsToMany->getForeignPivotKeyName(), $modelRow[$thisKey])
-//                ->get($belongsToMany->getRelatedPivotKeyName());
-//
-//            $relations = DB::table($fkModelTable)
-//                ->whereIn($belongsToMany->getRelatedKeyName(), $mappings->pluck('sdg_id')->toArray())
-//                ->get();
-//
-//            return $relations;
-//        }
-//
-//        return null;
-//    }
-
     /**
-     * @param $allModels
-     * @param $fkModelTableName
-     * @param $config
-     *
-     * @return mixed
+     * Get count of many to many fields for this dropdownable.
      */
-    private function colCountForManyToManyField($allModels, $fkModelTableName, $config): int
+    private function colCountForManyToManyField(Collection $allModels, string $fkModelTableName, DropdownConfig $config): int
     {
         $additionalColCount = $config->getMappingMinFields();
 
         // find out $maxColCount
-        /** @var Dropdownable $modelRow */
         foreach ($allModels as $modelRow) {
             $listOfFkModels = $modelRow->$fkModelTableName;
             if ($listOfFkModels && $listOfFkModels->count() > $additionalColCount) {
@@ -399,9 +364,9 @@ class SpreadsheetDropdowns
     }
 
     /**
-     * @param Sheet|Worksheet $worksheet
-     * @param DropdownConfig  $config            Field-DropdownConfig
-     * @param string          $validationFormula e.g. 'foo, bar' or 'metadata!B1:B3'
+     * Add a relation dropdown field
+     * 
+     * @param string $validationFormula e.g. 'foo, bar' or 'metadata!B1:B3'
      *
      * @throws PhpSpreadsheetException
      * @throws ExcelExportValidationException
@@ -424,9 +389,34 @@ class SpreadsheetDropdowns
     }
 
     /**
-     * Handles validation/dropdown-fields getDropdownFields.
+     * Add dropdown field + validation
+     * 
+     * @param string      $worksheetField    e.g. 'C2'
+     * @param string|null $cellValue         the describing value to be displayed, not the corresponding (db) id
+     * @param string      $validationFormula e.g. '"Item 1, Item 2, Item 3"' or 'metadata!$C$2:$C$240'
      *
-     * @param Dropdownable $dropdownable dropdownable model
+     * @throws PhpSpreadsheetException
+     */
+    private function addDropdownField(Worksheet $worksheet, string $worksheetField, string|null $cellValue, string $validationFormula): void
+    {
+        $worksheet->setCellValue($worksheetField, $cellValue);
+
+        $objValidation = $worksheet->getCell($worksheetField)->getDataValidation();
+        $objValidation->setType(DataValidation::TYPE_LIST);
+        $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+        $objValidation->setAllowBlank(false);
+        $objValidation->setShowInputMessage(true);
+        $objValidation->setShowErrorMessage(true);
+        $objValidation->setShowDropDown(true);
+        $objValidation->setErrorTitle('Input error');
+        $objValidation->setError('Value is not in list.');
+        $objValidation->setPromptTitle('Pick from list');
+        $objValidation->setPrompt('Please pick a value from the drop-down list.');
+        $objValidation->setFormula1($validationFormula);
+    }
+
+    /**
+     * Handles validation/dropdown-fields getDropdownFields.
      *
      * @throws PhpSpreadsheetException
      */
@@ -454,19 +444,15 @@ class SpreadsheetDropdowns
     /**
      * Replaces the descriptive text(dropdown) fields with the corresponding IDs.
      *
-     * @param DropdownConfig $dropdownConfig Field-DropdownConfig
-     *
      * @throws PhpSpreadsheetException
      */
     private function resolveImportIdsForDropdownColumn(Worksheet $worksheet, DropdownConfig $dropdownConfig, $colCoord): void
     {
-//        $colCoord = $this->utils->getColumnByHeading($worksheet, $dropdownConfig->getField());
         $highestDataRow = $worksheet->getHighestDataRow($colCoord);
         $highestRow = $worksheet->getHighestRow($colCoord);
 
         for ($i = 2; $i <= $highestRow; ++$i) {
             // remove DataValidation from all fields
-
             $worksheet->getCell($colCoord.$i)->setDataValidation();
         }
 
@@ -489,7 +475,6 @@ class SpreadsheetDropdowns
 
         for ($i = 2; $i <= $highestDataRow; ++$i) {
             // Remove validation from cells
-
             $cell = $worksheet->getCell($colCoord.$i);
             $rawValue = $cell->getValue();
 
@@ -505,13 +490,12 @@ class SpreadsheetDropdowns
     }
 
     /**
-     * @param DropdownConfig $config Field-DropdownConfig
+     * Build the embedded validation formula.
      *
      * @return string Formula
      */
     private function getEmbeddedValidationFormulaForForeignModel(DropdownConfig $config): string
     {
-        /** @var Collection $descriptions */
         $descriptions = $config->getFkModel()::select($config->getFkTextCol())->get();
         $selectOptions = implode(',', $descriptions->pluck($config->getFkTextCol())->toArray());
         if (strlen($selectOptions) > 255) {
@@ -522,7 +506,7 @@ class SpreadsheetDropdowns
     }
 
     /**
-     * get the Sheet containing meta data info like field validation references.
+     * Get the sheet containing meta data info like field validation references.
      *
      * @throws PhpSpreadsheetException
      */
@@ -557,32 +541,7 @@ class SpreadsheetDropdowns
     }
 
     /**
-     * @param string      $worksheetField    e.g. 'C2'
-     * @param string|null $cellValue         the describing value to be displayed, not the corresponding (db) id
-     * @param string      $validationFormula e.g. '"Item 1, Item 2, Item 3"' or 'metadata!$C$2:$C$240'
-     *
-     * @throws PhpSpreadsheetException
-     */
-    private function addDropdownField(Worksheet $worksheet, string $worksheetField, string|null $cellValue, string $validationFormula): void
-    {
-        $worksheet->setCellValue($worksheetField, $cellValue);
-
-        $objValidation = $worksheet->getCell($worksheetField)->getDataValidation();
-        $objValidation->setType(DataValidation::TYPE_LIST);
-        $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
-        $objValidation->setAllowBlank(false);
-        $objValidation->setShowInputMessage(true);
-        $objValidation->setShowErrorMessage(true);
-        $objValidation->setShowDropDown(true);
-        $objValidation->setErrorTitle('Input error');
-        $objValidation->setError('Value is not in list.');
-        $objValidation->setPromptTitle('Pick from list');
-        $objValidation->setPrompt('Please pick a value from the drop-down list.');
-        $objValidation->setFormula1($validationFormula);
-    }
-
-    /**
-     * Get the reference descriptive string value for given id.
+     * Get the reference descriptive string value for given ID.
      *
      * @param int|null $id e.g. 1
      *

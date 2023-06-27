@@ -18,6 +18,11 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use Syspons\Sheetable\Helpers\SheetableLog;
 use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 
+/**
+ * Implementation for a single sheets export.
+ * 
+ * @link https://docs.laravel-excel.com/3.1/imports/
+ */
 class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitle, WithStrictNullComparison //, WithColumnFormatting, WithMapping
 {
     use Exportable;
@@ -37,13 +42,20 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
         SheetableLog::log("Start exporting {$this->tableName}".($isTemplate ? ' template' : ''));
     }
 
+    /**
+     * The sheet title.
+     * 
+     * @link https://docs.laravel-excel.com/3.1/exports/multiple-sheets.html#sheet-classes
+     */
     public function title(): string
     {
         return $this->tableName.'-Export';
     }
 
     /**
-     * collection of models that should be exported.
+     * Collection of models that should be exported.
+     * 
+     * @link https://docs.laravel-excel.com/3.1/exports/collection.html
      */
     public function collection(): Collection
     {
@@ -51,7 +63,9 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
     }
 
     /**
-     * column name listing for exported models.
+     * Column name listing for exported models.
+     * 
+     * @link https://docs.laravel-excel.com/3.1/exports/mapping.html#adding-a-heading-row
      */
     public function headings(): array
     {
@@ -67,6 +81,11 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
         }
     }
 
+    /**
+     * Processing the worksheet after import.
+     * 
+     * @link https://docs.laravel-excel.com/3.1/exports/extending.html
+     */
     public function registerEvents(): array
     {
         return [

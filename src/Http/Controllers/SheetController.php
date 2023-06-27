@@ -18,7 +18,7 @@ use Syspons\Sheetable\Imports\SheetsImport;
 use Syspons\Sheetable\Services\SheetableService;
 
 /**
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * Sheetable API endpoint implementation.
  */
 class SheetController
 {
@@ -28,23 +28,38 @@ class SheetController
     ) {}
 
     /**
+     * Export the requested ids.
+     * 
      * @throws Exception
+     * @api
      */
     public function export(ExportRequest $request): BinaryFileResponse
     {
         return Excel::download(
-            new SheetsExport(Scopeable::filterScopes($this->getExportModels($request->input('ids', []))), $this->getModel(), $this->spreadsheetHelper),
+            new SheetsExport(
+                Scopeable::filterScopes($this->getEntities($request->input('ids', []))), 
+                $this->getModel(), 
+                $this->spreadsheetHelper
+            ),
             $this->getTableName().'.'.$this->sheetableService->getExportExtension()
         );
     }
 
     /**
+     * Export a template.
+     * 
      * @throws Exception
+     * @api
      */
     public function template(): BinaryFileResponse
     {
         return Excel::download(
-            new SheetsExport($this->getAllModels(), $this->getModel(), $this->spreadsheetHelper, true),
+            new SheetsExport(
+                $this->getEntities(), 
+                $this->getModel(), 
+                $this->spreadsheetHelper, 
+                isTemplate: true
+            ),
             $this->getTableName().'.'.$this->sheetableService->getExportExtension()
         );
     }
@@ -53,6 +68,7 @@ class SheetController
      * Import TABLENAME.xlsx via upload.
      *
      * @throws ExcelImportValidationException
+     * @api
      */
     public function import(Request $request): array
     {
@@ -65,30 +81,33 @@ class SheetController
             throw new ExcelImportValidationException($e);
         }
 
-        return $this->getAllModels()->toArray();
+        return $this->getEntities()->toArray();
     }
 
-    public function getModel(): Model|string
+    /**
+     * The model.
+     */
+    private function getModel(): Model|string
     {
         return $this->sheetableService->getTarget();
     }
+    
+    /**
+     * The table name.
+     */
+    private function getTableName(): string
+    {
+        return $this->getModel()::newModelInstance()->getTable();
+    }
 
-    private function getExportModels(array $ids = []): Collection
+    /**
+     * Get all or a subset of entities.
+     */
+    private function getEntities(array $ids = []): Collection
     {
         if (!$ids || empty($ids)) {
             return $this->getModel()::all();
         }
         return $this->getModel()::whereIn('id', $ids)->get();
-    }
-
-    private function getAllModels(): Collection
-    {
-        //User::all()
-        return $this->getModel()::all();
-    }
-
-    private function getTableName(): string
-    {
-        return $this->getModel()::newModelInstance()->getTable();
     }
 }

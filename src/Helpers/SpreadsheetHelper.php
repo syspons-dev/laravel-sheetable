@@ -11,11 +11,15 @@ use PhpOffice\PhpSpreadsheet\Calculation\Exception;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Syspons\Sheetable\Exceptions\ExcelImportScopeableException;
 use Syspons\Sheetable\Exceptions\ExcelImportValidationException;
 use Syspons\Sheetable\Models\Contracts\Dropdownable;
 
+/**
+ * Helper class for spread sheet interaction
+ */
 class SpreadsheetHelper
 {
     private string $codebookSheetNameHorizontal = 'codebook-horizontal';
@@ -27,6 +31,12 @@ class SpreadsheetHelper
     ) {}
 
     /**
+     * Process the worksheet after exporting.
+     * 
+     * * add the codebook
+     * * add dropdown fields
+     * * format columns
+     * 
      * @throws PhpSpreadsheetException
      */
     public function afterSheetExport(Dropdownable|Model $model, Worksheet $worksheet, Collection $models)
@@ -40,7 +50,7 @@ class SpreadsheetHelper
             SheetableLog::log('Dropdown fields added.');
         }
         SheetableLog::log('Formatting special fields...');
-        $this->utils->formatSpecialFields($model, $worksheet, $models);
+        $this->utils->formatColumns($model, $worksheet, $models);
         SheetableLog::log('Special fields formatted.');
     }
 
@@ -63,6 +73,7 @@ class SpreadsheetHelper
     }
 
     /**
+     * Clear userstamps and timestamps.
      * @throws PhpSpreadsheetException
      */
     public function clearStamps(Worksheet $worksheet)
@@ -84,15 +95,18 @@ class SpreadsheetHelper
     }
 
     /**
+     * Write a horizontal codebook.
+     * 
+     * @deprecated
      * @throws PhpSpreadsheetException
      */
-    public function writeCodeBookHorizontal(Model $model, Worksheet $worksheet)
+    private function writeCodeBookHorizontal(Model $model, Worksheet $worksheet)
     {
         if (!Schema::hasTable('code_book')) {
             return;
         }
 
-        $codebookSheet = $this->getCodebookSheetHorizontal($worksheet->getParent());
+        $codebookSheet = $this->getCodebookSheet($worksheet->getParent(), $this->codebookSheetNameHorizontal);
 
         $lastColumn = $worksheet->getHighestColumn();
         ++$lastColumn;
@@ -143,15 +157,17 @@ class SpreadsheetHelper
     }
 
     /**
+     * Write a codebook.
+     * 
      * @throws PhpSpreadsheetException
      */
-    public function writeCodeBook(Model $model, Worksheet $worksheet)
+    private function writeCodeBook(Model $model, Worksheet $worksheet)
     {
         if (!Schema::hasTable('code_book')) {
             return;
         }
         
-        $codebookSheet = $this->getCodebookSheet($worksheet->getParent());
+        $codebookSheet = $this->getCodebookSheet($worksheet->getParent(), $this->codebookSheetName);
 
         $lastColumn = $worksheet->getHighestColumn();
         ++$lastColumn;
@@ -205,24 +221,24 @@ class SpreadsheetHelper
                     ->setFormatCode(SpreadsheetUtils::FORMAT_DATE_DATETIME);
             } elseif ('bigint' === $type || 'integer' === $type || 'int' === $type) {
                 $codebookSheet->getStyle('E'.$rowNum)->getNumberFormat()
-                    ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER);
+                    ->setFormatCode(NumberFormat::FORMAT_NUMBER);
             } elseif ('decimal' === $type || 'float' === $type || 'double' === $type) {
                 $codebookSheet->getStyle('E'.$rowNum)->getNumberFormat()
-                    ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+                    ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
             }
         }
     }
 
     /**
-     * get the Sheet containing meta data info like field validation references.
+     * Get the sheet containing meta data info like field validation references.
      *
      * @throws PhpSpreadsheetException
      */
-    private function getCodebookSheetHorizontal(Spreadsheet $spreadsheet): Worksheet
+    private function getCodebookSheet(Spreadsheet $spreadsheet, string $sheetName): Worksheet
     {
-        $metaSheet = $spreadsheet->getSheetByName($this->codebookSheetNameHorizontal);
+        $metaSheet = $spreadsheet->getSheetByName($sheetName);
         if (null === $metaSheet) {
-            $metaSheet = new Worksheet($spreadsheet, $this->codebookSheetNameHorizontal);
+            $metaSheet = new Worksheet($spreadsheet, $sheetName);
             $spreadsheet->addSheet($metaSheet, 1);
         }
         $metaSheet->getProtection()->setSheet(true);
@@ -231,41 +247,31 @@ class SpreadsheetHelper
     }
 
     /**
-     * get the Sheet containing meta data info like field validation references.
-     *
-     * @throws PhpSpreadsheetException
-     */
-    private function getCodebookSheet(Spreadsheet $spreadsheet): Worksheet
-    {
-        $metaSheet = $spreadsheet->getSheetByName($this->codebookSheetName);
-        if (null === $metaSheet) {
-            $metaSheet = new Worksheet($spreadsheet, $this->codebookSheetName);
-            $spreadsheet->addSheet($metaSheet, 1);
-        }
-        $metaSheet->getProtection()->setSheet(true);
-
-        return $metaSheet;
-    }
-
-    /**
+     * Process the worksheet before importing.
+     * 
+     * * validate duplicates
+     * * import dropdown fields
+     * * preprocess document
+     * * clean date times
+     * 
      * @throws PhpSpreadsheetException
      */
     public function beforeSheetImport(Model|string $modelClass, Worksheet $worksheet)
     {
-        $this->preCheckDocumentBeforeImport($worksheet);
+        $this->validateIdDuplicates($worksheet);
         $this->preProcessDocument($worksheet);
         $this->cleanDateTimes($worksheet, $modelClass);
-        /** @var Dropdownable $dropdownable */
-        $dropdownable = $modelClass::newModelInstance();
         if (method_exists($modelClass, 'getDropdownFields')) {
-            $this->dropdowns->importDropdownFields($dropdownable, $worksheet);
+            $this->dropdowns->importDropdownFields($modelClass::newModelInstance(), $worksheet);
         }
     }
 
     /**
+     * Find ID duplicates and throw an error.
+     * 
      * @throws ExcelImportValidationException
      */
-    private function preCheckDocumentBeforeImport(Worksheet $worksheet)
+    private function validateIdDuplicates(Worksheet $worksheet)
     {
         $duplicates = $this->getIdDuplicatesInSheet($worksheet);
         if ($duplicates && !empty($duplicates)) {
@@ -277,35 +283,11 @@ class SpreadsheetHelper
     }
 
     /**
-     * Pre process all fields, use only calculated values, no formulas, trim spaces, remove double spaces.
-     *
-     * @throws PhpSpreadsheetException
-     * @throws Exception
+     * Find ID duplicates.
+     * 
+     * @return int[]
      */
-    private function preProcessDocument(Worksheet $worksheet)
-    {
-        foreach ($worksheet->getRowIterator() as $row) {
-            $cellIterator = $row->getCellIterator();
-            $cellIterator->setIterateOnlyExistingCells(true);
-            foreach ($cellIterator as $cell) {
-                $value = $cell->getCalculatedValue();
-                if (is_string($value)) {
-                    $value = preg_replace('/\s+/', ' ', $value);
-                    $value = trim($value);
-                    
-                    // don't store empty strings
-                    if (empty($value)) {
-                        $cell->setValue(null);
-                    }
-                }
-                if ($value) {
-                    $cell->setValue($value);
-                }
-            }
-        }
-    }
-
-    private function getIdDuplicatesInSheet(Worksheet $worksheet)
+    private function getIdDuplicatesInSheet(Worksheet $worksheet): array
     {
         $colCoord = $this->utils->getColumnByHeading($worksheet, 'id');
         $highestRow = $worksheet->getHighestDataRow($colCoord);
@@ -318,7 +300,45 @@ class SpreadsheetHelper
         return array_unique(array_diff_assoc($idValues, array_unique($idValues)));
     }
 
-    public function cleanDateTimes(Worksheet $worksheet, Model|string $model)
+    /**
+     * Pre process all fields.
+     * 
+     * * use only calculated values
+     * * no formulas
+     * * trim spaces
+     * * remove double spaces
+     *
+     * @throws PhpSpreadsheetException
+     */
+    private function preProcessDocument(Worksheet $worksheet)
+    {
+        foreach ($worksheet->getRowIterator() as $row) {
+            $cellIterator = $row->getCellIterator();
+            $cellIterator->setIterateOnlyExistingCells(true);
+            foreach ($cellIterator as $cell) {
+                // calculate formulas
+                $value = $cell->getCalculatedValue();
+                if (is_string($value)) {
+                    // remove double spaces
+                    $value = preg_replace('/\s+/', ' ', $value);
+                    // trim white spaces
+                    $value = trim($value);
+                    // don't store empty strings
+                    if (empty($value)) {
+                        $cell->setValue(null);
+                    }
+                }
+                if ($value) {
+                    $cell->setValue($value);
+                }
+            }
+        }
+    }
+
+    /**
+     * Converts excel date to DB dateTime.
+     */
+    private function cleanDateTimes(Worksheet $worksheet, Model|string $model)
     {
         foreach ($this->utils->getDateTimeCols($model) as $dateTimeCol) {
             $colCoord = $this->utils->getColumnByHeading($worksheet, $dateTimeCol);
@@ -330,6 +350,9 @@ class SpreadsheetHelper
         }
     }
 
+    /**
+     * Import the collection to the database.
+     */
     public function importCollection(Collection $collection, Model|string $model)
     {
         // TODO the upsert method will bypass model events (breaks userstamps + caching) and will
@@ -368,7 +391,10 @@ class SpreadsheetHelper
         }
     }
 
-    public function constrainedToDbColumns(Collection $collection, Model|string $model): Collection
+    /**
+     * Constrain the collection to match the database columns.
+     */
+    private function constrainedToDbColumns(Collection $collection, Model|string $model): Collection
     {
         return $collection->map(function ($item) use ($model) {
             return $item->only($this->utils->getDBColumns($model))->except(['created_at', 'updated_at', 'created_by', 'updated_by']);

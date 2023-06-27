@@ -1,7 +1,5 @@
 <?php
 
-/** @noinspection PhpMultipleClassDeclarationsInspection */
-
 namespace Syspons\Sheetable\Imports;
 
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +15,11 @@ use Syspons\Sheetable\Helpers\SheetableLog;
 use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 use Syspons\Sheetable\Models\Contracts\Sheetable;
 
+/**
+ * Implementation for a single sheets import.
+ * 
+ * @link https://docs.laravel-excel.com/3.1/imports/
+ */
 class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithEvents, SkipsEmptyRows, WithCalculatedFormulas
 {
     public function __construct(
@@ -26,6 +29,11 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
         SheetableLog::log("Start importing $modelClass");
     }
 
+    /**
+     * Import the collection.
+     * 
+     * @link https://docs.laravel-excel.com/3.1/imports/collection.html
+     */
     public function collection(Collection $collection)
     {
         SheetableLog::log('Parsing ended.');
@@ -34,6 +42,11 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
         SheetableLog::log('Imported '.$collection->count().' entries: '.$collection->pluck($this->modelClass::newModelInstance()->getKeyName())->join(', '));
     }
 
+    /**
+     * Process the worksheet before importing.
+     * 
+     * @link https://docs.laravel-excel.com/3.1/imports/collection.html
+     */
     public function registerEvents(): array
     {
         return [
@@ -47,6 +60,11 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
         ];
     }
 
+    /**
+     * The import validation rules.
+     * 
+     * @link https://docs.laravel-excel.com/3.1/imports/validation.html
+     */
     public function rules(): array
     {
         /** @var Sheetable $sheetable */

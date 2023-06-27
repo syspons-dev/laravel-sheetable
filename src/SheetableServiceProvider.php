@@ -15,6 +15,18 @@ use Syspons\Sheetable\Services\SheetableService;
 class SheetableServiceProvider extends ServiceProvider
 {
     /**
+     * Possible routes.
+     * 
+     * @var string[]
+     * @api
+     */
+    private $routes = [
+        'export', 
+        'template', 
+        'import',
+    ];
+
+    /**
      * Register services.
      */
     public function register(): void
@@ -70,7 +82,6 @@ class SheetableServiceProvider extends ServiceProvider
         $this->extendValidator();
     }
 
-    #[ArrayShape(['middleware' => 'mixed', 'prefix' => 'mixed'])]
     protected function routeConfiguration(): array
     {
         return [
@@ -79,6 +90,14 @@ class SheetableServiceProvider extends ServiceProvider
         ];
     }
 
+    /**
+     * Extends the Laravel validator by the following validations.
+     * 
+     * **exists_strict:table,column**
+     * The field under validation must exist in a given database table.
+     * 
+     * @api
+     */
     protected function extendValidator()
     {
         Validator::extend('exists_strict', function ($attribute, $value, $parameters, $validator) {
@@ -109,7 +128,7 @@ class SheetableServiceProvider extends ServiceProvider
      */
     protected function getCrudRoutes(string $sheetableClass): array
     {
-        $methods = ['export', 'template', 'import'];
+        $methods = $this->routes;
         if (!method_exists($sheetableClass, 'routeOptions')) {
             return $methods;
         }

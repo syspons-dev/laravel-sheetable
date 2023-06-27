@@ -43,9 +43,9 @@ return [
     | export_format
     |--------------------------------------------------------------------------
     |
-    | Defines the export format.
-    | Possible values:
+    | Defines the export format. Possible values are:
     | 'XLSX', 'CSV', 'TSV', 'ODS', 'XLS', 'HTML', 'MPDF', 'DOMPDF', 'TCPDF'
+    | See https://docs.laravel-excel.com/3.1/exports/export-formats.html
     |
     */
     'export_format' => 'XLSX',
@@ -55,10 +55,9 @@ return [
     | import_format
     |--------------------------------------------------------------------------
     |
-    | Defines the export format.
-    | Possible values:
+    | Defines the import format. Possible values are:
     | 'XLSX', 'CSV', 'TSV', 'ODS', 'XLS', 'HTML', 'MPDF', 'DOMPDF', 'TCPDF'
-    | and 'ANY' which means any of the values above may be imported
+    | See https://docs.laravel-excel.com/3.1/exports/export-formats.html
     |
     */
     'import_format' => 'ANY'

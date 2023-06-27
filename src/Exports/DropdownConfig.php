@@ -4,46 +4,49 @@ namespace Syspons\Sheetable\Exports;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Model holding information about a dropdownable column
+ */
 class DropdownConfig
 {
     /**
-     * @var string name of the field in the main Table/sheet. Without _1,_2 suffix in case of n-m
-     *             e.g. 'sdg_main_id' or 'sdg_additional_id'
+     * Name of the field in the main table/sheet. 
+     * 
+     * Without _1,_2 suffix in case of n-m
+     * e.g. 'sdg_main_id' or 'sdg_additional_id'
      */
     private string $field;
 
-    /** @var string DB foreign Model name containing the reference foreign id and text columns */
+    /** 
+     * Get field.
+     */
+    public function getField(): string|null
+    {
+        return $this->field;
+    }
+
+    /** 
+     * Set field.
+     */
+    public function setField(string $field): self
+    {
+        $this->field = $field;
+
+        return $this;
+    }
+
+    /** 
+     * DB foreign Model name containing the reference foreign id and text columns.
+     */
     private string $fkModel;
 
-    /** @var Model Instance of the fkModel */
-    private Model $fkModelInstance;
-
-    /** @var string|null DB column name in the foreign reference Table, containing the descriptive text for this field */
-    private ?string $fkTextCol = null;
-
-    /** @var string|null DB column name in the foreign reference Table, containing the fk id */
-    private ?string $fkIdCol = 'id';
-
-    /** @var bool embedded dropdown values in formula field, do not add them to metadata sheet */
-    private bool $embedded = false;
-
-    /********************************************************************************
-     * Many to many mapping table and field information ...
-     ********************************************************************************/
-
-    /** @var string|null the n-m-fields should appear next/right of this field; e.g. 'sdg_main_id' */
-    private ?string $mappingRightOfField = null;
-
-    private ?int $mappingMinFields = 0;
-
-
-    /**
-     * @var string[] fixed array of Dropdown options, currently not in use
+    /** 
+     * Instance of the fkModel 
      */
-    private array $fixedList = [];
-
-    /**
-     * @return Model|string|null DB foreign Model name containing the reference foreign id and text columns
+    private Model $fkModelInstance;
+    
+    /** 
+     * Get the foreign model.
      */
     public function getFkModel(): Model|string|null
     {
@@ -51,7 +54,7 @@ class DropdownConfig
     }
 
     /**
-     * @return $this
+     * Set the foreign model.
      */
     public function setFkModel(string $fkModel): self
     {
@@ -61,14 +64,32 @@ class DropdownConfig
         return $this;
     }
 
-    /**
-     * @return string DB column name in the foreign reference Table, containing the descriptive text for this field
+    /** 
+     * Get foreign key.
+     */
+    public function getForeignKey(): string|null
+    {
+        return $this->fkModelInstance->getForeignKey();
+    }
+
+    /** 
+     * DB column name in the foreign reference Table.
+     * 
+     * Containing the descriptive text for this field. 
+     */
+    private ?string $fkTextCol = null;
+
+    /** 
+     * Get the foreign column name.
      */
     public function getFkTextCol(): string
     {
         return $this->fkTextCol;
     }
 
+    /** 
+     * Get the foreign column name.
+     */
     public function setFkTextCol(string $fkTextCol): self
     {
         $this->fkTextCol = $fkTextCol;
@@ -76,39 +97,23 @@ class DropdownConfig
         return $this;
     }
 
-    public function isEmbedded(): bool
-    {
-        return $this->embedded;
-    }
+    /** 
+     * DB column name in the foreign reference Table.
+     * 
+     * Containing the fk id 
+     */
+    private ?string $fkIdCol = 'id';
 
-    public function setEmbedded(bool $embedded): self
-    {
-        $this->embedded = $embedded;
-
-        return $this;
-    }
-
-    public function getField(): string|null
-    {
-        return $this->field;
-    }
-
-    public function setField(string $field): self
-    {
-        $this->field = $field;
-
-        return $this;
-    }
-
+    /** 
+     * Get foreign id column.
+     */
     public function getFkIdCol(): string|null
     {
         return $this->fkIdCol;
     }
 
-    /**
-     * defaults to 'id'.
-     *
-     * @return $this
+    /** 
+     * Set foreign id column.
      */
     public function setFkIdCol(string $fkIdCol): self
     {
@@ -117,18 +122,43 @@ class DropdownConfig
         return $this;
     }
 
-    public function getForeignKey(): string|null
+    /** 
+     * Embedded dropdown values in formula field.
+     * 
+     * do not add them to metadata sheet
+     */
+    private bool $embedded = false;
+
+    /** 
+     * Get isEmbedded.
+     */
+    public function isEmbedded(): bool
     {
-        return $this->fkModelInstance->getForeignKey();
+        return $this->embedded;
     }
 
-    /********************************************************************************
-     *
-     * Many to many mapping table and field informations ...
-     *
-     ********************************************************************************/
+    /** 
+     * Set isEmbedded.
+     */
+    public function setEmbedded(bool $embedded): self
+    {
+        $this->embedded = $embedded;
+
+        return $this;
+    }
 
     /**
+     * Fixed array of Dropdown options.
+     * 
+     * Currently not in use.
+     * 
+     * @var string[] 
+     */
+    private array $fixedList = [];
+
+    /**
+     * Get fixed list.
+     * 
      * @return string[]
      */
     public function getFixedList(): array
@@ -137,7 +167,9 @@ class DropdownConfig
     }
 
     /**
-     * @param string[] $fixedList
+     * Set fixed list.
+     * 
+     * @param string[]
      */
     public function setFixedList(array $fixedList): self
     {
@@ -146,11 +178,24 @@ class DropdownConfig
         return $this;
     }
 
+    /** 
+     * The n-m-fields should appear next/right of this field.
+     * 
+     * E.g. 'sdg_main_id' 
+     */
+    private ?string $mappingRightOfField = null;
+
+    /**
+     * Get mapping right of field.
+     */
     public function getMappingRightOfField(): ?string
     {
         return $this->mappingRightOfField;
     }
 
+    /**
+     * Set mapping right of field.
+     */
     public function setMappingRightOfField(?string $mappingRightOfField): self
     {
         $this->mappingRightOfField = $mappingRightOfField;
@@ -158,11 +203,22 @@ class DropdownConfig
         return $this;
     }
 
+    /** 
+     * The minimum number of n-m-fields.
+     */
+    private ?int $mappingMinFields = 0;
+
+    /**
+     * Get mapping minimum fields.
+     */
     public function getMappingMinFields(): ?int
     {
         return $this->mappingMinFields;
     }
 
+    /**
+     * Set mapping minimum fields.
+     */
     public function setMappingMinFields(?int $mappingMinFields): self
     {
         $this->mappingMinFields = $mappingMinFields;

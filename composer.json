@@ -35,6 +35,7 @@
     "berthott/laravel-scopeable": "^3.0.0",
     "haydenpierce/class-finder": "^0.4.3",
     "maatwebsite/excel": "^3.1",
-    "berthott/laravel-targetable": "^3.0"
+    "berthott/laravel-targetable": "^3.0",
+    "berthott/laravel-translatable": "^3.0"
   }
 }

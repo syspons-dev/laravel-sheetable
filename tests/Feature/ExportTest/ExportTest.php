@@ -2,11 +2,14 @@
 
 namespace Syspons\Sheetable\Tests\Feature\ExportTest;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Facades\Excel;
 use Syspons\Sheetable\Exports\SheetsExport;
 use Syspons\Sheetable\Tests\Models\ScopeableManyToManyRelation;
 use Syspons\Sheetable\Tests\Models\WithRelationDummy;
 use Syspons\Sheetable\Tests\Models\SimpleDummy;
+use Syspons\Sheetable\Tests\Models\TranslatableDummy;
 use Syspons\Sheetable\Tests\Models\User;
 use Syspons\Sheetable\Tests\Models\WithScopeableRelationDummy;
 use Syspons\Sheetable\Tests\TestCase;
@@ -16,6 +19,8 @@ use Syspons\Sheetable\Tests\TestCase;
  */
 class ExportTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_store_simple_file()
     {
         $expectedName = 'simple_dummies.xlsx';
@@ -147,5 +152,24 @@ class ExportTest extends TestCase
                 $downloadedSimpleDummy->id === $dbSimpleDummy->id &&
                 $downloadedSimpleDummy->title === $dbSimpleDummy->title;
         });
+    }
+
+    public function test_store_translatable_file()
+    {
+        $this->assertTrue(Schema::hasTable('translatable_contents'));
+
+        $expectedName = 'translatable_dummies.xlsx';
+        TranslatableDummy::factory()->count(3)->create()->each(function ($item, $key) {
+            $index = ++$key;
+            $item->title = [
+                'de' => 'german '.$index,
+                'en' => 'english '.$index,
+            ];
+            $item->save();
+        });
+        $response = $this->get(route('translatable_dummies.export'))
+            ->assertStatus(200)
+            ->assertDownload($expectedName);
+        $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName);
     }
 }

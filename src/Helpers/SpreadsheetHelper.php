@@ -7,14 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Maatwebsite\Excel\DefaultValueBinder as ExcelDefaultValueBinder;
 use PhpOffice\PhpSpreadsheet\Calculation\Exception;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DefaultValueBinder;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Syspons\Sheetable\Exceptions\ExcelImportScopeableException;
 use Syspons\Sheetable\Exceptions\ExcelImportValidationException;
+use Syspons\Sheetable\Imports\ArrayValueBinder;
 use Syspons\Sheetable\Models\Contracts\Dropdownable;
 
 /**
@@ -48,6 +51,11 @@ class SpreadsheetHelper
             SheetableLog::log('Adding dropdown fields...');
             $this->dropdowns->exportDropdownFields($model, $worksheet, $models);
             SheetableLog::log('Dropdown fields added.');
+        }
+        if (method_exists($model, 'translatableFields')) {
+            SheetableLog::log('Adding translatable fields...');
+            $this->exportTranslatableFields($model, $worksheet, $models);
+            SheetableLog::log('Translatable fields added.');
         }
         SheetableLog::log('Formatting special fields...');
         $this->utils->formatColumns($model, $worksheet, $models);
@@ -264,6 +272,9 @@ class SpreadsheetHelper
         if (method_exists($modelClass, 'getDropdownFields')) {
             $this->dropdowns->importDropdownFields($modelClass::newModelInstance(), $worksheet);
         }
+        if (method_exists($modelClass, 'translatableFields')) {
+            $this->importTranslatableFields($modelClass::newModelInstance(), $worksheet);
+        }
     }
 
     /**
@@ -393,11 +404,104 @@ class SpreadsheetHelper
 
     /**
      * Constrain the collection to match the database columns.
+     * 
+     * Also includes translatable fields when present.
+     * 
+     * @see importTranslatableFields()
      */
     private function constrainedToDbColumns(Collection $collection, Model|string $model): Collection
     {
-        return $collection->map(function ($item) use ($model) {
-            return $item->only($this->utils->getDBColumns($model))->except(['created_at', 'updated_at', 'created_by', 'updated_by']);
-        });
+        $columnsToAccept = [
+            ...$this->utils->getDBColumns($model),
+            ...(method_exists($model, 'translatableFields') ? $model::translatableFields() : []),
+        ];
+        return $collection->map(fn ($item) =>
+            $item->only($columnsToAccept)->except(['created_at', 'updated_at', 'created_by', 'updated_by'])
+        );
+    }
+
+    /**
+     * Write all the translations to the worksheet.
+     * 
+     * Delete the original reference column and show a column for each language instead.
+     */
+    private function exportTranslatableFields(Model $target, Worksheet $worksheet, Collection $entities)
+    {
+        foreach ($target::translatableFields() as $translatableField) {
+            $column = $currentColumn = $this->utils->getColumnByHeading($worksheet, $translatableField.'_translatable_content_id');
+            if (!$column) {
+                continue;
+            }
+
+            foreach($this->getTranslatableLanguages() as $language) {
+                $worksheet->insertNewColumnBefore(++$currentColumn);
+                // heading
+                $worksheet->setCellValue($currentColumn.'1', $translatableField.'_'.$language);
+
+                // content
+                $entities->each(function (Model $entity, int $index) use ($worksheet, $currentColumn, $translatableField, $language) {
+                    $rowCount = $index + 2;
+                    $worksheet->setCellValue($currentColumn.$rowCount, $entity->$translatableField[$language]);
+                });
+            }
+            $worksheet->removeColumn($column);
+        }
+    }
+
+    /**
+     * Prepare the worksheet for import.
+     * 
+     * The translation columns will be joined into one column with an array to import 
+     * the translations.
+     * 
+     * @see \Syspons\Sheetable\Imports\SheetImport::prepareForValidation
+     * @see constrainedToDbColumns()
+     */
+    private function importTranslatableFields(Model $target, Worksheet $worksheet)
+    {
+        foreach ($target::translatableFields() as $translatableField) {
+            $column = $this->utils->getColumnByHeading($worksheet, $translatableField.'_'.config('translatable.default_language'));
+            if (!$column) {
+                continue;
+            }
+
+            // set original heading name
+            $worksheet->setCellValue($column.'1', $translatableField);
+
+            $highestRow = $worksheet->getHighestRow($column);
+            
+            // build translation array in first column
+            for ($row = 2; $row <= $highestRow; ++$row) {
+                $currentColumn = $column;
+                $translatable = [];
+                foreach($this->getTranslatableLanguages() as $language) {
+                    $translatable[$language] = $worksheet->getCell($currentColumn.$row)->getValue();
+                    $currentColumn++;
+                }
+                $cell = $worksheet->getCell($column.$row);
+                $cell->setDataValidation();
+                $cell->setValue($translatable);
+            }
+            
+            // delete the other columns
+            $currentColumn = $column;
+            foreach($this->getTranslatableLanguages() as $language) {
+                if ($language !== config('translatable.default_language')) {
+                    $worksheet->removeColumn($currentColumn);
+                }
+                $currentColumn++;
+            }
+        }
+    }
+
+    /**
+     * Get the columns needed for the translatable field.
+     */
+    private function getTranslatableLanguages(): array
+    {
+        return [
+            config('translatable.default_language'),
+            ...array_filter(array_keys(config('translatable.languages')), fn ($lang) => $lang !== config('translatable.default_language')),
+        ];
     }
 }

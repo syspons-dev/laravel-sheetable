@@ -3,7 +3,7 @@
 namespace Syspons\Sheetable\Tests;
 
 use berthott\Scopeable\ScopeableServiceProvider;
-use HaydenPierce\ClassFinder\ClassFinder;
+use berthott\Translatable\TranslatableServiceProvider;
 use Syspons\Sheetable\SheetableServiceProvider;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\UploadedFile;
@@ -28,12 +28,15 @@ abstract class TestCase extends BaseTestCase
             SheetableServiceProvider::class,
             ExcelServiceProvider::class,
             ScopeableServiceProvider::class,
+            TranslatableServiceProvider::class,
         ];
     }
 
     protected function getEnvironmentSetUp($app)
     {
         $this->setupTables();
+        Config::set('translatable.namespace', __NAMESPACE__.'\Models');
+        Config::set('translatable.languages', ['en' => 'English', 'de' => 'German']);
         Config::set('sheetable.namespace', __NAMESPACE__.'\Models');
         Config::set('scopeable.namespace', __NAMESPACE__.'\Models');
     }
@@ -112,6 +115,11 @@ abstract class TestCase extends BaseTestCase
 
             $table->foreign('scopeable_many_to_many_relation_id')->references('id')->on('scopeable_many_to_many_relations')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+        });
+
+        Schema::create('translatable_dummies', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->translatable('title');
         });
     }
 

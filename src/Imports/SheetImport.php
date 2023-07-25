@@ -72,4 +72,22 @@ class SheetImport implements ToCollection, WithHeadingRow, WithValidation, WithE
 
         return $sheetable::importRules();
     }
+
+    /**
+     * Prepare translatable fields for validation.
+     * 
+     * @see \Syspons\Sheetable\Helpers\SpreadsheetHelper::importTranslatableFields
+     * @link https://docs.laravel-excel.com/3.1/imports/validation.html#prepare-data-for-validation
+     */
+    public function prepareForValidation($data, $index)
+    {   
+        if (method_exists($this->modelClass, 'translatableFields')) {
+            foreach($this->modelClass::translatableFields() as $translatableField) {
+                if (array_key_exists($translatableField, $data)) {
+                    $data[$translatableField] = json_decode($data[$translatableField], JSON_OBJECT_AS_ARRAY);
+                }
+            }
+        }
+        return $data;
+    }
 }

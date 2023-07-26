@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Facades\Excel;
 use Syspons\Sheetable\Exports\SheetsExport;
 use Syspons\Sheetable\Tests\Models\ScopeableManyToManyRelation;
+use Syspons\Sheetable\Tests\Models\SelectDummy;
 use Syspons\Sheetable\Tests\Models\WithRelationDummy;
 use Syspons\Sheetable\Tests\Models\SimpleDummy;
 use Syspons\Sheetable\Tests\Models\TranslatableDummy;
@@ -29,6 +30,21 @@ class ExportTest extends TestCase
             $item->save();
         });
         $response = $this->get(route('simple_dummies.export'))
+            ->assertStatus(200)
+            ->assertDownload($expectedName);
+        $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName);
+    }
+
+    public function test_store_selected_file()
+    {
+        $expectedName = 'select_dummies.xlsx';
+        SelectDummy::factory()->count(3)->create()->each(function ($item, $key) {
+            $item->title = $item->title2 = 'test '.++$key;
+            $item->save();
+        });
+        $response = $this->get(route('select_dummies.export', ['select' => ['wrong']]))
+            ->assertJsonValidationErrorFor('select.0');
+        $response = $this->get(route('select_dummies.export', ['select' => ['id', 'title', 'title2']]))
             ->assertStatus(200)
             ->assertDownload($expectedName);
         $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName);

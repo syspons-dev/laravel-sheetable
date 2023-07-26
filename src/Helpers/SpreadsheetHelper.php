@@ -411,13 +411,23 @@ class SpreadsheetHelper
      */
     private function constrainedToDbColumns(Collection $collection, Model|string $model): Collection
     {
-        $columnsToAccept = [
+        return $collection->map(fn ($item) =>
+            $item->only($this->acceptedColumns($model))->except(['created_at', 'updated_at', 'created_by', 'updated_by'])
+        );
+    }
+
+    /**
+     * Returns all accepted columns.
+     * 
+     * @see constrainedToDbColumns()
+     * @see \Syspons\Sheetable\Http\Requests\ExportRequest::rules()
+     */
+    public function acceptedColumns(Model|string $model): array
+    {
+        return [
             ...$this->utils->getDBColumns($model),
             ...(method_exists($model, 'translatableFields') ? $model::translatableFields() : []),
         ];
-        return $collection->map(fn ($item) =>
-            $item->only($columnsToAccept)->except(['created_at', 'updated_at', 'created_by', 'updated_by'])
-        );
     }
 
     /**

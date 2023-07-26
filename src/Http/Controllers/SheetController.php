@@ -28,7 +28,7 @@ class SheetController
     ) {}
 
     /**
-     * Export the requested ids.
+     * Export the requested ids with the selected columns.
      * 
      * @throws Exception
      * @api
@@ -39,7 +39,8 @@ class SheetController
             new SheetsExport(
                 Scopeable::filterScopes($this->getEntities($request->input('ids', []))), 
                 $this->getModel(), 
-                $this->spreadsheetHelper
+                $this->spreadsheetHelper,
+                select: $request->input('select', []),
             ),
             $this->getTableName().'.'.$this->sheetableService->getExportExtension()
         );

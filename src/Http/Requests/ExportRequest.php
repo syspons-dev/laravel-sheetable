@@ -3,6 +3,8 @@
 namespace Syspons\Sheetable\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Syspons\Sheetable\Helpers\SpreadsheetHelper;
 use Syspons\Sheetable\Services\SheetableService;
 
 /**
@@ -12,7 +14,10 @@ class ExportRequest extends FormRequest
 {
     private string $target;
 
-    public function __construct(SheetableService $sheetableService)
+    public function __construct(
+        SheetableService $sheetableService,
+        private SpreadsheetHelper $helper
+    )
     {
         $this->target = $sheetableService->getTarget();
     }
@@ -25,8 +30,10 @@ class ExportRequest extends FormRequest
     public function rules(): array
     {
         return [
-          'ids' => 'nullable',
-          'ids.*' => 'exists:'.$this->target::newModelInstance()->getTable().',id',
+            'ids' => 'nullable',
+            'ids.*' => 'exists:'.$this->target::newModelInstance()->getTable().',id',
+            'select' => 'nullable|array',
+            'select.*' => Rule::in($this->helper->acceptedColumns($this->target)),
         ];
     }
 }

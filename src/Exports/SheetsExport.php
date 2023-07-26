@@ -3,9 +3,9 @@
 namespace Syspons\Sheetable\Exports;
 
 use Exception;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Grammars\MySqlGrammar;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -36,7 +36,8 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
         private Collection $models,
         private Model|string $model,
         private SpreadsheetHelper $helper,
-        private bool $isTemplate = false
+        private bool $isTemplate = false,
+        private array $select = [],
     ) {
         $this->tableName = $model::newModelInstance()->getTable();
         SheetableLog::log("Start exporting {$this->tableName}".($isTemplate ? ' template' : ''));
@@ -55,30 +56,41 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
     /**
      * Collection of models that should be exported.
      * 
+     * If {@link selected} is set, only the selected attributes will be included.
+     * 
      * @link https://docs.laravel-excel.com/3.1/exports/collection.html
      */
     public function collection(): Collection
     {
-        return $this->models;
+        return empty($this->select) 
+            ? $this->models
+            : $this->models->map(fn ($e) => $e->only($this->select));
     }
 
     /**
      * Column name listing for exported models.
      * 
+     * If {@link selected} is set, only the selected attributes will be included.
+     * 
      * @link https://docs.laravel-excel.com/3.1/exports/mapping.html#adding-a-heading-row
      */
     public function headings(): array
     {
+        $columns = [];
         try {
-            return collect(
+            $columns = collect(
                 DB::select(
                     (new MySqlGrammar)->compileColumnListing().' order by ordinal_position',
                     [DB::getDatabaseName(), $this->tableName]
                 )
             )->pluck('column_name')->toArray();
         } catch (Exception $e) {
-            return Schema::getColumnListing($this->tableName);
+            $columns = Schema::getColumnListing($this->tableName);
         }
+
+        return empty($this->select)
+            ? $columns
+            : array_intersect($columns, $this->select);
     }
 
     /**

@@ -121,6 +121,13 @@ abstract class TestCase extends BaseTestCase
             $table->bigIncrements('id');
             $table->translatable('title');
         });
+
+        Schema::create('select_dummies', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('title');
+            $table->string('title2');
+            $table->string('title3');
+        });
     }
 
     protected function assertSpreadsheetsAreEqual($expectedFilePath, $actualFilePath, $maxSheet = null)

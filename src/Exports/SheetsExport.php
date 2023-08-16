@@ -2,28 +2,27 @@
 
 namespace Syspons\Sheetable\Exports;
 
-use Exception;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Schema\Grammars\MySqlGrammar;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Syspons\Sheetable\Helpers\SheetableLog;
 use Syspons\Sheetable\Helpers\SpreadsheetHelper;
+use Facades\Syspons\Sheetable\Helpers\SpreadsheetJoins;
+use Facades\Syspons\Sheetable\Helpers\SpreadsheetUtils;
 
 /**
  * Implementation for a single sheets export.
  * 
  * @link https://docs.laravel-excel.com/3.1/imports/
  */
-class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitle, WithStrictNullComparison //, WithColumnFormatting, WithMapping
+class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitle, WithStrictNullComparison, WithMapping
 {
     use Exportable;
 
@@ -64,7 +63,21 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
     {
         return empty($this->select) 
             ? $this->models
-            : $this->models->map(fn ($e) => $e->only($this->select));
+            : $this->models->map(fn ($e) => $e->setVisible($this->select));
+    }
+
+    /**
+     * Collection of models that should be exported.
+     * 
+     * If {@link selected} is set, only the selected attributes will be included.
+     * 
+     * @link https://docs.laravel-excel.com/3.1/exports/collection.html
+     */
+    public function map($entity): array
+    {
+        return method_exists($entity, 'getJoins')
+            ? SpreadsheetJoins::getMapping($entity)
+            : $entity->toArray();
     }
 
     /**
@@ -76,21 +89,14 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
      */
     public function headings(): array
     {
-        $columns = [];
-        try {
-            $columns = collect(
-                DB::select(
-                    (new MySqlGrammar)->compileColumnListing().' order by ordinal_position',
-                    [DB::getDatabaseName(), $this->tableName]
-                )
-            )->pluck('column_name')->toArray();
-        } catch (Exception $e) {
-            $columns = Schema::getColumnListing($this->tableName);
-        }
-
-        return empty($this->select)
+        $columns = SpreadsheetUtils::getOrdinalColumnNames($this->tableName);
+        $columns = empty($this->select)
             ? $columns
             : array_intersect($columns, $this->select);
+        
+        return method_exists($this->model, 'getJoins')
+            ? SpreadsheetJoins::getHeadings($this->model, $columns)
+            : $columns;
     }
 
     /**

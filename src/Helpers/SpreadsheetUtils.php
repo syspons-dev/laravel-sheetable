@@ -3,9 +3,12 @@
 namespace Syspons\Sheetable\Helpers;
 
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Schema\Grammars\MySqlGrammar;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
@@ -274,5 +277,26 @@ class SpreadsheetUtils
         }
 
         return $arr;
+    }
+
+    /**
+     * Column name listing for exported models.
+     * 
+     * If {@link selected} is set, only the selected attributes will be included.
+     * 
+     * @link https://docs.laravel-excel.com/3.1/exports/mapping.html#adding-a-heading-row
+     */
+    public function getOrdinalColumnNames($tableName): array
+    {
+        try {
+            return collect(
+                DB::select(
+                    (new MySqlGrammar)->compileColumnListing().' order by ordinal_position',
+                    [DB::getDatabaseName(), $tableName]
+                )
+            )->pluck('column_name')->toArray();
+        } catch (Exception $e) {
+            return Schema::getColumnListing($tableName);
+        }
     }
 }

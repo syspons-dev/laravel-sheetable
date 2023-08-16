@@ -128,6 +128,27 @@ abstract class TestCase extends BaseTestCase
             $table->string('title2');
             $table->string('title3');
         });
+
+        Schema::create('joinable_relations', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('foreign_field');
+            $table->string('another_foreign_field');
+        });
+
+        Schema::create('another_joinable_relations', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('foreign_field');
+            $table->string('another_foreign_field');
+        });
+
+        Schema::create('joinable_dummies', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('title');
+            $table->string('description');
+
+            $table->foreignId('joinable_relation_id')->constrained();
+            $table->foreignId('another_joinable_relation_id')->constrained();
+        });
     }
 
     protected function assertSpreadsheetsAreEqual($expectedFilePath, $actualFilePath, $maxSheet = null)

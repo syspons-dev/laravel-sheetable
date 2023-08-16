@@ -6,6 +6,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Facades\Excel;
 use Syspons\Sheetable\Exports\SheetsExport;
+use Syspons\Sheetable\Tests\Models\AnotherJoinableRelation;
+use Syspons\Sheetable\Tests\Models\JoinableDummy;
+use Syspons\Sheetable\Tests\Models\JoinableRelation;
 use Syspons\Sheetable\Tests\Models\ScopeableManyToManyRelation;
 use Syspons\Sheetable\Tests\Models\SelectDummy;
 use Syspons\Sheetable\Tests\Models\WithRelationDummy;
@@ -184,6 +187,30 @@ class ExportTest extends TestCase
             $item->save();
         });
         $response = $this->get(route('translatable_dummies.export'))
+            ->assertStatus(200)
+            ->assertDownload($expectedName);
+        $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName);
+    }
+
+    public function test_store_joinable_file()
+    {
+        $expectedName = 'joinable_dummies.xlsx';
+        JoinableDummy::factory()->count(3)->make()->each(function ($item, $key) {
+            $item->title = 'title '.++$key;
+            $item->description = 'description '.$key;
+            $join = JoinableRelation::factory()->create([
+                'foreign_field' => 'foreign_field '.$key,
+                'another_foreign_field' => 'another_foreign_field '.$key,
+            ]);
+            $another_join = AnotherJoinableRelation::factory()->create([
+                'foreign_field' => 'foreign_field '.$key,
+                'another_foreign_field' => 'another_foreign_field '.$key,
+            ]);
+            $item->joinable_relation()->associate($join);
+            $item->another_joinable_relation()->associate($another_join);
+            $item->save();
+        });
+        $response = $this->get(route('joinable_dummies.export'))
             ->assertStatus(200)
             ->assertDownload($expectedName);
         $this->assertExpectedSpreadsheetResponse($response, __DIR__.'/'.$expectedName);

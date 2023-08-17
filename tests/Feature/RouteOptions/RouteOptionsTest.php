@@ -3,9 +3,8 @@
 namespace Syspons\Sheetable\Tests\Feature\RouteOptions;
 
 use Illuminate\Support\Facades\Route;
-use Syspons\Sheetable\Tests\TestCase;
 
-class RouteOptionsTest extends TestCase
+class RouteOptionsTest extends RouteOptionsTestCase
 {
     public function test_only_routes(): void
     {

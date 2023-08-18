@@ -1,12 +1,12 @@
 <?php
 
-namespace Syspons\Sheetable\Tests\Feature\JoinNestedTest;
+namespace Syspons\Sheetable\Tests\Feature\JoinBelongsToNestedTest;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Syspons\Sheetable\Models\Contracts\Sheetable;
 
-class JoinableRelation extends Model implements Sheetable
+class NestedJoinableRelation extends Model implements Sheetable
 {
     use HasFactory;
 
@@ -25,18 +25,13 @@ class JoinableRelation extends Model implements Sheetable
         ];
     }
 
-    protected static function newFactory(): JoinableRelationFactory
+    protected static function newFactory(): NestedJoinableRelationFactory
     {
-        return JoinableRelationFactory::new();
+        return NestedJoinableRelationFactory::new();
     }
 
     public function joinable_dummies()
     {
         return $this->hasMany(JoinableDummy::class);
-    }
-
-    public function nested_joinable_relation()
-    {
-        return $this->belongsTo(NestedJoinableRelation::class);
     }
 }

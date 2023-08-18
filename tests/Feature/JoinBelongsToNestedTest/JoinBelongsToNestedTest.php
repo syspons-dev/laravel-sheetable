@@ -1,6 +1,6 @@
 <?php
 
-namespace Syspons\Sheetable\Tests\Feature\JoinNestedTest;
+namespace Syspons\Sheetable\Tests\Feature\JoinBelongsToNestedTest;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 /**
  *
  */
-class JoinNestedTest extends JoinNestedTestCase
+class JoinBelongsToNestedTest extends JoinBelongsToNestedTestCase
 {
     use RefreshDatabase;
 

@@ -54,7 +54,15 @@ class JoinableDummy extends Model implements Sheetable, Joinable
                 entity: AnotherJoinableRelation::class,
                 relation: 'another_joinable_relation',
                 on: 'another_joinable_relation_id',
-                select: ['another_foreign_field']
+                select: ['another_foreign_field', 'nested_joinable_relation_id'],
+                nested: [
+                    new JoinConfig(
+                        entity: NestedJoinableRelation::class,
+                        relation: 'nested_joinable_relation',
+                        on: 'nested_joinable_relation_id',
+                        select: ['foreign_field'],
+                    ),
+                ]
             ),
         ];
     }

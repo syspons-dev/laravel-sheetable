@@ -35,10 +35,16 @@ class JoinTest extends JoinTestCase
                 'foreign_field' => 'foreign_field '.$key,
                 'another_foreign_field' => 'another_foreign_field '.$key,
             ]);
-            $another_join = AnotherJoinableRelation::factory()->create([
+            $another_join = AnotherJoinableRelation::factory()->make([
                 'foreign_field' => 'foreign_field '.$key,
                 'another_foreign_field' => 'another_foreign_field '.$key,
             ]);
+            $nested_join = NestedJoinableRelation::factory()->create([
+                'foreign_field' => 'foreign_field '.$key,
+                'another_foreign_field' => 'another_foreign_field '.$key,
+            ]);
+            $another_join->nested_joinable_relation()->associate($nested_join);
+            $another_join->save();
             $item->joinable_relation()->associate($join);
             $item->another_joinable_relation()->associate($another_join);
             $item->save();

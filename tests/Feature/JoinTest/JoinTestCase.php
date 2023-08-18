@@ -29,10 +29,19 @@ abstract class JoinTestCase extends TestCase
             $table->string('another_foreign_field');
         });
 
-        Schema::create('another_joinable_relations', function (Blueprint $table) {
+        Schema::create('nested_joinable_relations', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('foreign_field');
             $table->string('another_foreign_field');
+        });
+
+        Schema::create('another_joinable_relations', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('foreign_field');
+            $table->string('another_foreign_field');            
+            
+            $table->foreignId('nested_joinable_relation_id')->constrained();
+
         });
 
         Schema::create('joinable_dummies', function (Blueprint $table) {

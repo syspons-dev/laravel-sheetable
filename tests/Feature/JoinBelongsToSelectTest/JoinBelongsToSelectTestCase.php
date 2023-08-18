@@ -1,13 +1,13 @@
 <?php
 
-namespace Syspons\Sheetable\Tests\Feature\JoinSelectTest;
+namespace Syspons\Sheetable\Tests\Feature\JoinBelongsToSelectTest;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 use Syspons\Sheetable\Tests\TestCase;
 
-abstract class JoinSelectTestCase extends TestCase
+abstract class JoinBelongsToSelectTestCase extends TestCase
 {
     public function setUp(): void
     {

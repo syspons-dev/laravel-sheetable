@@ -1,6 +1,6 @@
 <?php
 
-namespace Syspons\Sheetable\Tests\Feature\JoinSelectTest;
+namespace Syspons\Sheetable\Tests\Feature\JoinBelongsToSelectTest;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 

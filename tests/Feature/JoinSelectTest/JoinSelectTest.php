@@ -1,6 +1,6 @@
 <?php
 
-namespace Syspons\Sheetable\Tests\Feature\JoinTest;
+namespace Syspons\Sheetable\Tests\Feature\JoinSelectTest;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 /**
  *
  */
-class JoinTest extends JoinTestCase
+class JoinSelectTest extends JoinSelectTestCase
 {
     use RefreshDatabase;
 
@@ -35,12 +35,7 @@ class JoinTest extends JoinTestCase
                 'foreign_field' => 'foreign_field '.$key,
                 'another_foreign_field' => 'another_foreign_field '.$key,
             ]);
-            $another_join = AnotherJoinableRelation::factory()->create([
-                'foreign_field' => 'foreign_field '.$key,
-                'another_foreign_field' => 'another_foreign_field '.$key,
-            ]);
             $item->joinable_relation()->associate($join);
-            $item->another_joinable_relation()->associate($another_join);
             $item->save();
         });
         $response = $this->get(route('joinable_dummies.export'))

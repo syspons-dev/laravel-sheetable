@@ -1,6 +1,6 @@
 <?php
 
-namespace Syspons\Sheetable\Tests\Feature\JoinTest;
+namespace Syspons\Sheetable\Tests\Feature\JoinNestedTest;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -49,11 +49,14 @@ class JoinableDummy extends Model implements Sheetable, Joinable
                 entity: JoinableRelation::class,
                 relation: 'joinable_relation',
                 on: 'joinable_relation_id',
-            ),
-            new JoinConfig(
-                entity: AnotherJoinableRelation::class,
-                relation: 'another_joinable_relation',
-                on: 'another_joinable_relation_id',
+                nested: [
+                    new JoinConfig(
+                        entity: NestedJoinableRelation::class,
+                        relation: 'nested_joinable_relation',
+                        on: 'nested_joinable_relation_id',
+                        select: ['foreign_field'],
+                    ),
+                ]
             ),
         ];
     }

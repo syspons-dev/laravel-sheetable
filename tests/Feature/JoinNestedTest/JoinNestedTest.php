@@ -1,6 +1,6 @@
 <?php
 
-namespace Syspons\Sheetable\Tests\Feature\JoinTest;
+namespace Syspons\Sheetable\Tests\Feature\JoinNestedTest;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 /**
  *
  */
-class JoinTest extends JoinTestCase
+class JoinNestedTest extends JoinNestedTestCase
 {
     use RefreshDatabase;
 
@@ -31,16 +31,17 @@ class JoinTest extends JoinTestCase
         JoinableDummy::factory()->count(3)->make()->each(function ($item, $key) {
             $item->title = 'title '.++$key;
             $item->description = 'description '.$key;
-            $join = JoinableRelation::factory()->create([
+            $join = JoinableRelation::factory()->make([
                 'foreign_field' => 'foreign_field '.$key,
                 'another_foreign_field' => 'another_foreign_field '.$key,
             ]);
-            $another_join = AnotherJoinableRelation::factory()->create([
+            $nested_join = NestedJoinableRelation::factory()->create([
                 'foreign_field' => 'foreign_field '.$key,
                 'another_foreign_field' => 'another_foreign_field '.$key,
             ]);
+            $join->nested_joinable_relation()->associate($nested_join);
+            $join->save();
             $item->joinable_relation()->associate($join);
-            $item->another_joinable_relation()->associate($another_join);
             $item->save();
         });
         $response = $this->get(route('joinable_dummies.export'))

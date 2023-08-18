@@ -1,13 +1,13 @@
 <?php
 
-namespace Syspons\Sheetable\Tests\Feature\JoinTest;
+namespace Syspons\Sheetable\Tests\Feature\JoinSelectTest;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 use Syspons\Sheetable\Tests\TestCase;
 
-abstract class JoinTestCase extends TestCase
+abstract class JoinSelectTestCase extends TestCase
 {
     public function setUp(): void
     {
@@ -29,20 +29,13 @@ abstract class JoinTestCase extends TestCase
             $table->string('another_foreign_field');
         });
 
-        Schema::create('another_joinable_relations', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('foreign_field');
-            $table->string('another_foreign_field');
-
-        });
-
         Schema::create('joinable_dummies', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('title');
             $table->string('description');
 
             $table->foreignId('joinable_relation_id')->constrained();
-            $table->foreignId('another_joinable_relation_id')->constrained();
+            
         });
     }
 }

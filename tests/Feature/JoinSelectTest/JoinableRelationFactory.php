@@ -1,12 +1,12 @@
 <?php
 
-namespace Syspons\Sheetable\Tests\Feature\JoinTest;
+namespace Syspons\Sheetable\Tests\Feature\JoinSelectTest;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class NestedJoinableRelationFactory extends Factory
+class JoinableRelationFactory extends Factory
 {
-    protected $model = NestedJoinableRelation::class;
+    protected $model = JoinableRelation::class;
 
     public function definition(): array
     {

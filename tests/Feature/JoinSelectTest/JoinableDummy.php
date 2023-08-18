@@ -1,6 +1,6 @@
 <?php
 
-namespace Syspons\Sheetable\Tests\Feature\JoinTest;
+namespace Syspons\Sheetable\Tests\Feature\JoinSelectTest;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -32,11 +32,6 @@ class JoinableDummy extends Model implements Sheetable, Joinable
         return $this->belongsTo(JoinableRelation::class);
     }
 
-    public function another_joinable_relation()
-    {
-        return $this->belongsTo(AnotherJoinableRelation::class);
-    }
-
     protected static function newFactory(): JoinableDummyFactory
     {
         return JoinableDummyFactory::new();
@@ -49,11 +44,7 @@ class JoinableDummy extends Model implements Sheetable, Joinable
                 entity: JoinableRelation::class,
                 relation: 'joinable_relation',
                 on: 'joinable_relation_id',
-            ),
-            new JoinConfig(
-                entity: AnotherJoinableRelation::class,
-                relation: 'another_joinable_relation',
-                on: 'another_joinable_relation_id',
+                select: ['foreign_field'],
             ),
         ];
     }

@@ -1,13 +1,13 @@
 <?php
 
-namespace Syspons\Sheetable\Tests\Feature\JoinTest;
+namespace Syspons\Sheetable\Tests\Feature\JoinNestedTest;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 use Syspons\Sheetable\Tests\TestCase;
 
-abstract class JoinTestCase extends TestCase
+abstract class JoinNestedTestCase extends TestCase
 {
     public function setUp(): void
     {
@@ -23,16 +23,18 @@ abstract class JoinTestCase extends TestCase
 
     private function setupTables(): void
     {
-        Schema::create('joinable_relations', function (Blueprint $table) {
+        Schema::create('nested_joinable_relations', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('foreign_field');
             $table->string('another_foreign_field');
         });
 
-        Schema::create('another_joinable_relations', function (Blueprint $table) {
+        Schema::create('joinable_relations', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('foreign_field');
-            $table->string('another_foreign_field');
+            $table->string('another_foreign_field');            
+            
+            $table->foreignId('nested_joinable_relation_id')->constrained();
 
         });
 
@@ -42,7 +44,6 @@ abstract class JoinTestCase extends TestCase
             $table->string('description');
 
             $table->foreignId('joinable_relation_id')->constrained();
-            $table->foreignId('another_joinable_relation_id')->constrained();
         });
     }
 }

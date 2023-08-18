@@ -1,6 +1,6 @@
 <?php
 
-namespace Syspons\Sheetable\Tests\Feature\JoinTest;
+namespace Syspons\Sheetable\Tests\Feature\JoinBelongsToTest;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 /**
  *
  */
-class JoinTest extends JoinTestCase
+class JoinBelongsToTest extends JoinBelongsToTestCase
 {
     use RefreshDatabase;
 

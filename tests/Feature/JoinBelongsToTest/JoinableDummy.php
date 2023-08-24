@@ -4,6 +4,7 @@ namespace Syspons\Sheetable\Tests\Feature\JoinBelongsToTest;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Syspons\Sheetable\Exports\Join;
 use Syspons\Sheetable\Exports\JoinConfig;
 use Syspons\Sheetable\Models\Contracts\Joinable;
 use Syspons\Sheetable\Models\Contracts\Sheetable;
@@ -45,15 +46,13 @@ class JoinableDummy extends Model implements Sheetable, Joinable
     public static function getJoins(): array 
     {
         return [
-            new JoinConfig(
-                entity: JoinableRelation::class,
-                relation: 'joinable_relation',
-                on: 'joinable_relation_id',
+            new Join(
+                parent: static::class,
+                relation: 'joinable_relation'
             ),
-            new JoinConfig(
-                entity: AnotherJoinableRelation::class,
+            new Join(
+                parent: static::class,
                 relation: 'another_joinable_relation',
-                on: 'another_joinable_relation_id',
             ),
         ];
     }

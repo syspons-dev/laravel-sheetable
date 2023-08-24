@@ -76,7 +76,7 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
     public function map($entity): array
     {
         return method_exists($entity, 'getJoins')
-            ? SpreadsheetJoins::getMapping($entity)
+            ? SpreadsheetJoins::getMapping($entity, $this->headings())
             : $entity->toArray();
     }
 

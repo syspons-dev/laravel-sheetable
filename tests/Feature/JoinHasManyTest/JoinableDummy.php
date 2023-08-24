@@ -1,6 +1,6 @@
 <?php
 
-namespace Syspons\Sheetable\Tests\Feature\JoinBelongsToNestedTest;
+namespace Syspons\Sheetable\Tests\Feature\JoinHasManyTest;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -27,14 +27,9 @@ class JoinableDummy extends Model implements Sheetable, Joinable
         ];
     }
 
-    public function joinable_relation()
+    public function joinable_relations()
     {
-        return $this->belongsTo(JoinableRelation::class);
-    }
-
-    public function another_joinable_relation()
-    {
-        return $this->belongsTo(AnotherJoinableRelation::class);
+        return $this->hasMany(JoinableRelation::class);
     }
 
     protected static function newFactory(): JoinableDummyFactory
@@ -47,14 +42,7 @@ class JoinableDummy extends Model implements Sheetable, Joinable
         return [
             new Join(
                 parent: static::class,
-                relation: 'joinable_relation',
-                nested: [
-                    new Join(
-                        parent: JoinableRelation::class,
-                        relation: 'nested_joinable_relation',
-                        select: ['foreign_field'],
-                    ),
-                ]
+                relation: 'joinable_relations',
             ),
         ];
     }

@@ -6,6 +6,7 @@ use Closure;
 use Facades\Syspons\Sheetable\Helpers\SpreadsheetUtils;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
@@ -80,6 +81,11 @@ class Join
       {
         $parentKey = $this->relationObject->getForeignKeyName();
         array_splice($columns, array_search($parentKey, $columns), 1);
+        $ret = array_merge($parentColumns, $this->array_map_recursive($columns, fn($column) => $this->relation.'.'.$column));
+        return $ret;
+      }
+      case BelongsToMany::class:
+      {
         $ret = array_merge($parentColumns, $this->array_map_recursive($columns, fn($column) => $this->relation.'.'.$column));
         return $ret;
       }

@@ -3,6 +3,7 @@
 namespace Syspons\Sheetable\Helpers;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -48,6 +49,7 @@ class SpreadsheetJoins
         if ($nestedLevel === 1) {
             switch(get_class($entity->$relation())) {
                 case HasMany::class:
+                case BelongsToMany::class:
                 {
                     $ret = $entity->$relation->pluck($nestedProperty)->join(', ');
                     return $ret;

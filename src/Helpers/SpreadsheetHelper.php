@@ -451,7 +451,9 @@ class SpreadsheetHelper
                 // content
                 $entities->each(function (Model $entity, int $index) use ($worksheet, $currentColumn, $translatableField, $language) {
                     $rowCount = $index + 2;
-                    $worksheet->setCellValue($currentColumn.$rowCount, $entity->$translatableField[$language]);
+                    if (array_key_exists($language, $entity->$translatableField)) {
+                        $worksheet->setCellValue($currentColumn.$rowCount, $entity->$translatableField[$language]);
+                    }
                 });
             }
             $worksheet->removeColumn($column);

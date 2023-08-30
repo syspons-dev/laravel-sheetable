@@ -31,11 +31,17 @@ class JoinBelongsToSelectTest extends JoinBelongsToSelectTestCase
         JoinableDummy::factory()->count(3)->make()->each(function ($item, $key) {
             $item->title = 'title '.++$key;
             $item->description = 'description '.$key;
-            $join = JoinableRelation::factory()->create([
+            $relation = [
                 'foreign_field' => 'foreign_field '.$key,
                 'another_foreign_field' => 'another_foreign_field '.$key,
-            ]);
-            $item->joinable_relation()->associate($join);
+                'yet_another_foreign_field' => 'yet_another_foreign_field '.$key,
+            ];
+            $select = JoinableSelectRelation::factory()->create($relation);
+            $item->joinable_select_relation()->associate($select);
+            $except = JoinableExceptRelation::factory()->create($relation);
+            $item->joinable_except_relation()->associate($except);
+            $both = JoinableBothRelation::factory()->create($relation);
+            $item->joinable_both_relation()->associate($both);
             $item->save();
         });
         $response = $this->get(route('joinable_dummies.export'))

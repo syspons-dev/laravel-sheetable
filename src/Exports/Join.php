@@ -24,8 +24,9 @@ class Join
   public function __construct(
     protected Model|string $parent,
     protected string $relation,
-    protected array $select = [],
     protected array $nested = [],
+    protected array $select = [],
+    protected array $except = [],
   ) {
     $this->parentEntity = new $parent;
     $rel = $this->getRelated();
@@ -43,9 +44,7 @@ class Join
   public function getJoinedColumns($parentColumns): array
   {
     $columns = SpreadsheetUtils::getOrdinalColumnNames($this->relationTableName);
-    if ($this->select) {
-        $columns = array_intersect($columns, array_merge($this->select, $this->joinOn()));
-    }
+    $columns = $this->applySelected($columns);
     if ($this->nested && count($this->nested)) {
       $nested = $columns;
       foreach($this->nested as $n) {
@@ -114,5 +113,18 @@ class Join
           ? $this->array_map_recursive($item, $cb)
           : $cb($item)
     );
+  }
+
+  private function applySelected(array $columns): array
+  {
+    if ($this->select && count($this->select)) {
+      $columns = array_intersect($columns, array_merge($this->select, $this->joinOn()));
+    }
+
+    if ($this->except && count($this->except)) {
+      $columns = array_diff($columns, $this->except);
+    }
+
+    return $columns;
   }
 }

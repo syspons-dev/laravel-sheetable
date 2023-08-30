@@ -27,9 +27,19 @@ class JoinableDummy extends Model implements Sheetable, Joinable
         ];
     }
 
-    public function joinable_relation()
+    public function joinable_select_relation()
     {
-        return $this->belongsTo(JoinableRelation::class);
+        return $this->belongsTo(JoinableSelectRelation::class);
+    }
+
+    public function joinable_except_relation()
+    {
+        return $this->belongsTo(JoinableExceptRelation::class);
+    }
+
+    public function joinable_both_relation()
+    {
+        return $this->belongsTo(JoinableBothRelation::class);
     }
 
     protected static function newFactory(): JoinableDummyFactory
@@ -42,8 +52,19 @@ class JoinableDummy extends Model implements Sheetable, Joinable
         return [
             new Join(
                 parent: static::class,
-                relation: 'joinable_relation',
+                relation: 'joinable_select_relation',
                 select: ['foreign_field'],
+            ),
+            new Join(
+                parent: static::class,
+                relation: 'joinable_except_relation',
+                except: ['id', 'another_foreign_field', 'yet_another_foreign_field'],
+            ),
+            new Join(
+                parent: static::class,
+                relation: 'joinable_both_relation',
+                select: ['foreign_field', 'another_foreign_field'],
+                except: ['another_foreign_field'],
             ),
         ];
     }

@@ -23,10 +23,25 @@ abstract class JoinBelongsToSelectTestCase extends TestCase
 
     private function setupTables(): void
     {
-        Schema::create('joinable_relations', function (Blueprint $table) {
+        Schema::create('joinable_select_relations', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('foreign_field');
             $table->string('another_foreign_field');
+            $table->string('yet_another_foreign_field');
+        });
+
+        Schema::create('joinable_except_relations', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('foreign_field');
+            $table->string('another_foreign_field');
+            $table->string('yet_another_foreign_field');
+        });
+
+        Schema::create('joinable_both_relations', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('foreign_field');
+            $table->string('another_foreign_field');
+            $table->string('yet_another_foreign_field');
         });
 
         Schema::create('joinable_dummies', function (Blueprint $table) {
@@ -34,8 +49,9 @@ abstract class JoinBelongsToSelectTestCase extends TestCase
             $table->string('title');
             $table->string('description');
 
-            $table->foreignId('joinable_relation_id')->constrained();
-            
+            $table->foreignId('joinable_select_relation_id')->constrained();
+            $table->foreignId('joinable_except_relation_id')->constrained();
+            $table->foreignId('joinable_both_relation_id')->constrained();
         });
     }
 }

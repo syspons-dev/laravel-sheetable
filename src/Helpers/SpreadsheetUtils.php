@@ -353,8 +353,8 @@ class SpreadsheetUtils
 
         $entities = $entity->$relation;
         if ($entities instanceof Collection) {
-            return $entities->map(fn ($e) => $this->getNestedProperty($e, $nestedProperty))->join(', ');
+            return $entities->map(fn ($e) => $this->getNestedProperty($e, $nestedProperty, $accessCb))->join(', ');
         }
-        return $this->getNestedProperty($entity->$relation, $nestedProperty);
+        return $this->getNestedProperty($entity->$relation, $nestedProperty, $accessCb);
     }
 }

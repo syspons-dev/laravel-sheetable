@@ -72,6 +72,12 @@ class Join
     $class = get_class($this->relationObject);
     switch($class) {
       case HasOne::class:
+        {
+          $parentKey = $this->relationObject->getLocalKeyName();
+          $columnIndex = array_search($parentKey, $parentColumns);
+          $ret = array_replace($parentColumns, [$columnIndex => $this->array_map_recursive($columns, fn($column) => $this->relation.'.'.$column)]);
+          return $ret;
+        }
       case BelongsTo::class:
       {
         $parentKey = $this->relationObject->getForeignKeyName();

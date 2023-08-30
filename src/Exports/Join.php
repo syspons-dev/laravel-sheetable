@@ -44,7 +44,7 @@ class Join
   {
     $columns = SpreadsheetUtils::getOrdinalColumnNames($this->relationTableName);
     if ($this->select) {
-        $columns = array_intersect($columns, $this->select);
+        $columns = array_intersect($columns, array_merge($this->select, $this->joinOn()));
     }
     if ($this->nested && count($this->nested)) {
       $nested = $columns;
@@ -80,7 +80,7 @@ class Join
       case HasMany::class:
       {
         $parentKey = $this->relationObject->getForeignKeyName();
-        array_splice($columns, array_search($parentKey, $columns), 1);
+        $columns = Arr::where($columns, fn($column) => $column !== $parentKey);
         $ret = array_merge($parentColumns, $this->array_map_recursive($columns, fn($column) => $this->relation.'.'.$column));
         return $ret;
       }
@@ -91,6 +91,17 @@ class Join
       }
       default:
         return $parentColumns;
+    }
+  }
+
+  private function joinOn(): array
+  {
+    switch(get_class($this->relationObject)) {
+      case BelongsTo::class:
+      case HasMany::class:
+        return [$this->relationObject->getForeignKeyName()];
+      default:
+        return [];
     }
   }
 

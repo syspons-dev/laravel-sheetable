@@ -5,6 +5,8 @@ namespace Syspons\Sheetable\Helpers;
 use berthott\Scopeable\Facades\Scopeable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\DefaultValueBinder as ExcelDefaultValueBinder;
@@ -52,11 +54,9 @@ class SpreadsheetHelper
             $this->dropdowns->exportDropdownFields($model, $worksheet, $models);
             SheetableLog::log('Dropdown fields added.');
         }
-        if (method_exists($model, 'translatableFields')) {
-            SheetableLog::log('Adding translatable fields...');
-            $this->exportTranslatableFields($model, $worksheet, $models);
-            SheetableLog::log('Translatable fields added.');
-        }
+        SheetableLog::log('Adding translatable fields...');
+        $this->exportTranslatableFields($model, $worksheet, $models);
+        SheetableLog::log('Translatable fields added.');
         SheetableLog::log('Formatting special fields...');
         $this->utils->formatColumns($model, $worksheet, $models);
         SheetableLog::log('Special fields formatted.');
@@ -437,8 +437,9 @@ class SpreadsheetHelper
      */
     private function exportTranslatableFields(Model $target, Worksheet $worksheet, Collection $entities)
     {
-        foreach ($target::translatableFields() as $translatableField) {
-            $column = $currentColumn = $this->utils->getColumnByHeading($worksheet, $translatableField.'_translatable_content_id');
+        foreach ($this->utils->getTranslatableColumns($worksheet) as $translatableColumn) {
+            $column = $currentColumn = $this->utils->getColumnByHeading($worksheet, $translatableColumn);
+            $translatableField = Str::before($translatableColumn, '_translatable_content_id');
             if (!$column) {
                 continue;
             }
@@ -451,9 +452,8 @@ class SpreadsheetHelper
                 // content
                 $entities->each(function (Model $entity, int $index) use ($worksheet, $currentColumn, $translatableField, $language) {
                     $rowCount = $index + 2;
-                    if (array_key_exists($language, $entity->$translatableField)) {
-                        $worksheet->setCellValue($currentColumn.$rowCount, $entity->$translatableField[$language]);
-                    }
+                    $translation = $this->utils->getNestedProperty($entity, $translatableField, fn($translations) => Arr::exists($translations, $language) ? $translations[$language] : null);
+                    $worksheet->setCellValue($currentColumn.$rowCount, $translation);
                 });
             }
             $worksheet->removeColumn($column);

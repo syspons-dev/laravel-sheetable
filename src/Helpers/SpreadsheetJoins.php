@@ -16,11 +16,12 @@ class SpreadsheetJoins
 {
     public function __construct(
         private SheetableService $sheetableService,
+        private SpreadsheetUtils $utils, 
     ) {}
 
     public function getMapping(Model $entity, array $headings): array
     {
-        $ret = array_map(fn($heading) => $this->getNestedProperty($entity, $heading), $headings);
+        $ret = array_map(fn($heading) => $this->utils->getNestedProperty($entity, $heading), $headings);
         return $ret;
     }
 
@@ -36,29 +37,5 @@ class SpreadsheetJoins
             $columns = $join->getJoinedColumns($columns);
         }
         return $columns;
-    }
-
-    private function getNestedProperty(Model $entity, string $property): mixed
-    {
-        $nestedLevel = Str::substrCount($property, '.');
-        if ($nestedLevel === 0) {
-            return $entity->$property;
-        }
-        
-        [$relation, $nestedProperty] = explode('.', $property, 2);
-        if ($nestedLevel === 1) {
-            switch(get_class($entity->$relation())) {
-                case HasMany::class:
-                case BelongsToMany::class:
-                {
-                    $ret = $entity->$relation->pluck($nestedProperty)->join(', ');
-                    return $ret;
-                }
-                default:
-                return $entity->$relation->$nestedProperty;
-              }
-        }
-
-        return $this->getNestedProperty($entity->$relation, $nestedProperty);
     }
 }

@@ -3,10 +3,14 @@
 namespace Syspons\Sheetable\Helpers;
 
 use Carbon\Carbon;
+use Closure;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Schema\Grammars\MySqlGrammar;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -223,6 +227,32 @@ class SpreadsheetUtils
     }
 
     /**
+     * Get the translatable headings.
+     */
+    public function getTranslatableColumns(Worksheet $worksheet): array
+    {
+        $headings = $this->getWorksheetHeadings($worksheet);
+        return array_filter($headings, fn($heading) => Str::contains($heading, 'translatable_content_id'));
+    }
+
+    /**
+     * Get the worksheets headings.
+     */
+    public function getWorksheetHeadings(Worksheet $worksheet): array
+    {
+        $ret = [];
+        $row = $worksheet->getRowIterator()->current();
+        $cellIterator = $row->getCellIterator();
+        $cellIterator->setIterateOnlyExistingCells(false);
+
+        foreach ($cellIterator as $cell) {
+            $ret[] = $cell->getValue();
+        }
+
+        return $ret;
+    }
+
+    /**
      * Shortens qualified class name like 'App\Models\Dummy' to shortname like 'Dummy'.
      *
      * @param string|null $model e.g. App\Models\Dummy
@@ -298,5 +328,29 @@ class SpreadsheetUtils
         } catch (Exception $e) {
             return Schema::getColumnListing($tableName);
         }
+    }
+
+    public function getNestedProperty(Model $entity, string $property, Closure $accessCb = null): mixed
+    {
+        $nestedLevel = Str::substrCount($property, '.');
+        if ($nestedLevel === 0) {
+            return $accessCb ? $accessCb($entity->$property) : $entity->$property;
+        }
+        
+        [$relation, $nestedProperty] = explode('.', $property, 2);
+        if ($nestedLevel === 1) {
+            switch(get_class($entity->$relation())) {
+                case HasMany::class:
+                case BelongsToMany::class:
+                {
+                    $ret = $entity->$relation->map(fn($r) => $accessCb ? $accessCb($r->$nestedProperty) : $r->$nestedProperty)->join(', ');
+                    return $ret;
+                }
+                default:
+                    return $accessCb ? $accessCb($entity->$relation->$nestedProperty) : $entity->$relation->$nestedProperty;
+              }
+        }
+
+        return $this->getNestedProperty($entity->$relation, $nestedProperty);
     }
 }

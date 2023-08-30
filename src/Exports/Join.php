@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 
@@ -25,8 +26,8 @@ class Join
     protected Model|string $parent,
     protected string $relation,
     protected array $nested = [],
-    protected array $select = [],
-    protected array $except = [],
+    protected array|null $select = null,
+    protected array|null $except = null,
   ) {
     $this->parentEntity = new $parent;
     $rel = $this->getRelated();
@@ -68,7 +69,9 @@ class Join
 
   private function joinWithParentColumns(array $columns, array $parentColumns): array
   {
-    switch(get_class($this->relationObject)) {
+    $class = get_class($this->relationObject);
+    switch($class) {
+      case HasOne::class:
       case BelongsTo::class:
       {
         $parentKey = $this->relationObject->getForeignKeyName();
@@ -117,11 +120,11 @@ class Join
 
   private function applySelected(array $columns): array
   {
-    if ($this->select && count($this->select)) {
+    if ($this->select !== null) {
       $columns = array_intersect($columns, array_merge($this->select, $this->joinOn()));
     }
 
-    if ($this->except && count($this->except)) {
+    if ($this->except !== null) {
       $columns = array_diff($columns, $this->except);
     }
 

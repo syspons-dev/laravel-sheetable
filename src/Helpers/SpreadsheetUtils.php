@@ -330,6 +330,11 @@ class SpreadsheetUtils
         }
     }
 
+    /**
+     * Returns a property in dot notation accessing related entities
+     * 
+     * @param Closure $accessCb A callback applied when accessing the final property 
+     */
     public function getNestedProperty(Model $entity, string $property, Closure $accessCb = null): mixed
     {
         $nestedLevel = Str::substrCount($property, '.');

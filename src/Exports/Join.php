@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 
+/**
+ * Configuration and helper class for export joins.
+ */
 class Join
 {
   protected string $relationTableName;
@@ -19,7 +22,10 @@ class Join
   protected Relation $relationObject;
 
   /**
+   * @param Model|string $parent The parent class
+   * @param string $relation The relation name
    * @param string[] $select The columns to select
+   * @param string[] $except The columns to except
    * @param JoinConfig[] $nested
    */
   public function __construct(
@@ -35,6 +41,9 @@ class Join
     $this->relationObject = $this->getRelationObject();
   }
 
+  /**
+   * Get the related class
+   */
   public function getRelated(): Model
   {
     $relation = $this->relation;
@@ -42,6 +51,9 @@ class Join
     return $rel->getRelated();
   }
 
+  /**
+   * Get the columns after the join
+   */
   public function getJoinedColumns($parentColumns): array
   {
     $columns = SpreadsheetUtils::getOrdinalColumnNames($this->relationTableName);
@@ -57,27 +69,39 @@ class Join
     return $columns;
   }
 
+  /**
+   * Get the protected members
+   */
   public function __get($key): mixed 
   {
     return $this->$key ?: null;
   }
 
+  /**
+   * Instantiate the relation object
+   */
   private function getRelationObject(): Relation
   {
     return ($this->parentEntity)->{$this->relation}();
   }
 
+  /**
+   * Remove the join column from the parent columns and add the joined ones instead.
+   * 
+   * * `HasOne` and `BelongsTo` will use insert the joined columns where the reference column was
+   * * `HasMany`and `BelongsToMany`will add the joined columns at the end. 
+   */
   private function joinWithParentColumns(array $columns, array $parentColumns): array
   {
     $class = get_class($this->relationObject);
     switch($class) {
       case HasOne::class:
-        {
-          $parentKey = $this->relationObject->getLocalKeyName();
-          $columnIndex = array_search($parentKey, $parentColumns);
-          $ret = array_replace($parentColumns, [$columnIndex => $this->array_map_recursive($columns, fn($column) => $this->relation.'.'.$column)]);
-          return $ret;
-        }
+      {
+        $parentKey = $this->relationObject->getLocalKeyName();
+        $columnIndex = array_search($parentKey, $parentColumns);
+        $ret = array_replace($parentColumns, [$columnIndex => $this->array_map_recursive($columns, fn($column) => $this->relation.'.'.$column)]);
+        return $ret;
+      }
       case BelongsTo::class:
       {
         $parentKey = $this->relationObject->getForeignKeyName();
@@ -102,9 +126,14 @@ class Join
     }
   }
 
+  /**
+   * Return the column that is joined on
+   */
   private function joinOn(): array
   {
     switch(get_class($this->relationObject)) {
+      case HasOne::class:
+        return [$this->relationObject->getLocalKeyName()];
       case BelongsTo::class:
       case HasMany::class:
         return [$this->relationObject->getForeignKeyName()];
@@ -113,6 +142,9 @@ class Join
     }
   }
 
+  /**
+   * Apply a callback recursively on an arrays items
+   */
   private function array_map_recursive(array $array, Closure $cb): array
   {
     return Arr::map(
@@ -124,6 +156,9 @@ class Join
     );
   }
 
+  /**
+   * Apply select and except properties.
+   */
   private function applySelected(array $columns): array
   {
     if ($this->select !== null) {

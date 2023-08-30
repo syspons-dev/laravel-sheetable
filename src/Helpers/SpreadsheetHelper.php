@@ -9,17 +9,13 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Maatwebsite\Excel\DefaultValueBinder as ExcelDefaultValueBinder;
-use PhpOffice\PhpSpreadsheet\Calculation\Exception;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use PhpOffice\PhpSpreadsheet\Cell\DefaultValueBinder;
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Syspons\Sheetable\Exceptions\ExcelImportScopeableException;
 use Syspons\Sheetable\Exceptions\ExcelImportValidationException;
-use Syspons\Sheetable\Imports\ArrayValueBinder;
 use Syspons\Sheetable\Models\Contracts\Dropdownable;
 
 /**
@@ -434,6 +430,9 @@ class SpreadsheetHelper
      * Write all the translations to the worksheet.
      * 
      * Delete the original reference column and show a column for each language instead.
+     * 
+     * Note: we do not rely on `translationFields()` here, but look for the
+     * occurrence on `_translatable_content_id`columns.
      */
     private function exportTranslatableFields(Model $target, Worksheet $worksheet, Collection $entities)
     {

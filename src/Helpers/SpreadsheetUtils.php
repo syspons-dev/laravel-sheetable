@@ -348,7 +348,7 @@ class SpreadsheetUtils
                 case HasMany::class:
                 case BelongsToMany::class:
                 {
-                    $ret = $entity->$relation->map(fn($r) => $accessCb ? $accessCb($r->$nestedProperty) : $r->$nestedProperty)->join(', ');
+                    $ret = $entity->$relation->map(fn($r) => $accessCb ? $accessCb($r->$nestedProperty) : $r->$nestedProperty)->filter()->join(', ');
                     return $ret;
                 }
                 default:

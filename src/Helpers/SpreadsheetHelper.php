@@ -444,6 +444,12 @@ class SpreadsheetHelper
             }
 
             foreach($this->getTranslatableLanguages() as $language) {
+                if ($langs = request()->lang) {
+                    $langs = is_array($langs) ? $langs : [$langs];
+                    if (array_search($language, $langs) === false) {
+                        continue;
+                    }
+                }
                 $worksheet->insertNewColumnBefore(++$currentColumn);
                 // heading
                 $worksheet->setCellValue($currentColumn.'1', $translatableField.'_'.$language);

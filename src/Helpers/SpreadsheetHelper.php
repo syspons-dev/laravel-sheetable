@@ -3,6 +3,7 @@
 namespace Syspons\Sheetable\Helpers;
 
 use berthott\Scopeable\Facades\Scopeable;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Arr;
@@ -53,6 +54,11 @@ class SpreadsheetHelper
         SheetableLog::log('Adding translatable fields...');
         $this->exportTranslatableFields($model, $worksheet, $models);
         SheetableLog::log('Translatable fields added.');
+        if (method_exists($model, 'exportMapping')) {
+            SheetableLog::log('Mapping fields...');
+            $this->mapExport($model, $worksheet, $models);
+            SheetableLog::log('Fields mapped.');
+        }
         SheetableLog::log('Formatting special fields...');
         $this->utils->formatColumns($model, $worksheet, $models);
         SheetableLog::log('Special fields formatted.');
@@ -424,6 +430,96 @@ class SpreadsheetHelper
             ...$this->utils->getDBColumns($model),
             ...(method_exists($model, 'translatableFields') ? $model::translatableFields() : []),
         ];
+    }
+
+    /**
+     * Map all columns according to the Sheetable::exportMapping() array.
+     */
+    private function mapExport(Model $target, Worksheet $worksheet, Collection $entities)
+    {
+        $mappings = $this->getTranslatedMapping($target, $worksheet);
+        foreach($mappings as $newColumnsName => $mapping) {
+            $currentColumn = $this->utils->getColumnByHeading($worksheet, Arr::first($mapping['select']));
+            $worksheet->insertNewColumnBefore(++$currentColumn);
+            // heading
+            $worksheet->setCellValue($currentColumn.'1', $newColumnsName);
+            // content
+            $entities->each(function (Model $entity, int $index) use ($worksheet, $currentColumn, $mapping) {
+                $rowCount = $index + 2;
+                $args = Arr::map($mapping['select'], function($selected) use ($entity, $mapping) {
+                    return !array_key_exists('language', $mapping) 
+                        ? $this->utils->getNestedProperty($entity, $selected, nestedAsArray: true)
+                        : $this->utils->getNestedProperty(
+                            $entity, 
+                            Str::before($selected, '_'.$mapping['language']),
+                            fn($translations) => Arr::exists($translations, $mapping['language']) ? $translations[$mapping['language']] : null,
+                            nestedAsArray: true
+                        );
+                });
+                // handle nested relation
+                if (Arr::first($args) instanceof Collection || Arr::first($args) instanceof EloquentCollection) {
+                    $ret = [];
+                    $flattenedArgs = $this->utils->array_map_recursive($args, function($collection) {
+                        if ($collection instanceof Collection || $collection instanceof EloquentCollection) {
+                            return $collection->flatten()->toArray();
+                        }
+                        return $collection; 
+                    });
+                    if (count(Arr::first($flattenedArgs))) { // nested many
+                        foreach(range(0, count(Arr::first($flattenedArgs)) - 1) as $i) {
+                            $values = Arr::map($flattenedArgs, fn($collection) => $collection[$i]);
+                            $ret[] = $mapping['map'](...$values);
+                        }
+                        $ret = Arr::join($ret, ', ');
+                    } else { // non-nested many
+                        $values = Arr::map($flattenedArgs, fn($c) => Arr::join($c, ', '));
+                        $ret = $mapping['map'](...$values);
+                    }
+                } else { // non-many
+                    $ret = $mapping['map'](...$args);
+                }
+                $worksheet->setCellValue($currentColumn.$rowCount, $ret);
+            });
+            foreach($mapping['select'] as $selected) {
+                $worksheet->removeColumn($this->utils->getColumnByHeading($worksheet, $selected));
+            }
+        }
+    }
+
+    /**
+     * Transform the Sheetable::exportMapping() array according to selected translated columns
+     */
+    private function getTranslatedMapping(Model $target, Worksheet $worksheet): array
+    {
+        $mappings = array_filter($target::exportMapping(), fn($mapping) => is_array($mapping) && array_key_exists('select', $mapping));
+        $translatedMapping = [];
+        array_walk($mappings, function($mapping, $newColumnsName) use ($worksheet, &$translatedMapping) {
+            $translatableFields = array_filter($mapping['select'], fn($selected) => Str::contains($selected, '_translatable_content_id'));
+            if (count($translatableFields)) {
+                foreach($this->getTranslatableLanguages() as $language) {
+                    $abort = false;
+                    foreach($translatableFields as &$translatableField) {
+                        $translatableField = Str::before($translatableField, '_translatable_content_id');
+                        $column = $translatableField.'_'.$language;
+                        if (!$this->utils->getColumnByHeading($worksheet, $column)) {
+                            $abort = true;
+                        }
+                    }
+                    if ($abort) {
+                        continue;
+                    }
+                    $translatedFields = Arr::map($translatableFields, fn($field) => $field.'_'.$language);
+                    $translatedMapping[$newColumnsName.'_'.$language] = [
+                        'select' => array_replace($mapping['select'], $translatedFields),
+                        'map' => $mapping['map'],
+                        'language' => $language,
+                    ];
+                }
+            } else {
+                $translatedMapping[$newColumnsName] = $mapping;
+            }
+        }, []);
+        return $translatedMapping;
     }
 
     /**

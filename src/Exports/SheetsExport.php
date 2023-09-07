@@ -3,6 +3,7 @@
 namespace Syspons\Sheetable\Exports;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -75,9 +76,7 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
      */
     public function map($entity): array
     {
-        return method_exists($entity, 'getJoins')
-            ? SpreadsheetJoins::getMapping($entity, $this->headings())
-            : $entity->toArray();
+        return SpreadsheetJoins::getMapping($entity, $this->headings());
     }
 
     /**
@@ -94,9 +93,19 @@ class SheetsExport implements FromCollection, WithHeadings, WithEvents, WithTitl
             ? $columns
             : array_intersect($columns, $this->select);
         
-        return method_exists($this->model, 'getJoins')
+        $columns = method_exists($this->model, 'getJoins')
             ? SpreadsheetJoins::getHeadings($this->model, $columns)
             : $columns;
+
+        // handle reordering
+        if (method_exists($this->model, 'exportMapping')) {
+            SheetableLog::log('Reordering columns...');
+            $mapping = Arr::flatten(Arr::map($this->model::exportMapping(), fn($value) => is_array($value) && array_key_exists('select', $value) ? $value['select'] : $value));
+            $columns = array_intersect($mapping, $columns);
+            SheetableLog::log('Columns reordered.');
+        }
+
+        return $columns;
     }
 
     /**

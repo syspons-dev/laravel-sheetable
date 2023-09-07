@@ -347,7 +347,7 @@ class SpreadsheetHelper
      */
     private function cleanDateTimes(Worksheet $worksheet, Model|string $model)
     {
-        foreach ($this->utils->getDateTimeCols($model) as $dateTimeCol) {
+        foreach ($this->utils->getDateTimeCols($model, $worksheet) as $dateTimeCol) {
             $colCoord = $this->utils->getColumnByHeading($worksheet, $dateTimeCol);
             $highestRow = $worksheet->getHighestDataRow($colCoord);
             for ($row = 2; $row <= $highestRow; $row++) {

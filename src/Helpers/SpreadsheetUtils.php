@@ -89,12 +89,13 @@ class SpreadsheetUtils
      * 
      * @return string[] e.g. ['date_start', 'date_end']
      */
-    public function getDateTimeCols(Model|string $model, bool $inclCreateUpd = false): array
+    public function getDateTimeCols(Model|string $model, Worksheet $worksheet, bool $inclCreateUpd = false): array
     {
         $dateTimeCols = [];
 
         $tableName = $model::newModelInstance()->getTable();
-        foreach (DB::getSchemaBuilder()->getColumnListing($tableName) as $colName) {
+        $columns = array_intersect($this->getWorksheetHeadings($worksheet), DB::getSchemaBuilder()->getColumnListing($tableName));
+        foreach ($columns as $colName) {
             $type = DB::getSchemaBuilder()->getColumnType($tableName, $colName);
             if ($inclCreateUpd || ('created_at' !== $colName && 'updated_at' !== $colName)) {
                 if ('datetime' === $type) {
@@ -151,7 +152,7 @@ class SpreadsheetUtils
      */
     private function formatDateColumns(Model $model, Worksheet $worksheet, Collection $models)
     {
-        $dateTimeCols = $this->getDateTimeCols($model, true);
+        $dateTimeCols = $this->getDateTimeCols($model, $worksheet, true);
         $rowNr = 1;
 
         // set width
@@ -183,7 +184,8 @@ class SpreadsheetUtils
     private function setColumnFormat(Model|string $model, Worksheet $worksheet)
     {
         $tableName = $model::newModelInstance()->getTable();
-        foreach (DB::getSchemaBuilder()->getColumnListing($tableName) as $colName) {
+        $columns = array_intersect($this->getWorksheetHeadings($worksheet), DB::getSchemaBuilder()->getColumnListing($tableName));
+        foreach ($columns as $colName) {
             $colCoord = $this->getColumnByHeading($worksheet, $colName);
             $type = DB::getSchemaBuilder()->getColumnType($tableName, $colName);
             $format = '';

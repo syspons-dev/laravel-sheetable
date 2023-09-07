@@ -99,26 +99,26 @@ class Join
       {
         $parentKey = $this->relationObject->getLocalKeyName();
         $columnIndex = array_search($parentKey, $parentColumns);
-        $ret = array_replace($parentColumns, [$columnIndex => $this->array_map_recursive($columns, fn($column) => $this->relation.'.'.$column)]);
+        $ret = array_replace($parentColumns, [$columnIndex => SpreadsheetUtils::array_map_recursive($columns, fn($column) => $this->relation.'.'.$column)]);
         return $ret;
       }
       case BelongsTo::class:
       {
         $parentKey = $this->relationObject->getForeignKeyName();
         $columnIndex = array_search($parentKey, $parentColumns);
-        $ret = array_replace($parentColumns, [$columnIndex => $this->array_map_recursive($columns, fn($column) => $this->relation.'.'.$column)]);
+        $ret = array_replace($parentColumns, [$columnIndex => SpreadsheetUtils::array_map_recursive($columns, fn($column) => $this->relation.'.'.$column)]);
         return $ret;
       }
       case HasMany::class:
       {
         $parentKey = $this->relationObject->getForeignKeyName();
         $columns = Arr::where($columns, fn($column) => $column !== $parentKey);
-        $ret = array_merge($parentColumns, $this->array_map_recursive($columns, fn($column) => $this->relation.'.'.$column));
+        $ret = array_merge($parentColumns, SpreadsheetUtils::array_map_recursive($columns, fn($column) => $this->relation.'.'.$column));
         return $ret;
       }
       case BelongsToMany::class:
       {
-        $ret = array_merge($parentColumns, $this->array_map_recursive($columns, fn($column) => $this->relation.'.'.$column));
+        $ret = array_merge($parentColumns, SpreadsheetUtils::array_map_recursive($columns, fn($column) => $this->relation.'.'.$column));
         return $ret;
       }
       default:
@@ -140,20 +140,6 @@ class Join
       default:
         return [];
     }
-  }
-
-  /**
-   * Apply a callback recursively on an arrays items
-   */
-  private function array_map_recursive(array $array, Closure $cb): array
-  {
-    return Arr::map(
-      $array,
-      fn($item) => 
-        is_array($item)
-          ? $this->array_map_recursive($item, $cb)
-          : $cb($item)
-    );
   }
 
   /**

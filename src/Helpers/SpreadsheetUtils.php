@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Schema\Grammars\MySqlGrammar;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -362,6 +363,20 @@ class SpreadsheetUtils
         if ($entities instanceof Collection) {
             return $entities->map(fn ($e) => $this->getNestedProperty($e, $nestedProperty, $accessCb))->join(', ');
         }
-        return $this->getNestedProperty($entity->$relation, $nestedProperty, $accessCb);
+        return $this->getNestedProperty($entity->$relation, $nestedProperty, $accessCb, $nestedAsArray);
+    }
+
+    /**
+     * Apply a callback recursively on an arrays items
+     */
+    public function array_map_recursive(array $array, Closure $cb): array
+    {
+      return Arr::map(
+        $array,
+        fn($item) => 
+          is_array($item)
+            ? $this->array_map_recursive($item, $cb)
+            : $cb($item)
+      );
     }
 }

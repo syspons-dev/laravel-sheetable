@@ -338,7 +338,7 @@ class SpreadsheetUtils
      * 
      * @param Closure $accessCb A callback applied when accessing the final property 
      */
-    public function getNestedProperty(Model $entity, string $property, Closure $accessCb = null): mixed
+    public function getNestedProperty(Model $entity, string $property, Closure $accessCb = null, bool $nestedAsArray = false): mixed
     {
         $nestedLevel = Str::substrCount($property, '.');
         if ($nestedLevel === 0) {
@@ -351,7 +351,10 @@ class SpreadsheetUtils
                 case HasMany::class:
                 case BelongsToMany::class:
                 {
-                    $ret = $entity->$relation->map(fn($r) => $accessCb ? $accessCb($r->$nestedProperty) : $r->$nestedProperty)->filter()->join(', ');
+                    $ret = $entity->$relation->map(fn($r) => $accessCb ? $accessCb($r->$nestedProperty) : $r->$nestedProperty)->filter();
+                    if (!$nestedAsArray) {
+                        $ret = $ret->join(', ');
+                    }
                     return $ret;
                 }
                 default:
@@ -361,7 +364,11 @@ class SpreadsheetUtils
 
         $entities = $entity->$relation;
         if ($entities instanceof Collection) {
-            return $entities->map(fn ($e) => $this->getNestedProperty($e, $nestedProperty, $accessCb))->join(', ');
+            $ret = $entities->map(fn ($e) => $this->getNestedProperty($e, $nestedProperty, $accessCb, $nestedAsArray));
+            if (!$nestedAsArray) {
+                $ret = $ret->join(', ');
+            }
+            return $ret;
         }
         return $this->getNestedProperty($entity->$relation, $nestedProperty, $accessCb, $nestedAsArray);
     }

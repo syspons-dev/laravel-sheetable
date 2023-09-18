@@ -8,6 +8,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Schema\Grammars\MySqlGrammar;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -349,7 +350,9 @@ class SpreadsheetUtils
         if ($nestedLevel === 1) {
             switch(get_class($entity->$relation())) {
                 case HasMany::class:
+                case MorphMany::class:
                 case BelongsToMany::class:
+                case MorphToMany::class:
                 {
                     $ret = $entity->$relation->map(fn($r) => $accessCb ? $accessCb($r->$nestedProperty) : $r->$nestedProperty)->filter();
                     if (!$nestedAsArray) {

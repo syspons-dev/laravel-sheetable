@@ -2,13 +2,14 @@
 
 namespace Syspons\Sheetable\Exports;
 
-use Closure;
 use Facades\Syspons\Sheetable\Helpers\SpreadsheetUtils;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
 
@@ -102,6 +103,15 @@ class Join
         $ret = array_replace($parentColumns, [$columnIndex => SpreadsheetUtils::array_map_recursive($columns, fn($column) => $this->relation.'.'.$column)]);
         return $ret;
       }
+      case MorphOne::class:
+      case MorphMany::class:
+      {
+        $parentKey = $this->relationObject->getForeignKeyName();
+        $morphType = $this->relationObject->getMorphType();
+        $columns = Arr::where($columns, fn($column) => $column !== $parentKey && $column !== $morphType);
+        $ret = array_merge($parentColumns, SpreadsheetUtils::array_map_recursive($columns, fn($column) => $this->relation.'.'.$column));
+        return $ret;
+      }
       case BelongsTo::class:
       {
         $parentKey = $this->relationObject->getForeignKeyName();
@@ -117,6 +127,7 @@ class Join
         return $ret;
       }
       case BelongsToMany::class:
+      case MorphToMany::class:
       {
         $ret = array_merge($parentColumns, SpreadsheetUtils::array_map_recursive($columns, fn($column) => $this->relation.'.'.$column));
         return $ret;

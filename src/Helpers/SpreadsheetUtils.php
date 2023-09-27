@@ -361,7 +361,11 @@ class SpreadsheetUtils
                     return $ret;
                 }
                 default:
-                    return $accessCb ? $accessCb($entity->$relation->$nestedProperty) : $entity->$relation->$nestedProperty;
+                    return $entity->$relation 
+                        ? $accessCb 
+                            ? $accessCb($entity->$relation->$nestedProperty) 
+                            : $entity->$relation->$nestedProperty
+                        : null;
               }
         }
 

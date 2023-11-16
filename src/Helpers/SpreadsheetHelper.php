@@ -307,7 +307,9 @@ class SpreadsheetHelper
         $ids = $worksheet->rangeToArray($colCoord.'2:'.$colCoord.$highestRow);
         $idValues = [];
         foreach ($ids as $id) {
-            $idValues[] = $id[0];
+            if ($id[0]) {
+                $idValues[] = $id[0];
+            }
         }
 
         return array_unique(array_diff_assoc($idValues, array_unique($idValues)));
